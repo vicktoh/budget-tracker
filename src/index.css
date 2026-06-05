@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 100 23% 97%;
+    --foreground: 211 24% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 211 24% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 211 24% 16%;
+    --primary: 151 69% 28%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 36 57% 91%;
+    --secondary-foreground: 29 52% 36%;
+    --muted: 132 13% 94%;
+    --muted-foreground: 143 6% 42%;
+    --accent: 138 37% 93%;
+    --accent-foreground: 149 68% 19%;
+    --destructive: 4 75% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 134 14% 87%;
+    --input: 134 14% 87%;
+    --ring: 151 69% 28%;
+    --radius: 0.5rem;
+    --chart-1: 151 69% 28%;
+    --chart-2: 177 77% 26%;
+    --chart-3: 29 52% 36%;
+    --chart-4: 36 72% 42%;
+    --chart-5: 143 6% 42%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 211 24% 16%;
+    --sidebar-border: 134 14% 87%;
+    --sidebar-accent: 138 37% 93%;
+    --sidebar-accent-foreground: 151 69% 28%;
+    --status-pending: 36 72% 42%;
+    --status-pending-bg: 39 100% 95%;
+    --status-approved: 151 69% 28%;
+    --status-approved-bg: 138 37% 93%;
+    --status-processed: 177 77% 26%;
+    --status-processed-bg: 168 38% 93%;
+    --status-rejected: 4 75% 40%;
+    --status-rejected-bg: 0 78% 96%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .focus-ring {
+    @apply outline-none ring-offset-2 ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring;
+  }
+}
