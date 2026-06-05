@@ -3,7 +3,10 @@
 !.env.example
 
 node_modules/
+.next/
 dist/
+*.tsbuildinfo
+supabase/.temp/
 coverage/
 .DS_Store
 npm-debug.log*

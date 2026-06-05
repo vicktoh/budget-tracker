@@ -4,6 +4,7 @@ This document explains the executable database artifacts produced from the workb
 
 ## Files
 
+- `docs/nextjs-server-conventions.md` documents privileged workflow route handlers and server-only environment variables.
 - `supabase/migrations/202605290001_initial_schema.sql` creates the initial Postgres/Supabase schema.
 - `supabase/seeds/001_reference_data.sql` seeds statuses, MDA types, MDAs, funding sources, expenditure categories, programme areas, payment methods, LGAs, and PHC facilities.
 - `supabase/seeds/002_budget_2026.sql` seeds 2026 approved MDA budgets from the workbook.

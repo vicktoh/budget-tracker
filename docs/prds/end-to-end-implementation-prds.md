@@ -2,7 +2,7 @@
 
 These PRDs translate the current domain notes, ADRs, design system, implementation plan, workbook study, database model, and Supabase artifacts into implementation-ready product slices.
 
-Stack note: these PRDs specify a Vite/React SPA implementation. That supersedes the earlier framework direction at the PRD level; the stack ADR should be updated separately if ADR consistency is required.
+Stack note: these PRDs specify a Next.js App Router implementation aligned with ADR 0002.
 
 Issue tracker publication note: the `to-prd` skill expects a configured issue tracker and `ready-for-agent` triage label, but no issue-tracker setup or label vocabulary is present in this repository. Until that setup exists, this document is the source artifact to publish.
 
@@ -14,7 +14,7 @@ The project already has strong domain documentation, a verified Supabase schema,
 
 ## Solution
 
-Build the Vite/React foundation for the Kano Health Finance Tracker using Supabase, TypeScript, Tailwind CSS, shadcn/ui, and lucide icons. The first implementation slice should create authenticated client-side routes, Supabase browser clients, role-aware navigation, semantic theme tokens, shared UI primitives, and serverless conventions for trusted workflows. The experience should feel like a compact, light-first public finance operations tool with long-form data entry, dense tables, status clarity, audit visibility, and Nigerian naira formatting treated as first-class requirements.
+Build the Next.js foundation for the Kano Health Finance Tracker using Supabase, TypeScript, Tailwind CSS, shadcn/ui, and lucide icons. The first implementation slice should create authenticated App Router pages, Supabase browser and server clients, role-aware navigation, semantic theme tokens, shared UI primitives, and route-handler conventions for trusted workflows. The experience should feel like a compact, light-first public finance operations tool with long-form data entry, dense tables, status clarity, audit visibility, and Nigerian naira formatting treated as first-class requirements.
 
 ## User Stories
 
@@ -30,16 +30,16 @@ Build the Vite/React foundation for the Kano Health Finance Tracker using Supaba
 10. As a user, I want pending, approved, processed, and rejected statuses to use consistent colors and labels, so that review state is instantly understandable.
 11. As a user, I want data quality warnings to look different from validation errors, so that I can tell non-blocking warnings from submission blockers.
 12. As a user, I want predictable loading, empty, error, and success states, so that the app feels reliable even when data is missing or still loading.
-13. As an Admin, I want privileged workflows to run in trusted serverless handlers, so that service-role access, Resend email delivery, imports, exports, and storage signing are not exposed in the browser.
-14. As a developer, I want shared Supabase client helpers, so that browser-safe access and trusted serverless access patterns are explicit and consistent.
+13. As an Admin, I want privileged workflows to run in trusted Next.js route handlers, so that service-role access, Resend email delivery, imports, exports, and storage signing are not exposed in the browser.
+14. As a developer, I want shared Supabase client helpers, so that browser-safe access and trusted server-side access patterns are explicit and consistent.
 15. As a developer, I want shared UI primitives for forms, tables, filters, dialogs, sheets, status badges, charts, notifications, imports, uploads, and exports, so that feature work can move quickly without visual drift.
 16. As a developer, I want semantic design tokens instead of raw colors in feature components, so that the product can evolve without rewriting every screen.
 17. As a developer, I want shared Nigerian naira, date, quarter, fiscal-year, status, and Public Entry ID formatting helpers, so that user-visible finance data is consistent.
-18. As a developer, I want client-side route groups and authorization guards that separate MDA, Reviewer, and Admin surfaces, so that downstream screens inherit the right boundaries.
+18. As a developer, I want App Router route groups and authorization guards that separate MDA, Reviewer, and Admin surfaces, so that downstream screens inherit the right boundaries.
 
 ## Implementation Decisions
 
-- Use Vite, React, TypeScript, Tailwind CSS, shadcn/ui, lucide icons, Supabase browser clients, and Supabase Edge Functions or equivalent serverless handlers.
+- Use Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, lucide icons, Supabase browser and server clients, and Next.js route handlers for privileged workflows.
 - Preserve Supabase Row Level Security as the primary data-access boundary; privileged server code must still enforce domain authorization.
 - Create a shared app shell with collapsible sidebar navigation and a slim contextual top header.
 - Use the design system's light-first civic operations theme, including Kano Health Green, Deep Governance Green, Grounded Earth Brown, status colors, restrained borders, and limited shadows.
@@ -50,8 +50,8 @@ Build the Vite/React foundation for the Kano Health Finance Tracker using Supaba
 - Create shared form, table, filter, dialog, sheet, chart, notification, import, upload, and export primitives using shadcn/ui composition.
 - Create a permissions module with a stable interface for role checks, assigned-MDA checks, submitter checks, reviewer checks, and admin checks.
 - Create a formatting module for Nigerian naira, dates, fiscal year, quarter, Public Entry IDs, and status labels.
-- Create Supabase access helpers that clearly separate browser-safe queries from trusted serverless operations.
-- Create serverless handler conventions for imports, exports, Resend email delivery, storage signing, and service-role operations.
+- Create Supabase access helpers that clearly separate browser-safe queries from trusted server-side operations.
+- Create route-handler conventions for imports, exports, Resend email delivery, storage signing, and service-role operations.
 - Keep routes boring and explicit so the framework surface area does not become a source of product complexity.
 
 ## Testing Decisions
@@ -70,13 +70,13 @@ Build the Vite/React foundation for the Kano Health Finance Tracker using Supaba
 - Building full review queues, Admin Insights, imports, exports, notifications, or reference-data CRUD.
 - Dark mode.
 - Public marketing pages.
-- A full custom backend service beyond Supabase Edge Functions or equivalent serverless handlers.
+- A full custom backend service beyond Next.js route handlers and Supabase.
 
 ## Further Notes
 
 - This slice unlocks all other implementation work.
 - The app should not hardcode 2026 even though the current workbook seed data is 2026-heavy.
-- Trusted serverless code must not treat service-role access as a substitute for domain authorization.
+- Trusted server-side code must not treat service-role access as a substitute for domain authorization.
 
 ## PRD 2: MDA Funding And Expenditure Entry Workflows
 
@@ -134,7 +134,7 @@ Build authenticated MDA workflows for creating, viewing, and editing pending Fun
 - For AOP Linkage, filter available AOP Activities by selected MDA and fiscal year; keep linkage optional.
 - For Expenditure Item, filter by Expenditure Category when the item is category-linked; keep item optional in v1.
 - Use private Supabase Storage and attachment metadata for optional Entry Attachments.
-- Route all submission writes through authorization-aware client commands or trusted serverless handlers with Supabase RLS still active.
+- Route all submission writes through authorization-aware client commands or trusted Next.js route handlers with Supabase RLS still active.
 - MDA users can update their assigned-MDA entries only while status is pending.
 - Reviewed-entry edits by Admins or Reviewers belong to the review/audit PRD, not normal MDA editing.
 - Create a deep entry-validation module that converts domain rules and Reference Data into reusable validation for forms, imports, and tests.
@@ -387,7 +387,7 @@ Build MDA Dashboards, Reviewer/Admin Insights, reporting queries, and export wor
 - Pair restrained charts with drill-down tables for traceability.
 - Use the design system's operational chart palette: green, teal, brown, amber, and slate.
 - Keep filters consistent across dashboards, tables, exports, and review contexts.
-- Use Supabase Edge Functions or equivalent serverless handlers for CSV, XLSX, and PDF export generation.
+- Use Next.js route handlers for CSV, XLSX, and PDF export generation.
 - Store Export Jobs with export type, subject, filters, status, storage metadata, creator, timestamps, and errors.
 - Preserve selected filters in exported files.
 - Create a deep reporting module that composes filters, queries views, applies role scope, and returns report payloads.
@@ -435,7 +435,7 @@ Add end-to-end hardening across validation, permissions, RLS, imports, reporting
 3. As an Admin, I want Supabase RLS policies verified for each role, so that users cannot access unauthorized entries or admin surfaces.
 4. As an MDA user, I want my assigned-MDA boundaries enforced in forms, dashboards, comments, attachments, and notifications, so that other MDA data remains private.
 5. As a Reviewer, I want reviewer boundaries enforced across queues, edits, comments, attachments, warnings, and dashboards, so that I act only on assigned MDAs.
-6. As an Admin, I want trusted serverless workflows verified, so that imports, exports, storage signing, and Resend operations do not leak secrets.
+6. As an Admin, I want trusted server-side workflows verified, so that imports, exports, storage signing, and Resend operations do not leak secrets.
 7. As a finance user, I want all Money Amounts stored and displayed consistently as Nigerian naira with two decimals, so that reports are precise and familiar.
 8. As a finance user, I want long MDA names and voucher references to render without clipping, so that dense finance screens are usable.
 9. As a Reviewer, I want Data Quality Warnings tested across form submissions and imports, so that warnings are trustworthy.

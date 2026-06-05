@@ -1,6 +1,8 @@
+"use client";
+
 import * as React from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import { MailIcon } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LogInIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,26 +15,32 @@ import { getDefaultPathForProfile } from "@/lib/access";
 
 export function SignInRoute() {
   const { profile } = useAuth();
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
 
+  React.useEffect(() => {
+    if (profile) {
+      router.replace(getDefaultPathForProfile(profile));
+    }
+  }, [profile, router]);
+
   if (profile) {
-    return <Navigate replace to={getDefaultPathForProfile(profile)} />;
+    return null;
   }
 
-  const from = (location.state as { from?: Location } | null)?.from?.pathname ?? "/mda";
+  const from = searchParams.get("redirect") ?? "/mda";
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase) return;
 
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: `${window.location.origin}${from}`,
-      },
+      password,
     });
     setLoading(false);
 
@@ -41,7 +49,7 @@ export function SignInRoute() {
       return;
     }
 
-    toast.success("Magic link sent. Check your email to continue.");
+    router.replace(from);
   }
 
   return (
@@ -58,7 +66,7 @@ export function SignInRoute() {
             <Alert variant="warning">
               <AlertTitle>Supabase environment is not configured</AlertTitle>
               <AlertDescription>
-                Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to your local environment.
+                Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY to your local environment.
               </AlertDescription>
             </Alert>
           ) : null}
@@ -75,14 +83,25 @@ export function SignInRoute() {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                 />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <Input
+                  autoComplete="current-password"
+                  id="password"
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
                 <FieldDescription>
-                  Supabase Auth sends a secure sign-in link to this address.
+                  Sign in with the email and password issued by your administrator.
                 </FieldDescription>
               </Field>
             </FieldGroup>
             <Button disabled={!hasSupabaseConfig || loading} type="submit">
-              <MailIcon aria-hidden="true" data-icon="inline-start" />
-              {loading ? "Sending link" : "Send magic link"}
+              <LogInIcon aria-hidden="true" data-icon="inline-start" />
+              {loading ? "Signing in" : "Sign in"}
             </Button>
           </form>
         </CardContent>

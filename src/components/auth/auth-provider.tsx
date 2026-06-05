@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import type { AppProfile, AuthState, MdaMembership } from "@/lib/auth-types";
+import { loadProfileForUser } from "@/lib/db/memberships";
+import type { AppProfile, AuthState } from "@/lib/auth-types";
 
 const AuthContext = React.createContext<AuthState | null>(null);
 
@@ -34,13 +37,41 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
         return;
       }
 
-      const profile = await loadProfile(session.user);
-      if (active) {
+      try {
+        const profile = await loadProfile(session.user);
+        if (!active) return;
         setState({ user: session.user, profile, loading: false });
+      } catch (error) {
+        if (!active) return;
+        // If profile load fails (e.g. transient network error or RLS hiccup
+        // right after a write), don't strand the layout on its skeleton —
+        // surface a fallback profile derived from the auth user so the
+        // shell renders. Errors are still visible in the console for ops.
+        // eslint-disable-next-line no-console
+        console.error("Failed to load profile:", error);
+        setState({
+          user: session.user,
+          profile: {
+            id: session.user.id,
+            full_name:
+              session.user.email?.split("@")[0] ?? "Kano finance user",
+            role: "mda_user",
+            memberships: [],
+          },
+          loading: false,
+        });
       }
     };
 
-    supabase.auth.getSession().then(({ data }) => loadSession(data.session));
+    supabase.auth
+      .getSession()
+      .then(({ data }) => loadSession(data.session))
+      .catch((error) => {
+        if (!active) return;
+        // eslint-disable-next-line no-console
+        console.error("Failed to read Supabase session:", error);
+        setState({ user: null, profile: null, loading: false });
+      });
 
     const {
       data: { subscription },
@@ -67,40 +98,14 @@ export function useAuth() {
 }
 
 async function loadProfile(user: User): Promise<AppProfile> {
-  const fallbackName = user.email?.split("@")[0] ?? "Kano finance user";
-  const fallbackProfile: AppProfile = {
-    id: user.id,
-    full_name: fallbackName,
-    role: "mda_user",
-    memberships: [],
-  };
+  if (!supabase) {
+    return {
+      id: user.id,
+      full_name: user.email?.split("@")[0] ?? "Kano finance user",
+      role: "mda_user",
+      memberships: [],
+    };
+  }
 
-  if (!supabase) return fallbackProfile;
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, full_name, role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const { data: memberships } = await supabase
-    .from("user_mda_memberships")
-    .select("id, mda_id, membership_role, mdas(id, name, abbreviation)")
-    .eq("user_id", user.id);
-
-  const normalizedMemberships = (memberships ?? []).map((membership) => ({
-    id: membership.id,
-    mda_id: membership.mda_id,
-    membership_role: membership.membership_role,
-    mdas: Array.isArray(membership.mdas)
-      ? (membership.mdas[0] ?? null)
-      : (membership.mdas ?? null),
-  })) as MdaMembership[];
-
-  return {
-    ...fallbackProfile,
-    ...profile,
-    role: profile?.role ?? fallbackProfile.role,
-    memberships: normalizedMemberships,
-  };
+  return loadProfileForUser(supabase, user);
 }

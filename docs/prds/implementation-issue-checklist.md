@@ -14,19 +14,19 @@ Issue tracker publication note: no issue tracker configuration or triage label v
 
 ## Slice Summary
 
-1. [x] Vite app shell and authenticated role routing
+1. [x] Next.js app shell and authenticated role routing
    - Type: AFK
    - Blocked by: None
    - User stories covered: PRD 1 stories 1-18
-2. [ ] Supabase database connection, typed access, and capability checks
+2. [x] Supabase database connection, typed access, and capability checks
    - Type: AFK
    - Blocked by: Slice 1
    - User stories covered: PRD 1 stories 13-18; PRD 2 stories 1, 26-28; PRD 3 stories 1-4
-3. [ ] Funding Entry submit and pending edit path
+3. [x] Funding Entry submit and pending edit path
    - Type: AFK
    - Blocked by: Slices 1, 2
    - User stories covered: PRD 2 stories 1-7, 23-28, 30
-4. [ ] Expenditure Entry submit and pending edit path
+4. [x] Expenditure Entry submit and pending edit path
    - Type: AFK
    - Blocked by: Slices 1, 2
    - User stories covered: PRD 2 stories 1, 8-30
@@ -63,9 +63,56 @@ Issue tracker publication note: no issue tracker configuration or triage label v
     - Blocked by: Slices 1-11
     - User stories covered: PRD 6 stories 1-18
 
+### TOR Alignment Slices (added after IBP TOR review)
+
+13. [ ] Monthly Submission Cycle skeleton (draft + submit + deadline + late state)
+    - Type: AFK
+    - Blocked by: Slices 3, 4
+    - User stories covered: PRD stories 53, 54, 56, 57
+14. [ ] Budget Release Entries and expenditure release-reconciliation fields
+    - Type: AFK
+    - Blocked by: Slices 4, 8, 13
+    - User stories covered: PRD stories 61, 62
+15. [ ] Release Notes and Activity Progress per cycle
+    - Type: AFK
+    - Blocked by: Slices 8, 13, 14
+    - User stories covered: PRD stories 58, 59
+16. [ ] Submission confirmation PDF and PHC facility-cycle entry surface
+    - Type: AFK
+    - Blocked by: Slices 13, 15
+    - User stories covered: PRD stories 55, 60
+17. [ ] SMoH System-Wide Dashboard with drill-down, quarterly breakdown, Compliance Matrix, and annotations
+    - Type: AFK
+    - Blocked by: Slices 5, 10, 13
+    - User stories covered: PRD stories 63, 64, 65, 66, 67
+18. [ ] Fiscal Intelligence rules engine (snapshot, variance, compliance alerts, lagging programmes, zero-release attribution, early warning)
+    - Type: AFK
+    - Blocked by: Slices 8, 13, 14, 15, 17
+    - User stories covered: PRD stories 68, 69, 70, 71, 72, 73, 74, 75
+19. [ ] MoPB role and Monthly Aggregate Feed portal (BIR Excel + JSON/CSV + DQ Flag Matrix)
+    - Type: AFK
+    - Blocked by: Slices 8, 11, 13, 14, 15, 18
+    - User stories covered: PRD stories 76, 77, 78
+20. [ ] BIR pre-publication validation interface
+    - Type: AFK
+    - Blocked by: Slice 19
+    - User stories covered: PRD story 79
+21. [ ] Security and operations hardening (immutable audit log, session timeout, concurrent sessions, ≥80% coverage)
+    - Type: AFK
+    - Blocked by: Slices 5, 6
+    - User stories covered: PRD stories 82, 83
+22. [ ] Hosting Strategy ADR and Deferred TOR Commitments register
+    - Type: HITL
+    - Blocked by: None
+    - User stories covered: PRD stories 80, 85 (planning/decisions only)
+23. [ ] PWA offline-first upgrade (service worker, IndexedDB mirror, sync queue, conflict surfacing)
+    - Type: AFK
+    - Blocked by: Slices 13, 14, 15, 16
+    - User stories covered: PRD story 81
+
 ## Issue Drafts
 
-## Issue 1: Vite App Shell And Authenticated Role Routing
+## Issue 1: Next.js App Shell And Authenticated Role Routing
 
 Status:
 - [ ] Not started
@@ -74,12 +121,12 @@ Status:
 
 ## What to build
 
-Build the Vite/React application foundation for authenticated MDA user, Reviewer, and Admin workflows. The slice should create the app shell, client-side routing, Supabase browser client setup, role-aware navigation, design tokens, and core UI primitives so a signed-in user can land in the correct product surface.
+Build the Next.js application foundation for authenticated MDA user, Reviewer, and Admin workflows. The slice should create the app shell, App Router pages, Supabase browser and server client setup, role-aware navigation, design tokens, and core UI primitives so a signed-in user can land in the correct product surface.
 
 ## Acceptance criteria
 
-- [x] A Vite/React/TypeScript app runs from the repository root.
-- [x] Supabase browser configuration reads `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
+- [x] A Next.js/React/TypeScript app runs from the repository root.
+- [x] Supabase browser configuration reads `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 - [x] Unauthenticated users are routed to sign-in or an auth gate.
 - [x] MDA users, Reviewers, and Admins see role-appropriate navigation.
 - [x] The shared app shell includes sidebar navigation and a contextual top header.
@@ -96,7 +143,7 @@ None - can start immediately.
 Status:
 - [ ] Not started
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 
 ## What to build
 
@@ -104,23 +151,23 @@ Connect the app to the existing Supabase/Postgres schema and expose typed helper
 
 ## Acceptance criteria
 
-- [ ] Database types or typed access helpers reflect the current Supabase schema.
-- [ ] Active Reference Data can be queried for form dropdowns.
-- [ ] MDA Memberships can be queried for the authenticated user.
-- [ ] Capability helpers distinguish Admin, Reviewer, submitter, and assigned-MDA access.
-- [ ] UI route guards use capability helpers rather than ad hoc role checks.
-- [ ] Tests cover capability outcomes for Admin, Reviewer, MDA user, one-MDA membership, and multi-MDA membership.
+- [x] Database types or typed access helpers reflect the current Supabase schema (`src/lib/db/types.ts`).
+- [x] Active Reference Data can be queried for form dropdowns (`src/lib/db/reference-data.ts`).
+- [x] MDA Memberships can be queried for the authenticated user (`src/lib/db/memberships.ts`).
+- [x] Capability helpers distinguish Admin, Reviewer, submitter, and assigned-MDA access (`src/lib/access.ts`).
+- [x] UI route guards use capability helpers rather than ad hoc role checks (`AuthenticatedLayout` → `canAccessRoute`).
+- [x] Tests cover capability outcomes for Admin, Reviewer, MDA user, one-MDA membership, and multi-MDA membership (`src/test/access.test.ts`).
 
 ## Blocked by
 
-- Slice 1: Vite App Shell And Authenticated Role Routing
+- Slice 1: Next.js App Shell And Authenticated Role Routing
 
 ## Issue 3: Funding Entry Submit And Pending Edit Path
 
 Status:
 - [ ] Not started
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 
 ## What to build
 
@@ -128,19 +175,19 @@ Build the complete MDA Funding Entry path from dashboard/navigation to form subm
 
 ## Acceptance criteria
 
-- [ ] MDA users can create Funding Entries only for assigned MDAs.
-- [ ] The form captures transaction date, MDA, Programme Area, Funding Source, Money Amount, Reference Number, and Remarks.
-- [ ] Fiscal Year and quarter are derived from transaction date and shown read-only.
-- [ ] Amount must be positive.
-- [ ] Reference Number is required and duplicate scoped references are surfaced clearly.
-- [ ] Other Options require Remarks.
-- [ ] Submitted entries default to pending.
-- [ ] MDA users can edit their own assigned-MDA Funding Entries only while pending.
-- [ ] Tests cover required fields, amount validation, Other requiring Remarks, duplicate Reference Number handling, and pending-only edit access.
+- [x] MDA users can create Funding Entries only for assigned MDAs. *(MDA combobox is filtered to `submittableMdaIds(profile)`; admins see all. RLS `funding_insert_by_submitter` enforces server-side.)*
+- [x] The form captures transaction date, MDA, Programme Area, Funding Source, Money Amount, Reference Number, and Remarks. *(`src/components/funding/funding-entry-form.tsx`.)*
+- [x] Fiscal Year and quarter are derived from transaction date and shown read-only. *(`deriveFiscalPeriod` + read-only "FY YYYY · Q#" chip.)*
+- [x] Amount must be positive. *(Validation rejects ≤ 0; Postgres `amount > 0` check is the final gate.)*
+- [x] Reference Number is required and duplicate scoped references are surfaced clearly. *(Required validation + `mapFundingEntryError` translates 23505 unique violations into a field-scoped message.)*
+- [x] Other Options require Remarks. *(`validateFundingEntry` flags Other Programme Area or Funding Source without remarks; trigger validation surfaces the same message if bypassed.)*
+- [x] Submitted entries default to pending. *(`insertFundingEntry` sets `status: "pending"`; DB default and `funding_insert_by_submitter` RLS also enforce.)*
+- [x] MDA users can edit their own assigned-MDA Funding Entries only while pending. *(UI uses `canEditFundingEntry`; the edit sheet calls `updatePendingFundingEntry` which scopes the update to `status = 'pending'`.)*
+- [x] Tests cover required fields, amount validation, Other requiring Remarks, duplicate Reference Number handling, and pending-only edit access. *(`src/test/funding-validation.test.ts`, 19 cases.)*
 
 ## Blocked by
 
-- Slice 1: Vite App Shell And Authenticated Role Routing
+- Slice 1: Next.js App Shell And Authenticated Role Routing
 - Slice 2: Supabase Database Connection, Typed Access, And Capability Checks
 
 ## Issue 4: Expenditure Entry Submit And Pending Edit Path
@@ -148,7 +195,7 @@ Build the complete MDA Funding Entry path from dashboard/navigation to form subm
 Status:
 - [ ] Not started
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 
 ## What to build
 
@@ -156,23 +203,23 @@ Build the complete MDA Expenditure Entry path from dashboard/navigation to form 
 
 ## Acceptance criteria
 
-- [ ] MDA users can create Expenditure Entries only for assigned MDAs.
-- [ ] The form captures transaction date, MDA, Programme Area, Expenditure Category, optional Expenditure Item, Money Amount, PHC flag, Payment Method, Voucher Reference Number, and Remarks.
-- [ ] Fiscal Year and quarter are derived from transaction date and shown read-only.
-- [ ] PHC Expenditure requires LGA and PHC Facility.
-- [ ] Facility choices are filtered by selected LGA.
-- [ ] Non-PHC Expenditure clears LGA and Facility.
-- [ ] AOP Activity choices are filtered by selected MDA and fiscal year.
-- [ ] Amount must be positive and Voucher Reference Number is required.
-- [ ] Payment Method is required.
-- [ ] Other Options require Remarks.
-- [ ] Submitted entries default to pending.
-- [ ] MDA users can edit their own assigned-MDA Expenditure Entries only while pending.
-- [ ] Tests cover PHC validation, AOP mismatch, facility/LGA mismatch, Expenditure Item/category mismatch, duplicate Voucher Reference Number handling, and pending-only edit access.
+- [x] MDA users can create Expenditure Entries only for assigned MDAs. *(MDA combobox is filtered to `submittableMdaIds(profile)`; admins see all. RLS `expenditure_insert_by_submitter` enforces server-side.)*
+- [x] The form captures transaction date, MDA, Programme Area, Expenditure Category, optional Expenditure Item, Money Amount, PHC flag, Payment Method, Voucher Reference Number, and Remarks. *(`src/components/expenditure/expenditure-entry-form.tsx`.)*
+- [x] Fiscal Year and quarter are derived from transaction date and shown read-only. *(`deriveFiscalPeriod` + read-only "FY YYYY · Q#" chip.)*
+- [x] PHC Expenditure requires LGA and PHC Facility. *(`validateExpenditureEntry` flags missing LGA/facility when `is_phc`; trigger `validate_expenditure_entry` is the final gate.)*
+- [x] Facility choices are filtered by selected LGA. *(Form filters `facilities` by `lga_id`; clearing LGA clears facility.)*
+- [x] Non-PHC Expenditure clears LGA and Facility. *(Toggle off resets `lga_id`/`facility_id` in draft and `ValidatedExpenditureEntry` returns nulls.)*
+- [x] AOP Activity choices are filtered by selected MDA and fiscal year. *(Form filters `aopActivities` by `mda_id` + derived `fiscal_year`; switching MDA or date clears stale linkage.)*
+- [x] Amount must be positive and Voucher Reference Number is required. *(Validation rejects ≤ 0 and blank voucher; Postgres `amount > 0` check + unique constraint are the final gates.)*
+- [x] Payment Method is required. *(Validation rejects missing payment method; column is `not null` in the schema.)*
+- [x] Other Options require Remarks. *(`validateExpenditureEntry` flags Other Programme Area, Expenditure Category, or Payment Method without remarks; trigger validation surfaces the same message if bypassed.)*
+- [x] Submitted entries default to pending. *(`insertExpenditureEntry` sets `status: "pending"`; DB default and `expenditure_insert_by_submitter` RLS also enforce.)*
+- [x] MDA users can edit their own assigned-MDA Expenditure Entries only while pending. *(UI uses `canEditExpenditureEntry`; the edit page calls `updatePendingExpenditureEntry` which scopes the update to `status = 'pending'`.)*
+- [x] Tests cover PHC validation, AOP mismatch, facility/LGA mismatch, Expenditure Item/category mismatch, duplicate Voucher Reference Number handling, and pending-only edit access. *(`src/test/expenditure-validation.test.ts`, 33 cases.)*
 
 ## Blocked by
 
-- Slice 1: Vite App Shell And Authenticated Role Routing
+- Slice 1: Next.js App Shell And Authenticated Role Routing
 - Slice 2: Supabase Database Connection, Typed Access, And Capability Checks
 
 ## Issue 5: Reviewer/Admin Entry Detail, Comments, And Status Workflow
@@ -255,7 +302,7 @@ Build Admin Reference Data management and MDA Reference Value Request workflows.
 
 ## Blocked by
 
-- Slice 1: Vite App Shell And Authenticated Role Routing
+- Slice 1: Next.js App Shell And Authenticated Role Routing
 - Slice 2: Supabase Database Connection, Typed Access, And Capability Checks
 
 ## Issue 8: Approved Budget And AOP Activity Management
@@ -280,7 +327,7 @@ Build Admin planning-data workflows for Approved Budgets and AOP Activities. Adm
 
 ## Blocked by
 
-- Slice 1: Vite App Shell And Authenticated Role Routing
+- Slice 1: Next.js App Shell And Authenticated Role Routing
 - Slice 2: Supabase Database Connection, Typed Access, And Capability Checks
 - Slice 7: Reference Data Management And Reference Value Requests
 
@@ -351,7 +398,7 @@ Status:
 
 ## What to build
 
-Build Export Jobs for CSV, XLSX, and PDF outputs from shared report payloads. Exports should preserve selected filters and visible totals, run through trusted serverless handlers, and store downloadable file metadata.
+Build Export Jobs for CSV, XLSX, and PDF outputs from shared report payloads. Exports should preserve selected filters and visible totals, run through trusted Next.js route handlers, and store downloadable file metadata.
 
 ## Acceptance criteria
 
@@ -393,3 +440,290 @@ Harden the full implementation across migrations, seeds, validation, permissions
 ## Blocked by
 
 - Slices 1-11
+
+## Issue 13: Monthly Submission Cycle Skeleton
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Introduce the `mda_monthly_submissions` model and a per-MDA monthly cycle UI. A cycle bundles Funding Entries, Budget Release Entries, Expenditure Entries, Activity Progress, and Release Notes for one fiscal month per MDA. The cycle has states `draft`, `submitted`, `late`, `accepted`, `returned`, with `late` derived from `submitted_at` vs a configurable deadline (default 5th of the following month, per fiscal year).
+
+## Acceptance criteria
+
+- [ ] Migration adds `mda_monthly_submissions` keyed by `(mda_id, fiscal_year, fiscal_month)` with state, deadline, submitted_at, submitted_by, accepted_at, returned_reason.
+- [ ] Migration adds `submission_deadlines` (per fiscal year) with default month-day 5.
+- [ ] MDA users see a "Current Cycle" page for assigned MDAs with progress indicators for each of the five bundled categories.
+- [ ] Draft auto-save updates `updated_at` without changing state.
+- [ ] Submit action sets state to `submitted` and records `submitted_at`; `late` is derived from the deadline.
+- [ ] Real-time validation surfaces implausible values (negative, missing required field, dropdown mismatch) before submit.
+- [ ] RLS ensures only assigned-MDA submitters can write a cycle; reviewers and admins can read.
+- [ ] Tests cover deadline derivation, late computation, draft-save without state change, submit transition, and assigned-MDA scope.
+
+## Blocked by
+
+- Slice 3: Funding Entry Submit And Pending Edit Path
+- Slice 4: Expenditure Entry Submit And Pending Edit Path
+
+## Issue 14: Budget Release Entries And Expenditure Release-Reconciliation Fields
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Add a **Budget Release Entry** write model representing internal Kano releases against approved budget lines (distinct from external Funding Entries which represent receipts). Add `uncommitted_balance` and `activity_line` to Expenditure Entries to enable release-to-expenditure reconciliation and variance flagging.
+
+## Acceptance criteria
+
+- [ ] Migration adds `budget_release_entries` with `mda_id`, `fiscal_year`, `programme_area_id`, `funding_source_id`, `release_date`, `amount`, `memo_reference`, `cycle_id`, `entered_by`, `status`.
+- [ ] Migration adds `uncommitted_balance numeric(18,2)` (nullable, ≥0) and `activity_line text` on `expenditure_entries`.
+- [ ] MDA form supports adding/editing Budget Release Entries within a cycle.
+- [ ] Public ID generated as `BR-<fiscal_year>-####`.
+- [ ] Insights distinguish "received funding" (Funding Entries) from "internal release" (Budget Release Entries).
+- [ ] Tests cover required fields, positive amount, memo reference, scoped uniqueness `(fiscal_year, mda_id, memo_reference)`, and cycle linkage.
+
+## Blocked by
+
+- Slice 4: Expenditure Entry Submit And Pending Edit Path
+- Slice 8: Approved Budget And AOP Activity Management
+- Slice 13: Monthly Submission Cycle Skeleton
+
+## Issue 15: Release Notes And Activity Progress Per Cycle
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Add the **Release Note** model (mandatory free-text for any programme line with zero release in a cycle) and the **Activity Progress** model (status per AOP Activity per cycle with mandatory reason when blocked).
+
+## Acceptance criteria
+
+- [ ] Migration adds `release_notes` keyed by `(cycle_id, programme_area_id)` with `note text not null`.
+- [ ] Migration adds `activity_progress` keyed by `(cycle_id, aop_activity_id)` with `status in ('completed','in_progress','not_started','blocked')` and `blocked_reason` required when `status = 'blocked'`.
+- [ ] Cycle UI lists programme areas with zero release for the month and requires a Release Note before submit.
+- [ ] Cycle UI lists AOP Activities assigned to the MDA for the fiscal year and lets the submitter set status + reason.
+- [ ] Cycle submission is blocked when a zero-release programme line has no Release Note.
+- [ ] Tests cover zero-release detection, missing Release Note blocking submit, blocked-status requiring reason, and AOP scope by MDA/fiscal year.
+
+## Blocked by
+
+- Slice 8: Approved Budget And AOP Activity Management
+- Slice 13: Monthly Submission Cycle Skeleton
+- Slice 14: Budget Release Entries And Expenditure Release-Reconciliation Fields
+
+## Issue 16: Submission Confirmation PDF And PHC Facility Cycle Entry
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Generate a server-side PDF confirmation when a cycle is submitted, archived per cycle and downloadable by submitter and reviewers. For MDAs with PHC responsibility (primarily PHCMB), surface facility-level expenditure entry inside the cycle with LGA-filtered facilities.
+
+## Acceptance criteria
+
+- [ ] Submit action triggers a route handler that renders a PDF summary (cycle totals + each bundled list) and stores it in private Supabase Storage keyed by cycle.
+- [ ] Submitter and reviewers can download the PDF from the cycle page.
+- [ ] PHC-responsible MDAs see a facility-level expenditure subtable inside the cycle, with LGA and facility selection.
+- [ ] Tests cover PDF generation success, storage path, signed download URL, and PHC-mode visibility scoped to the right MDA configuration.
+
+## Blocked by
+
+- Slice 13: Monthly Submission Cycle Skeleton
+- Slice 15: Release Notes And Activity Progress Per Cycle
+
+## Issue 17: SMoH System-Wide Dashboard And Compliance Matrix
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Build the SMoH-facing system-wide dashboard mirroring the workbook `Dashboard` sheet: sector totals, funding by source, expenditure by category, MDA-by-MDA comparison, quarterly breakdown, and programme-area rollups, all updating from live submissions. Add a Compliance Matrix (MDA × month), drill-down from sector → MDA → programme → LGA → facility, and admin annotations with follow-up actions.
+
+## Acceptance criteria
+
+- [ ] Reporting views aggregate funding, releases, expenditure, and AOP coverage at sector / MDA / programme / LGA / facility levels.
+- [ ] Compliance Matrix renders MDA × month with `not started | draft | submitted | late | accepted | returned`.
+- [ ] Drill-down navigation preserves filters between levels.
+- [ ] Quarterly breakdown is a first-class view, not an ad hoc filter.
+- [ ] `record_annotations` table stores annotation, assignee, due date, status with audit events.
+- [ ] Tests cover view totals against seeded fixtures, compliance state derivation, drill-down filter propagation, and annotation lifecycle.
+
+## Blocked by
+
+- Slice 5: Reviewer/Admin Entry Detail, Comments, And Status Workflow
+- Slice 10: MDA Dashboard And Admin Insights
+- Slice 13: Monthly Submission Cycle Skeleton
+
+## Issue 18: Fiscal Intelligence Rules Engine
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Implement a transparent, configurable rules engine that evaluates submissions and deadlines and emits `alerts` rows with an evidence payload. Cover the TOR's six functions: expenditure snapshot, variance flagging (default 20%), compliance alerts, lagging programme ranking, early warning signals (after ≥2 quarters), zero-release attribution.
+
+## Acceptance criteria
+
+- [ ] Migration adds `rules` (key, name, threshold, lookback, scope, enabled) and `alerts` (rule_key, scope, severity, evidence_json, created_at, resolved_at, resolved_by, follow_up_action_id).
+- [ ] Rule runner executes on cycle submit and on deadline tick; alert rows are persisted, not computed live.
+- [ ] Variance rule compares actual release vs approved budget per programme line using the configured threshold.
+- [ ] Compliance alerts list on-time, late, and missing MDAs per fiscal month.
+- [ ] Lagging programme rule ranks programmes × MDAs by execution rate and surfaces the bottom quartile.
+- [ ] Early warning rule activates only with ≥2 quarters of data and includes the historical basis in the evidence payload.
+- [ ] Zero-release attribution checks for Release Note presence and raises an unresolved-gap alert when missing.
+- [ ] Expenditure snapshot generates plain-language text per cycle and is stored alongside the cycle.
+- [ ] SMoH dashboard lists alerts and shows the evidence on click.
+- [ ] Tests cover threshold configuration, rule outputs against fixtures, ≥2-quarters gating, alert evidence presence, and resolution lifecycle.
+
+## Blocked by
+
+- Slice 8: Approved Budget And AOP Activity Management
+- Slice 13: Monthly Submission Cycle Skeleton
+- Slice 14: Budget Release Entries And Expenditure Release-Reconciliation Fields
+- Slice 15: Release Notes And Activity Progress Per Cycle
+- Slice 17: SMoH System-Wide Dashboard And Compliance Matrix
+
+## Issue 19: MoPB Portal And Monthly Aggregate Feed
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Add a `mopb_user` role and a dedicated MoPB portal that exposes only the monthly aggregate feed and supporting context. The feed compiles MDA submissions into a BIR administrative classification layout (Excel) and a machine-readable JSON/CSV. A Data Quality Flag Matrix shows per-MDA `complete | partial | absent` plus unresolved-gap counts.
+
+## Acceptance criteria
+
+- [ ] `profiles.role` accepts `mopb_user`; capability helpers and route guards updated.
+- [ ] Migration adds `mopb_aggregates` (fiscal_year, fiscal_month, generated_at, generated_by, excel_path, jsonl_path, dq_summary_json).
+- [ ] Scheduled monthly generation triggers after each deadline; manual regeneration available to admins.
+- [ ] Excel layout matches the BIR administrative classification (verified against `Budget 2026` sheet structure).
+- [ ] JSON/CSV parity is enforced and tested.
+- [ ] MoPB portal lists available aggregates with signed downloads and a DQ Flag Matrix table.
+- [ ] RLS blocks MoPB users from MDA-level write surfaces and entry tables.
+- [ ] Tests cover role isolation, aggregate composition, DQ matrix derivation, BIR layout, and JSON/CSV parity.
+
+## Blocked by
+
+- Slice 8: Approved Budget And AOP Activity Management
+- Slice 11: CSV, XLSX, And PDF Export Jobs
+- Slice 13: Monthly Submission Cycle Skeleton
+- Slice 14: Budget Release Entries And Expenditure Release-Reconciliation Fields
+- Slice 15: Release Notes And Activity Progress Per Cycle
+- Slice 18: Fiscal Intelligence Rules Engine
+
+## Issue 20: BIR Pre-Publication Validation Interface
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+SMoH-only interface to upload MoPB's draft BIR, compare it against the platform's monthly aggregate, and surface discrepancies for reconciliation before publication.
+
+## Acceptance criteria
+
+- [ ] Upload accepts MoPB BIR Excel/CSV.
+- [ ] Comparison runs per MDA × programme line and reports matches, mismatches (with delta), and missing rows on either side.
+- [ ] Reconciliation result is exportable (CSV/XLSX/PDF).
+- [ ] Annotations from the SMoH dashboard can be linked to mismatch rows.
+- [ ] Tests cover parsing, comparison correctness against fixtures, and edge cases (empty MDA, extra rows, mismatched fiscal month).
+
+## Blocked by
+
+- Slice 19: MoPB Portal And Monthly Aggregate Feed
+
+## Issue 21: Security And Operations Hardening (V1 Scope)
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Application-level security and operations work we can ship without government hosting. Infrastructure-level TOR items (WAF, off-site backups, OWASP scan, load test, OpenAPI publication, bilingual training materials) remain in the Deferred TOR Commitments register and are tracked separately.
+
+## Acceptance criteria
+
+- [ ] `audit_events` revoked from UPDATE/DELETE for every role at the Postgres level; tests prove an attempted update or delete fails.
+- [ ] Session inactivity timeout (default 30 minutes, configurable) signs the user out and clears tokens.
+- [ ] Concurrent-session controls record active sessions per user and let admins terminate other sessions.
+- [ ] CI enforces ≥80% statement coverage on application code; PRs fail below the threshold.
+- [ ] No Kano-specific value (MDA list, programme codes, facility list, user accounts, budget figures) is hardcoded in application code; all live in config or database.
+- [ ] Dependency register lists every third-party library, version, and licence; GPL or proprietary dependencies are flagged.
+
+## Blocked by
+
+- Slice 5: Reviewer/Admin Entry Detail, Comments, And Status Workflow
+- Slice 6: Data Quality Warnings And Workflow Notifications
+
+## Issue 22: Hosting Strategy ADR And Deferred TOR Commitments Register
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Documentation-only slice that captures decisions and outstanding TOR obligations so v1 development does not foreclose handover. Producing this slice early protects every later technical decision.
+
+## Acceptance criteria
+
+- [ ] `docs/adr/0003-hosting-strategy.md` records: v1 on managed Supabase; TOR-required `*.kano.gov.ng` deployment deferred; chosen migration approach (self-hosted Supabase on government infrastructure vs Nigeria-based government-compliant cloud) and its trigger date.
+- [ ] `docs/handover/deferred-tor-commitments.md` lists each deferred item (hosting, WAF, off-site backups, OWASP scan, load test, OpenAPI publication, bilingual training, video walkthroughs, reference-data verification gate, PWA upgrade, 90-day SLA) with owner, target phase, and acceptance standard.
+- [ ] `docs/prd.md` already references this register; cross-link the ADR.
+
+## Blocked by
+
+None - can start immediately and should be picked up alongside Slice 13.
+
+## Issue 23: PWA Offline-First Upgrade
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [ ] Complete
+
+## What to build
+
+Upgrade the v1 "offline-tolerant draft" posture to a full PWA offline-first build: service worker app-shell caching, IndexedDB mirror of reference data and the current cycle, a sync queue processed in order on reconnection, and conflict surfacing instead of silent overwrite. This slice is intentionally scheduled after the cycle work is stable.
+
+## Acceptance criteria
+
+- [ ] Service worker registers and serves the app shell offline.
+- [ ] Reference data and the active cycle are mirrored in IndexedDB.
+- [ ] Cycle drafts captured offline persist and sync on reconnection.
+- [ ] Sync queue processes operations in the order they were captured.
+- [ ] Conflict detection compares server `updated_at` vs local snapshot; conflicts surface to the user with a chosen-version action, not silent overwrite.
+- [ ] Tests cover offline draft capture, queue ordering, conflict detection, and reconnect resync.
+
+## Blocked by
+
+- Slice 13: Monthly Submission Cycle Skeleton
+- Slice 14: Budget Release Entries And Expenditure Release-Reconciliation Fields
+- Slice 15: Release Notes And Activity Progress Per Cycle
+- Slice 16: Submission Confirmation PDF And PHC Facility Cycle Entry

@@ -1,5 +1,5 @@
 import { PlusIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { coreWorkflowItems } from "@/components/layout/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -21,7 +21,7 @@ export function MdaDashboardRoute() {
     <div className="flex flex-col gap-5">
       <PageHeader
         actions={
-          <Link className={buttonVariants()} to="/funding">
+          <Link className={buttonVariants()} href="/funding">
             <PlusIcon aria-hidden="true" data-icon="inline-start" />
             New entry
           </Link>

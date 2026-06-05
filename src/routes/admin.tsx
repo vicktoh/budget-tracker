@@ -45,14 +45,14 @@ export function AdminRoute() {
           <CardHeader>
             <CardTitle>Import and export conventions</CardTitle>
             <CardDescription>
-              Privileged workflows use serverless boundaries and never expose service-role secrets in the browser.
+              Privileged workflows use Next.js route handlers and never expose service-role secrets in the browser.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 text-sm text-muted-foreground">
               <p>Imports validate row-level errors before writes.</p>
               <p>Exports preserve filters and create downloadable job metadata.</p>
-              <p>Email delivery and privileged writes run from server-only functions.</p>
+              <p>Email delivery and privileged writes run from server-only route handlers.</p>
             </div>
           </CardContent>
         </Card>

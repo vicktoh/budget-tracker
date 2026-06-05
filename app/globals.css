@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Semantic theme tokens for the Kano Health Finance Tracker.
+ * Source of truth: DESIGN.md (calm civic operations dashboard, light-first).
+ * HSL values are aligned to the named hex palette in DESIGN.md §2.
+ */
+@layer base {
+  :root {
+    /* Civic Canvas #F8FAF7 */
+    --background: 100 21% 97%;
+    /* Primary Ink #1F2933 */
+    --foreground: 210 25% 16%;
+    /* Clean Ledger Surface #FFFFFF */
+    --card: 0 0% 100%;
+    --card-foreground: 210 25% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 25% 16%;
+    /* Kano Health Green #167A4A */
+    --primary: 151 70% 28%;
+    --primary-foreground: 0 0% 100%;
+    /* Light Clay Wash #F3E9DC over Grounded Earth Brown #8A5A2B */
+    --secondary: 35 57% 91%;
+    --secondary-foreground: 29 53% 36%;
+    /* Subtle muted surface used for table headers, badges. */
+    --muted: 132 13% 94%;
+    /* Muted Administrative Slate #64706A */
+    --muted-foreground: 143 6% 42%;
+    /* Soft Health Mint #E7F4EC over Deep Governance Green #0F5132 */
+    --accent: 137 36% 93%;
+    --accent-foreground: 149 69% 19%;
+    /* Rejection Red #B42318 */
+    --destructive: 4 78% 40%;
+    --destructive-foreground: 0 0% 100%;
+    /* Soft Boundary Mist #D9E2DB */
+    --border: 132 14% 87%;
+    --input: 132 14% 87%;
+    --ring: 151 70% 28%;
+    --radius: 0.5rem;
+    /* Chart palette - green, teal, brown, amber, slate. Restrained, not rainbow. */
+    --chart-1: 151 70% 28%;
+    --chart-2: 176 77% 26%;
+    --chart-3: 29 53% 36%;
+    --chart-4: 36 71% 42%;
+    --chart-5: 143 6% 42%;
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 210 25% 16%;
+    --sidebar-border: 132 14% 87%;
+    --sidebar-accent: 137 36% 93%;
+    --sidebar-accent-foreground: 151 70% 28%;
+    /* Status tokens — keep conservative, semantic. */
+    /* pending: Review Amber #B7791F on Warning Sand #FFF7E6 */
+    --status-pending: 36 71% 42%;
+    --status-pending-bg: 40 100% 95%;
+    /* approved: Kano Health Green on Soft Health Mint */
+    --status-approved: 151 70% 28%;
+    --status-approved-bg: 137 36% 93%;
+    /* processed: Processed Teal #0F766E on Soft Processed Aqua #E6F4F1 */
+    --status-processed: 176 77% 26%;
+    --status-processed-bg: 168 38% 93%;
+    /* rejected: Rejection Red on Soft Rejection Rose #FDECEC */
+    --status-rejected: 4 78% 40%;
+    --status-rejected-bg: 0 86% 96%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply min-h-screen bg-background text-foreground antialiased;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1,
+      "tnum" 1;
+  }
+
+  /* Tabular figures for finance values keep amounts aligned in tables. */
+  .tabular-nums,
+  td.amount,
+  [data-amount] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .focus-ring {
+    @apply outline-none ring-offset-2 ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring;
+  }
+}

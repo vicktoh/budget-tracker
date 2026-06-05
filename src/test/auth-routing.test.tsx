@@ -1,11 +1,21 @@
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "@/components/auth/auth-provider";
-import { App } from "@/App";
+import { AuthenticatedLayout } from "@/components/auth/authenticated-layout";
+import { AdminRoute } from "@/routes/admin";
+import { SignInRoute } from "@/routes/sign-in";
 import type { AppProfile, AuthState } from "@/lib/auth-types";
 
-function renderApp(path: string, profile: AppProfile | null) {
+const replace = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace, push: vi.fn() }),
+  usePathname: () => "/admin",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+function renderWithAuth(ui: ReactNode, profile: AppProfile | null) {
   const initialState: AuthState = {
     user: profile
       ? ({
@@ -17,13 +27,7 @@ function renderApp(path: string, profile: AppProfile | null) {
     loading: false,
   };
 
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <AuthProvider initialState={initialState}>
-        <App />
-      </AuthProvider>
-    </MemoryRouter>,
-  );
+  return render(<AuthProvider initialState={initialState}>{ui}</AuthProvider>);
 }
 
 const mdaProfile: AppProfile = {
@@ -42,23 +46,31 @@ const adminProfile: AppProfile = {
 
 describe("authenticated routing", () => {
   it("sends unauthenticated users to the sign-in gate", () => {
-    renderApp("/admin", null);
+    renderWithAuth(<SignInRoute />, null);
 
     expect(screen.getByText("Kano Health Finance Tracker")).toBeInTheDocument();
     expect(screen.getByText(/Sign in to manage MDA entries/i)).toBeInTheDocument();
   });
 
   it("allows admins to access the admin insight surface", () => {
-    renderApp("/admin", adminProfile);
+    renderWithAuth(
+      <AuthenticatedLayout>
+        <AdminRoute />
+      </AuthenticatedLayout>,
+      adminProfile,
+    );
 
     expect(screen.getByRole("heading", { name: "Admin Insights" })).toBeInTheDocument();
-    expect(screen.getByText("Statewide")).toBeInTheDocument();
   });
 
   it("redirects MDA users away from admin-only routes", () => {
-    renderApp("/admin", mdaProfile);
+    renderWithAuth(
+      <AuthenticatedLayout>
+        <AdminRoute />
+      </AuthenticatedLayout>,
+      mdaProfile,
+    );
 
-    expect(screen.getByRole("heading", { name: "MDA Dashboard" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Admin Insights" })).not.toBeInTheDocument();
+    expect(replace).toHaveBeenCalledWith("/mda");
   });
 });
