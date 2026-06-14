@@ -11,13 +11,22 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isAdmin, submittableMdaIds } from "@/lib/access";
+import { ReviewedEditBanner } from "@/components/review/reviewed-edit-banner";
+import {
+  assignedFacilityIds,
+  canReviewMda,
+  facilityUserMdaId,
+  isAdmin,
+  isFacilityUser,
+  submittableMdaIds,
+} from "@/lib/access";
 import {
   getExpenditureEntry,
   insertExpenditureEntry,
   updatePendingExpenditureEntry,
   type ExpenditureEntryRow,
 } from "@/lib/db/expenditure-entries";
+import { updateReviewedExpenditureEntry } from "@/lib/db/review";
 import {
   listExpenditureCategories,
   listExpenditureItems,
@@ -80,10 +89,16 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
   const [serverError, setServerError] = React.useState<string | null>(null);
 
   const admin = isAdmin(profile);
+  const facilityUser = isFacilityUser(profile);
   const submittableIds = React.useMemo(
     () => submittableMdaIds(profile),
     [profile],
   );
+  const assignedFacilityIdSet = React.useMemo(
+    () => assignedFacilityIds(profile),
+    [profile],
+  );
+  const facilityMdaId = facilityUserMdaId(profile);
 
   React.useEffect(() => {
     if (!profile) return;
@@ -186,7 +201,20 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
     return reference.mdas.filter((mda) => allowed.has(mda.id));
   }, [admin, reference, submittableIds]);
 
-  const editable =
+  // Facility users only ever see (and submit against) their assigned facilities.
+  const formFacilities = React.useMemo(() => {
+    if (!reference) return [];
+    if (!facilityUser) return reference.facilities;
+    const allowed = new Set(assignedFacilityIdSet);
+    return reference.facilities.filter((f) => allowed.has(f.id));
+  }, [reference, facilityUser, assignedFacilityIdSet]);
+
+  const facilityScope =
+    facilityUser && facilityMdaId ? { mdaId: facilityMdaId } : undefined;
+  const facilityUserWithoutAssignments =
+    facilityUser && assignedFacilityIdSet.length === 0;
+
+  const pendingEditable =
     mode.kind === "new" ||
     (entry
       ? canEditExpenditureEntry(
@@ -203,15 +231,40 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
         )
       : true);
 
+  // Reviewer/admin edit path: non-pending, non-processed entries that the
+  // current user can review.
+  const reviewedEditMode =
+    mode.kind === "edit" &&
+    entry !== null &&
+    (entry.status === "approved" || entry.status === "rejected") &&
+    (admin || canReviewMda(profile, entry.mda_id));
+
+  const editable = pendingEditable || reviewedEditMode;
+  const [reviewReason, setReviewReason] = React.useState("");
+
   async function handleSubmit(values: ValidatedExpenditureEntry) {
     if (!supabase || !user) return;
     setSubmitting(true);
     setServerErrors({});
     setServerError(null);
     try {
-      let saved: ExpenditureEntryRow;
-      if (mode.kind === "edit") {
-        saved = await updatePendingExpenditureEntry(
+      if (mode.kind === "edit" && reviewedEditMode) {
+        const trimmed = reviewReason.trim();
+        if (trimmed.length === 0) {
+          setServerError("An audit reason is required for reviewed-entry edits.");
+          setSubmitting(false);
+          return;
+        }
+        await updateReviewedExpenditureEntry(supabase, {
+          entryId: mode.entryId,
+          reason: trimmed,
+          values,
+        });
+        toast.success(
+          `Updated reviewed expenditure entry ${entry?.public_id ?? mode.entryId.slice(0, 8)}.`,
+        );
+      } else if (mode.kind === "edit") {
+        const saved = await updatePendingExpenditureEntry(
           supabase,
           mode.entryId,
           values,
@@ -220,7 +273,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
           `Updated expenditure entry ${saved.public_id ?? saved.id.slice(0, 8)}.`,
         );
       } else {
-        saved = await insertExpenditureEntry(supabase, values, user.id);
+        const saved = await insertExpenditureEntry(supabase, values, user.id);
         toast.success(
           `Submitted expenditure entry ${saved.public_id ?? saved.id.slice(0, 8)}.`,
           {
@@ -344,7 +397,24 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
               <AlertDescription>
                 {entry?.status === "pending"
                   ? "Only the original submitter on an assigned MDA can edit a pending expenditure entry."
-                  : `This entry is ${entry?.status}. Reviewed entries require an audit reason to change — coming in the reviewer slice.`}
+                  : entry?.status === "processed"
+                    ? "Processed entries are terminal and cannot be edited."
+                    : `This entry is ${entry?.status}. Only reviewers or admins on this MDA can edit it.`}
+              </AlertDescription>
+            </Alert>
+            <div className="mt-4 flex justify-end">
+              <Button variant="outline" onClick={handleCancel}>
+                Back to entries
+              </Button>
+            </div>
+          </div>
+        ) : facilityUserWithoutAssignments ? (
+          <div className="px-6 py-10 md:px-10">
+            <Alert>
+              <AlertTitle>No facilities assigned yet</AlertTitle>
+              <AlertDescription>
+                Ask an admin to assign you to a PHC facility before recording
+                expenditure entries.
               </AlertDescription>
             </Alert>
             <div className="mt-4 flex justify-end">
@@ -369,23 +439,39 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
             </div>
           </div>
         ) : reference ? (
-          <ExpenditureEntryForm
-            mdas={visibleMdas}
-            programmeAreas={reference.programmeAreas}
-            expenditureCategories={reference.expenditureCategories}
-            expenditureItems={reference.expenditureItems}
-            paymentMethods={reference.paymentMethods}
-            lgas={reference.lgas}
-            facilities={reference.facilities}
-            aopActivities={reference.aopActivities}
-            initial={initial}
-            serverErrors={serverErrors}
-            serverError={serverError}
-            submitting={submitting}
-            submitLabel={isEdit ? "Save changes" : "Submit expenditure entry"}
-            onCancel={handleCancel}
-            onSubmit={handleSubmit}
-          />
+          <>
+            {reviewedEditMode && entry ? (
+              <ReviewedEditBanner
+                status={entry.status as "approved" | "rejected"}
+                reason={reviewReason}
+                onReasonChange={setReviewReason}
+              />
+            ) : null}
+            <ExpenditureEntryForm
+              mdas={visibleMdas}
+              programmeAreas={reference.programmeAreas}
+              expenditureCategories={reference.expenditureCategories}
+              expenditureItems={reference.expenditureItems}
+              paymentMethods={reference.paymentMethods}
+              lgas={reference.lgas}
+              facilities={formFacilities}
+              aopActivities={reference.aopActivities}
+              initial={initial}
+              serverErrors={serverErrors}
+              serverError={serverError}
+              submitting={submitting}
+              submitLabel={
+                reviewedEditMode
+                  ? "Save with audit reason"
+                  : isEdit
+                    ? "Save changes"
+                    : "Submit expenditure entry"
+              }
+              facilityScope={facilityScope}
+              onCancel={handleCancel}
+              onSubmit={handleSubmit}
+            />
+          </>
         ) : null}
       </div>
     </div>

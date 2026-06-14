@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Kano Health Finance Tracker",
+  title: "Kano Health Financing Flow Dashboard",
   description:
     "Authenticated health finance operations for MDA entries, review workflows, and admin insights.",
 };

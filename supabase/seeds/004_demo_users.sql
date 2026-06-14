@@ -12,9 +12,16 @@ declare
   admin_id uuid := '00000000-0000-0000-0000-000000000001';
   mda_user_id uuid := '00000000-0000-0000-0000-000000000002';
   reviewer_id uuid := '00000000-0000-0000-0000-000000000003';
+  facility_user_id uuid := '00000000-0000-0000-0000-000000000004';
   mda_hq_id uuid;
+  demo_facility_id uuid;
 begin
   select id into mda_hq_id from public.mdas where name = 'Ministry of Health (HQ)' limit 1;
+  select id into demo_facility_id
+    from public.facilities
+    where lower(facility_type) = 'phc' and active
+    order by name
+    limit 1;
 
   insert into auth.users (
     instance_id,
@@ -84,6 +91,23 @@ begin
       '',
       '',
       ''
+    ),
+    (
+      '00000000-0000-0000-0000-000000000000',
+      facility_user_id,
+      'authenticated',
+      'authenticated',
+      'facility@example.gov.ng',
+      demo_password,
+      now(),
+      '{"provider":"email","providers":["email"]}',
+      '{"full_name":"Facility Officer"}',
+      now(),
+      now(),
+      '',
+      '',
+      '',
+      ''
     )
   on conflict (id) do nothing;
 
@@ -127,6 +151,16 @@ begin
       now(),
       now(),
       now()
+    ),
+    (
+      facility_user_id,
+      facility_user_id,
+      format('{"sub":"%s","email":"facility@example.gov.ng"}', facility_user_id)::jsonb,
+      'email',
+      facility_user_id::text,
+      now(),
+      now(),
+      now()
     )
   on conflict (provider, provider_id) do nothing;
 
@@ -134,7 +168,8 @@ begin
   values
     (admin_id, 'Admin User', 'admin'),
     (mda_user_id, 'MDA Submitter', 'mda_user'),
-    (reviewer_id, 'Finance Reviewer', 'reviewer')
+    (reviewer_id, 'Finance Reviewer', 'reviewer'),
+    (facility_user_id, 'Facility Officer', 'facility_user')
   on conflict (id) do update
   set full_name = excluded.full_name,
       role = excluded.role,
@@ -146,6 +181,12 @@ begin
       (mda_user_id, mda_hq_id, 'submitter'),
       (reviewer_id, mda_hq_id, 'reviewer')
     on conflict (user_id, mda_id, membership_role) do nothing;
+  end if;
+
+  if mda_hq_id is not null and demo_facility_id is not null then
+    insert into public.user_facility_assignments (user_id, facility_id, mda_id)
+    values (facility_user_id, demo_facility_id, mda_hq_id)
+    on conflict (user_id, facility_id) do nothing;
   end if;
 end $$;
 

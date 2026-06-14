@@ -1,4 +1,9 @@
-import type { AppProfile, AppRole, MdaMembership } from "@/lib/auth-types";
+import type {
+  AppProfile,
+  AppRole,
+  FacilityAssignment,
+  MdaMembership,
+} from "@/lib/auth-types";
 
 export type AppRoute =
   | "/mda"
@@ -6,6 +11,13 @@ export type AppRoute =
   | "/expenditure"
   | "/review"
   | "/admin"
+  | "/admin/reports"
+  | "/admin/users"
+  | "/admin/reference-data"
+  | "/admin/reference-requests"
+  | "/admin/budgets"
+  | "/admin/aop-activities"
+  | "/reference-requests"
   | "/imports"
   | "/exports"
   | "/settings";
@@ -13,17 +25,25 @@ export type AppRoute =
 const routeRoles: Record<AppRoute, AppRole[]> = {
   "/mda": ["mda_user", "reviewer", "admin"],
   "/funding": ["mda_user", "admin"],
-  "/expenditure": ["mda_user", "admin"],
+  "/expenditure": ["mda_user", "admin", "facility_user"],
   "/review": ["reviewer", "admin"],
   "/admin": ["admin"],
+  "/admin/reports": ["admin"],
+  "/admin/users": ["admin"],
+  "/admin/reference-data": ["admin"],
+  "/admin/reference-requests": ["admin"],
+  "/admin/budgets": ["admin"],
+  "/admin/aop-activities": ["admin"],
+  "/reference-requests": ["mda_user", "reviewer", "admin", "facility_user"],
   "/imports": ["admin"],
   "/exports": ["reviewer", "admin"],
-  "/settings": ["mda_user", "reviewer", "admin"],
+  "/settings": ["mda_user", "reviewer", "admin", "facility_user"],
 };
 
 export function getDefaultPathForProfile(profile: Pick<AppProfile, "role">) {
   if (profile.role === "admin") return "/admin";
   if (profile.role === "reviewer") return "/review";
+  if (profile.role === "facility_user") return "/expenditure";
   return "/mda";
 }
 
@@ -40,6 +60,7 @@ export function getRoleLabel(role: AppRole) {
     admin: "Admin",
     reviewer: "Reviewer",
     mda_user: "MDA User",
+    facility_user: "Facility User",
   };
 
   return labels[role];
@@ -53,7 +74,10 @@ export function getRoleLabel(role: AppRole) {
 /* surface forbidden actions without waiting for RLS to reject them.          */
 /* -------------------------------------------------------------------------- */
 
-export type ProfileForCapability = Pick<AppProfile, "role" | "memberships"> | null;
+export type ProfileForCapability = Pick<
+  AppProfile,
+  "role" | "memberships" | "facilityAssignments"
+> | null;
 
 export function isAdmin(profile: ProfileForCapability): boolean {
   return profile?.role === "admin";
@@ -67,12 +91,37 @@ export function isMdaUser(profile: ProfileForCapability): boolean {
   return profile?.role === "mda_user";
 }
 
+export function isFacilityUser(profile: ProfileForCapability): boolean {
+  return profile?.role === "facility_user";
+}
+
 function membershipsForMda(
   profile: ProfileForCapability,
   mdaId: string,
 ): MdaMembership[] {
   if (!profile) return [];
   return profile.memberships.filter((membership) => membership.mda_id === mdaId);
+}
+
+/** Facility assignments for a facility user (empty for every other role). */
+export function assignedFacilities(
+  profile: ProfileForCapability,
+): FacilityAssignment[] {
+  if (!profile || profile.role !== "facility_user") return [];
+  return profile.facilityAssignments;
+}
+
+/** The single MDA a facility user reports under, or null. */
+export function facilityUserMdaId(
+  profile: ProfileForCapability,
+): string | null {
+  const assignments = assignedFacilities(profile);
+  return assignments[0]?.mda_id ?? null;
+}
+
+/** Facility IDs a facility user may submit/view expenditure for. */
+export function assignedFacilityIds(profile: ProfileForCapability): string[] {
+  return assignedFacilities(profile).map((a) => a.facility_id);
 }
 
 /** True for admins or for users with a `submitter` membership on the MDA. */
@@ -82,6 +131,7 @@ export function canSubmitForMda(
 ): boolean {
   if (!profile) return false;
   if (isAdmin(profile)) return true;
+  if (isFacilityUser(profile)) return facilityUserMdaId(profile) === mdaId;
   return membershipsForMda(profile, mdaId).some(
     (membership) => membership.membership_role === "submitter",
   );
@@ -113,6 +163,10 @@ export function canViewMda(
 export function submittableMdaIds(profile: ProfileForCapability): string[] {
   if (!profile) return [];
   if (isAdmin(profile)) return [];
+  if (isFacilityUser(profile)) {
+    const mdaId = facilityUserMdaId(profile);
+    return mdaId ? [mdaId] : [];
+  }
   const ids = new Set<string>();
   for (const membership of profile.memberships) {
     if (membership.membership_role === "submitter") {
@@ -139,6 +193,10 @@ export function reviewableMdaIds(profile: ProfileForCapability): string[] {
 export function viewableMdaIds(profile: ProfileForCapability): string[] {
   if (!profile) return [];
   if (isAdmin(profile)) return [];
+  if (isFacilityUser(profile)) {
+    const mdaId = facilityUserMdaId(profile);
+    return mdaId ? [mdaId] : [];
+  }
   const ids = new Set<string>();
   for (const membership of profile.memberships) {
     ids.add(membership.mda_id);

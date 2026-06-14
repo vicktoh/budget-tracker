@@ -45,6 +45,9 @@ type WriteBuilder = {
 export type ListExpenditureEntriesOptions = {
   mdaIds?: string[];
   status?: Tables<"expenditure_entries">["status"];
+  fiscalYear?: number;
+  dateFrom?: string;
+  dateTo?: string;
   limit?: number;
 };
 
@@ -62,6 +65,15 @@ export async function listExpenditureEntries(
   }
   if (options.status) {
     query = query.eq("status", options.status);
+  }
+  if (options.fiscalYear) {
+    query = query.eq("fiscal_year", options.fiscalYear);
+  }
+  if (options.dateFrom) {
+    query = query.gte("transaction_date", options.dateFrom);
+  }
+  if (options.dateTo) {
+    query = query.lte("transaction_date", options.dateTo);
   }
   if (options.limit) {
     query = query.limit(options.limit);

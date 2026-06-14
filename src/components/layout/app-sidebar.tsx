@@ -56,16 +56,16 @@ export function AppSidebar({
             "focus-ring flex min-w-0 items-center gap-2 rounded-md px-1 py-1",
             collapsed && "justify-center",
           )}
-          aria-label="Kano Health Finance Tracker home"
+          aria-label="Kano Health Financing Flow Dashboard home"
         >
           <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <ActivityIcon aria-hidden="true" className="size-4" />
           </span>
           {!collapsed ? (
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-[13px] font-bold">Kano Health</span>
+              <span className="truncate text-[13px] font-bold">Kano Health Financing</span>
               <span className="truncate text-[11px] text-muted-foreground">
-                Finance Tracker
+                Flow Dashboard
               </span>
             </span>
           ) : null}

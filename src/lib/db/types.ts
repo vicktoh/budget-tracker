@@ -10,7 +10,7 @@
  * connected to the typegen tool.
  */
 
-export type AppRoleSlug = "admin" | "reviewer" | "mda_user";
+export type AppRoleSlug = "admin" | "reviewer" | "mda_user" | "facility_user";
 export type MembershipRoleSlug = "submitter" | "reviewer";
 export type EntryStatusSlug = "pending" | "approved" | "processed" | "rejected";
 export type EntryType = "funding_entry" | "expenditure_entry";
@@ -75,6 +75,28 @@ export type Database = {
           user_id: string;
           mda_id: string;
           membership_role: MembershipRoleSlug;
+        }>;
+      };
+      user_facility_assignments: {
+        Row: {
+          id: string;
+          user_id: string;
+          facility_id: string;
+          mda_id: string;
+          created_at: ISOTimestamp;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          facility_id: string;
+          mda_id: string;
+          created_at?: ISOTimestamp;
+        };
+        Update: Partial<{
+          id: string;
+          user_id: string;
+          facility_id: string;
+          mda_id: string;
         }>;
       };
       programme_areas: ReferenceTable;
@@ -620,7 +642,59 @@ export type Database = {
         };
       };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      review_entry: {
+        Args: {
+          p_entry_type: EntryType;
+          p_entry_id: string;
+          p_action: "approve" | "reject" | "process";
+          p_reason?: string | null;
+          p_comment?: string | null;
+        };
+        Returns: void;
+      };
+      resubmit_entry: {
+        Args: {
+          p_entry_type: EntryType;
+          p_entry_id: string;
+        };
+        Returns: void;
+      };
+      update_reviewed_funding_entry: {
+        Args: {
+          p_id: string;
+          p_reason: string;
+          p_transaction_date: ISODate;
+          p_mda_id: string;
+          p_programme_area_id: string;
+          p_funding_source_id: string;
+          p_amount: Numeric;
+          p_reference_no: string;
+          p_remarks: string | null;
+        };
+        Returns: void;
+      };
+      update_reviewed_expenditure_entry: {
+        Args: {
+          p_id: string;
+          p_reason: string;
+          p_transaction_date: ISODate;
+          p_mda_id: string;
+          p_programme_area_id: string;
+          p_expenditure_category_id: string;
+          p_expenditure_item_id: string | null;
+          p_aop_activity_id: string | null;
+          p_is_phc: boolean;
+          p_lga_id: string | null;
+          p_facility_id: string | null;
+          p_amount: Numeric;
+          p_voucher_ref_no: string;
+          p_payment_method_id: string;
+          p_remarks: string | null;
+        };
+        Returns: void;
+      };
+    };
     Enums: Record<string, never>;
   };
 };

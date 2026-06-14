@@ -57,6 +57,7 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
               session.user.email?.split("@")[0] ?? "Kano finance user",
             role: "mda_user",
             memberships: [],
+            facilityAssignments: [],
           },
           loading: false,
         });
@@ -104,6 +105,7 @@ async function loadProfile(user: User): Promise<AppProfile> {
       full_name: user.email?.split("@")[0] ?? "Kano finance user",
       role: "mda_user",
       memberships: [],
+      facilityAssignments: [],
     };
   }
 

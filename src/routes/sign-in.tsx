@@ -56,7 +56,7 @@ export function SignInRoute() {
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Kano Health Finance Tracker</CardTitle>
+          <CardTitle>Kano Health Financing Flow Dashboard</CardTitle>
           <CardDescription>
             Sign in to manage MDA entries, review queues, reference data, and exports.
           </CardDescription>

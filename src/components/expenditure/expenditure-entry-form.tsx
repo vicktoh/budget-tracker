@@ -6,6 +6,7 @@ import {
   HashIcon,
   HospitalIcon,
   LandmarkIcon,
+  LockIcon,
   ReceiptTextIcon,
   SaveIcon,
   StickyNoteIcon,
@@ -54,6 +55,17 @@ type AopActivityLite = {
   fiscal_year: number;
 };
 
+/**
+ * When set, the form runs in facility-user mode: PHC is forced on and the MDA,
+ * LGA, and Facility are locked to the user's assignment. `facilities` should
+ * already be narrowed to the user's assigned facilities. A single facility is
+ * fully locked; multiple facilities present a constrained picker. The server
+ * (RLS + trigger) is the real authority — these locks are just the matching UI.
+ */
+export type ExpenditureFacilityScope = {
+  mdaId: string;
+};
+
 export type ExpenditureEntryFormProps = {
   mdas: Pick<Tables<"mdas">, "id" | "name" | "abbreviation">[];
   programmeAreas: ReferenceLite[];
@@ -68,6 +80,7 @@ export type ExpenditureEntryFormProps = {
   serverError?: string | null;
   submitting?: boolean;
   submitLabel?: string;
+  facilityScope?: ExpenditureFacilityScope;
   onCancel?: () => void;
   onSubmit: (values: ValidatedExpenditureEntry) => void;
 };
@@ -86,13 +99,24 @@ export function ExpenditureEntryForm({
   serverError,
   submitting,
   submitLabel = "Submit expenditure entry",
+  facilityScope,
   onCancel,
   onSubmit,
 }: ExpenditureEntryFormProps) {
-  const [draft, setDraft] = React.useState<ExpenditureEntryDraft>(() => ({
-    ...emptyExpenditureDraft(),
-    ...initial,
-  }));
+  const facilityLocked = Boolean(facilityScope);
+  const [draft, setDraft] = React.useState<ExpenditureEntryDraft>(() => {
+    const base = { ...emptyExpenditureDraft(), ...initial };
+    if (facilityScope) {
+      base.is_phc = true;
+      base.mda_id = facilityScope.mdaId;
+      // With a single assigned facility, lock both facility and its LGA up front.
+      if (facilities.length === 1 && !base.facility_id) {
+        base.facility_id = facilities[0].id;
+        base.lga_id = facilities[0].lga_id;
+      }
+    }
+    return base;
+  });
   const [errors, setErrors] = React.useState<ExpenditureEntryFieldErrors>({});
   const [touched, setTouched] = React.useState<
     Partial<Record<keyof ExpenditureEntryDraft, boolean>>
@@ -189,6 +213,15 @@ export function ExpenditureEntryForm({
         if (facility && facility.lga_id !== value) {
           next.facility_id = "";
         }
+      }
+      // Facility-user mode: choosing a facility auto-derives its LGA, and PHC
+      // can never be turned off.
+      if (facilityLocked && key === "facility_id") {
+        const facility = facilities.find((f) => f.id === value);
+        next.lga_id = facility?.lga_id ?? "";
+      }
+      if (facilityLocked && key === "is_phc") {
+        next.is_phc = true;
       }
       if (key === "expenditure_category_id") {
         const item = expenditureItems.find(
@@ -358,29 +391,38 @@ export function ExpenditureEntryForm({
 
         <Field>
           <FieldLabel htmlFor="mda">MDA</FieldLabel>
-          <Combobox
-            id="mda"
-            options={mdaOptions}
-            placeholder={
-              mdaOptions.length === 0
-                ? "No assigned MDAs available"
-                : "Select MDA"
-            }
-            value={draft.mda_id || undefined}
-            onValueChange={(value) => {
-              markTouched("mda_id");
-              setField("mda_id", value);
-            }}
-            disabled={mdaOptions.length === 0}
-          />
+          {facilityLocked ? (
+            <LockedValue
+              label={
+                mdas.find((m) => m.id === draft.mda_id)?.name ?? "Assigned MDA"
+              }
+            />
+          ) : (
+            <Combobox
+              id="mda"
+              options={mdaOptions}
+              placeholder={
+                mdaOptions.length === 0
+                  ? "No assigned MDAs available"
+                  : "Select MDA"
+              }
+              value={draft.mda_id || undefined}
+              onValueChange={(value) => {
+                markTouched("mda_id");
+                setField("mda_id", value);
+              }}
+              disabled={mdaOptions.length === 0}
+            />
+          )}
           {errors.mda_id ? (
             <FieldDescription className="text-status-rejected">
               {errors.mda_id}
             </FieldDescription>
           ) : (
             <FieldDescription>
-              Submitters can only pick MDAs they hold a submitter membership for.
-              Admins see every MDA.
+              {facilityLocked
+                ? "Locked to the MDA your facility reports under."
+                : "Submitters can only pick MDAs they hold a submitter membership for. Admins see every MDA."}
             </FieldDescription>
           )}
         </Field>
@@ -526,8 +568,67 @@ export function ExpenditureEntryForm({
         eyebrow="03"
         icon={HospitalIcon}
         title="PHC location"
-        description="Toggle PHC on for primary health care expenditure. PHC entries require both an LGA and a PHC-classified facility — non-PHC entries clear them automatically."
+        description={
+          facilityLocked
+            ? "This entry is locked to your assigned facility. The LGA is derived from the facility and cannot be changed."
+            : "Toggle PHC on for primary health care expenditure. PHC entries require both an LGA and a PHC-classified facility — non-PHC entries clear them automatically."
+        }
       >
+        {facilityLocked ? (
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-2.5 rounded-md border border-status-approved/30 bg-status-approved-bg/60 px-4 py-3 text-sm text-status-approved">
+              <LockIcon aria-hidden="true" className="size-4 shrink-0" />
+              <span className="font-medium">
+                PHC expenditure — locked on for facility users.
+              </span>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="facility">PHC Facility</FieldLabel>
+                {facilities.length === 1 ? (
+                  <LockedValue
+                    label={facilities[0]?.name ?? "Assigned facility"}
+                  />
+                ) : (
+                  <Combobox
+                    id="facility"
+                    options={facilityOptions}
+                    placeholder="Select your facility"
+                    value={draft.facility_id || undefined}
+                    onValueChange={(value) => {
+                      markTouched("facility_id");
+                      setField("facility_id", value);
+                    }}
+                  />
+                )}
+                {errors.facility_id ? (
+                  <FieldDescription className="text-status-rejected">
+                    {errors.facility_id}
+                  </FieldDescription>
+                ) : (
+                  <FieldDescription>
+                    {facilities.length === 1
+                      ? "Locked to your assigned facility."
+                      : "Choose from the facilities assigned to you."}
+                  </FieldDescription>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel>LGA</FieldLabel>
+                <LockedValue
+                  label={
+                    lgas.find((l) => l.id === draft.lga_id)?.name ??
+                    "Derived from facility"
+                  }
+                />
+                <FieldDescription>
+                  Derived from the selected facility. Read-only.
+                </FieldDescription>
+              </Field>
+            </div>
+          </div>
+        ) : (
+        <>
         <div className="flex items-start justify-between gap-6 rounded-md border bg-muted/30 px-4 py-3">
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium text-foreground">
@@ -603,6 +704,8 @@ export function ExpenditureEntryForm({
           <p className="text-xs text-muted-foreground">
             Non-PHC entry — LGA and facility are not required.
           </p>
+        )}
+        </>
         )}
       </FormSection>
 
@@ -768,6 +871,15 @@ export function ExpenditureEntryForm({
         </div>
       </div>
     </form>
+  );
+}
+
+function LockedValue({ label }: { label: string }) {
+  return (
+    <div className="flex h-11 items-center gap-2.5 rounded-md border border-dashed bg-muted/40 px-3.5 text-sm text-foreground">
+      <LockIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+      <span className="font-medium">{label}</span>
+    </div>
   );
 }
 

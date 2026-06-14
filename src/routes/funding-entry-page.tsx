@@ -11,7 +11,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReviewedEditBanner } from "@/components/review/reviewed-edit-banner";
 import {
+  canReviewMda,
   isAdmin,
   submittableMdaIds,
 } from "@/lib/access";
@@ -26,6 +28,7 @@ import {
   listMdas,
   listProgrammeAreas,
 } from "@/lib/db/reference-data";
+import { updateReviewedFundingEntry } from "@/lib/db/review";
 import {
   canEditFundingEntry,
   mapFundingEntryError,
@@ -122,7 +125,7 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
     return reference.mdas.filter((mda) => allowed.has(mda.id));
   }, [admin, reference, submittableIds]);
 
-  const editable =
+  const pendingEditable =
     mode.kind === "new" ||
     (entry
       ? canEditFundingEntry(
@@ -139,20 +142,49 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
         )
       : true);
 
+  // Reviewer/admin edit path for non-pending entries. `processed` is terminal;
+  // pending edits flow through the submitter path above.
+  const reviewedEditMode =
+    mode.kind === "edit" &&
+    entry !== null &&
+    (entry.status === "approved" || entry.status === "rejected") &&
+    (admin || canReviewMda(profile, entry.mda_id));
+
+  const editable = pendingEditable || reviewedEditMode;
+  const [reviewReason, setReviewReason] = React.useState("");
+
   async function handleSubmit(values: ValidatedFundingEntry) {
     if (!supabase || !user) return;
     setSubmitting(true);
     setServerErrors({});
     setServerError(null);
     try {
-      let saved: FundingEntryRow;
-      if (mode.kind === "edit") {
-        saved = await updatePendingFundingEntry(supabase, mode.entryId, values);
+      if (mode.kind === "edit" && reviewedEditMode) {
+        const trimmed = reviewReason.trim();
+        if (trimmed.length === 0) {
+          setServerError("An audit reason is required for reviewed-entry edits.");
+          setSubmitting(false);
+          return;
+        }
+        await updateReviewedFundingEntry(supabase, {
+          entryId: mode.entryId,
+          reason: trimmed,
+          values,
+        });
+        toast.success(
+          `Updated reviewed funding entry ${entry?.public_id ?? mode.entryId.slice(0, 8)}.`,
+        );
+      } else if (mode.kind === "edit") {
+        const saved = await updatePendingFundingEntry(
+          supabase,
+          mode.entryId,
+          values,
+        );
         toast.success(
           `Updated funding entry ${saved.public_id ?? saved.id.slice(0, 8)}.`,
         );
       } else {
-        saved = await insertFundingEntry(supabase, values, user.id);
+        const saved = await insertFundingEntry(supabase, values, user.id);
         toast.success(
           `Submitted funding entry ${saved.public_id ?? saved.id.slice(0, 8)}.`,
           {
@@ -270,7 +302,9 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
               <AlertDescription>
                 {entry?.status === "pending"
                   ? "Only the original submitter on an assigned MDA can edit a pending funding entry."
-                  : `This entry is ${entry?.status}. Reviewed entries require an audit reason to change — coming in the reviewer slice.`}
+                  : entry?.status === "processed"
+                    ? "Processed entries are terminal and cannot be edited."
+                    : `This entry is ${entry?.status}. Only reviewers or admins on this MDA can edit it.`}
               </AlertDescription>
             </Alert>
             <div className="mt-4 flex justify-end">
@@ -295,18 +329,33 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
             </div>
           </div>
         ) : reference ? (
-          <FundingEntryForm
-            mdas={visibleMdas}
-            programmeAreas={reference.programmeAreas}
-            fundingSources={reference.fundingSources}
-            initial={initial}
-            serverErrors={serverErrors}
-            serverError={serverError}
-            submitting={submitting}
-            submitLabel={isEdit ? "Save changes" : "Submit funding entry"}
-            onCancel={handleCancel}
-            onSubmit={handleSubmit}
-          />
+          <>
+            {reviewedEditMode && entry ? (
+              <ReviewedEditBanner
+                status={entry.status as "approved" | "rejected"}
+                reason={reviewReason}
+                onReasonChange={setReviewReason}
+              />
+            ) : null}
+            <FundingEntryForm
+              mdas={visibleMdas}
+              programmeAreas={reference.programmeAreas}
+              fundingSources={reference.fundingSources}
+              initial={initial}
+              serverErrors={serverErrors}
+              serverError={serverError}
+              submitting={submitting}
+              submitLabel={
+                reviewedEditMode
+                  ? "Save with audit reason"
+                  : isEdit
+                    ? "Save changes"
+                    : "Submit funding entry"
+              }
+              onCancel={handleCancel}
+              onSubmit={handleSubmit}
+            />
+          </>
         ) : null}
       </div>
     </div>

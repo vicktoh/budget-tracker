@@ -35,6 +35,7 @@ const mdaProfile: AppProfile = {
   full_name: "MDA Submitter",
   role: "mda_user",
   memberships: [],
+  facilityAssignments: [],
 };
 
 const adminProfile: AppProfile = {
@@ -42,13 +43,14 @@ const adminProfile: AppProfile = {
   full_name: "Admin User",
   role: "admin",
   memberships: [],
+  facilityAssignments: [],
 };
 
 describe("authenticated routing", () => {
   it("sends unauthenticated users to the sign-in gate", () => {
     renderWithAuth(<SignInRoute />, null);
 
-    expect(screen.getByText("Kano Health Finance Tracker")).toBeInTheDocument();
+    expect(screen.getByText("Kano Health Financing Flow Dashboard")).toBeInTheDocument();
     expect(screen.getByText(/Sign in to manage MDA entries/i)).toBeInTheDocument();
   });
 
