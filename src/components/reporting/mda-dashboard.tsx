@@ -21,12 +21,14 @@ import { ReportFiltersBar } from "@/components/reporting/report-filters-bar";
 import { StatCard } from "@/components/reporting/stat-card";
 import { HorizontalBarReport } from "@/components/reporting/charts/horizontal-bar-report";
 import { useReportingData } from "@/components/reporting/use-reporting-data";
+import { OfflineDataNotice } from "@/components/offline/offline-data-notice";
 import { useReportFilters } from "@/hooks/use-report-filters";
 import { isAdmin, viewableMdaIds } from "@/lib/access";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 import {
   aggregateBudgetVsActual,
   aggregateExpenditureByCategory,
+  aggregateExpenditureByFundingSource,
   aggregateFundingBySource,
   aggregateStatusCounts,
   filterExpenditure,
@@ -46,7 +48,10 @@ export function MdaDashboardRoute() {
     return { mdaIds: ids };
   }, [profile]);
 
-  const { dataset, options, loading, error } = useReportingData(supabase, scope);
+  const { dataset, options, loading, error, cachedAt } = useReportingData(
+    supabase,
+    scope,
+  );
   const { filters, setFilters, clearFilters } = useReportFilters();
 
   if (!hasSupabaseConfig || !supabase) {
@@ -77,6 +82,9 @@ export function MdaDashboardRoute() {
     : [];
   const expenditureRows = dataset
     ? aggregateExpenditureByCategory(dataset.expenditure, filters, scope)
+    : [];
+  const expenditureBySourceRows = dataset
+    ? aggregateExpenditureByFundingSource(dataset.expenditure, filters, scope)
     : [];
 
   const myRejections = dataset
@@ -129,6 +137,8 @@ export function MdaDashboardRoute() {
         </Alert>
       ) : null}
 
+      <OfflineDataNotice cachedAt={cachedAt} />
+
       <ReportFiltersBar
         filters={filters}
         options={options ?? {
@@ -146,7 +156,7 @@ export function MdaDashboardRoute() {
           label="Pending entries"
           value={status ? formatInteger(status.funding.pending + status.expenditure.pending) : "—"}
           tone="pending"
-          helper="Awaiting reviewer action"
+          helper="Awaiting viewer action"
         />
         <StatCard
           label="Approved this view"
@@ -203,6 +213,23 @@ export function MdaDashboardRoute() {
           />
         </ChartCard>
 
+        <ChartCard
+          title="Expenditure by funding source"
+          description="Spend attributed to each funding source from allocation splits."
+          loading={loading}
+          isEmpty={!loading && expenditureBySourceRows.length === 0}
+        >
+          <HorizontalBarReport
+            data={expenditureBySourceRows.map((row) => ({
+              id: row.funding_source_id,
+              label: row.funding_source_name,
+              value: row.total_amount,
+            }))}
+          />
+        </ChartCard>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
         <ChartCard
           title="Expenditure by category"
           description="Top expenditure categories for assigned MDAs."

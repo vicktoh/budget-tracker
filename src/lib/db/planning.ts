@@ -42,8 +42,13 @@ export type AopActivityRow = Tables<"aop_activities"> & {
   mdas: Pick<Tables<"mdas">, "id" | "name" | "abbreviation"> | null;
 };
 
+export type ApprovedBudgetLineRow = Tables<"approved_budget_lines"> & {
+  mdas: Pick<Tables<"mdas">, "id" | "name" | "abbreviation"> | null;
+};
+
 const BUDGET_SELECT = "*, mdas(id, name, abbreviation)";
 const ACTIVITY_SELECT = "*, mdas(id, name, abbreviation)";
+const BUDGET_LINE_SELECT = "*, mdas(id, name, abbreviation)";
 
 type ListResult<Row> = { data: Row[] | null; error: SupabaseError };
 type SingleResult<Row> = Promise<{ data: Row | null; error: SupabaseError }>;
@@ -242,4 +247,44 @@ export async function setAopActivityActive(
       code: result.error.code,
     });
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Approved Budget Lines                                                       */
+/* -------------------------------------------------------------------------- */
+
+export type ListApprovedBudgetLinesOptions = {
+  fiscalYear?: number;
+  mdaIds?: string[];
+  includeInactive?: boolean;
+};
+
+/**
+ * Lists the NCOA line-item detail behind the approved budget. The expenditure
+ * form loads these for the MDAs a submitter can act on, then filters client-side
+ * by the entry's MDA, fiscal year, and budget class so a state-budget entry can
+ * bind to a specific line.
+ */
+export async function listApprovedBudgetLines(
+  client: Client,
+  options: ListApprovedBudgetLinesOptions = {},
+): Promise<ApprovedBudgetLineRow[]> {
+  let query = client
+    .from("approved_budget_lines")
+    .select(BUDGET_LINE_SELECT)
+    .order("budget_class", { ascending: true })
+    .order("economic_code", { ascending: true })
+    .order("source_row_number", { ascending: true, nullsFirst: false });
+  if (typeof options.fiscalYear === "number") {
+    query = query.eq("fiscal_year", options.fiscalYear);
+  }
+  if (options.mdaIds && options.mdaIds.length > 0) {
+    query = query.in("mda_id", options.mdaIds);
+  }
+  if (!options.includeInactive) {
+    query = query.eq("active", true);
+  }
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as ApprovedBudgetLineRow[];
 }

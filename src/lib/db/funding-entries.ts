@@ -36,6 +36,7 @@ export type ListFundingEntriesOptions = {
   mdaIds?: string[];
   status?: Tables<"funding_entries">["status"];
   fiscalYear?: number;
+  quarter?: number;
   dateFrom?: string;
   dateTo?: string;
   limit?: number;
@@ -58,6 +59,9 @@ export async function listFundingEntries(
   }
   if (options.fiscalYear) {
     query = query.eq("fiscal_year", options.fiscalYear);
+  }
+  if (options.quarter) {
+    query = query.eq("quarter", options.quarter);
   }
   if (options.dateFrom) {
     query = query.gte("transaction_date", options.dateFrom);

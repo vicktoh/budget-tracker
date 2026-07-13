@@ -8,7 +8,13 @@ import {
   ClipboardCheckIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { LedgerEntryTableFooter } from "@/components/ledger/ledger-entry-table-footer";
+import {
+  QuarterFilterPills,
+  type QuarterFilterValue,
+} from "@/components/ledger/ledger-entry-filters";
 import { PageHeader } from "@/components/layout/page-header";
+import { OfflineDataNotice } from "@/components/offline/offline-data-notice";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -32,7 +38,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { isAdmin, reviewableMdaIds } from "@/lib/access";
+import { isAdmin, isReviewer, reviewableMdaIds } from "@/lib/access";
 import {
   listExpenditureEntries,
   type ExpenditureEntryRow,
@@ -44,6 +50,13 @@ import {
 import { listMdas } from "@/lib/db/reference-data";
 import type { EntryStatusSlug, Tables } from "@/lib/db/types";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
+import { readThroughCache } from "@/lib/offline/data-cache";
+import {
+  filterExpenditureBySearch,
+  filterFundingBySearch,
+  paginateItems,
+} from "@/lib/ledger/entry-list-filters";
+import { formatNaira } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type EntryTab = "funding" | "expenditure";
@@ -53,16 +66,11 @@ type ReviewFilters = {
   status: "all" | EntryStatusSlug;
   mdaId: string;
   fiscalYear: string;
+  quarter: QuarterFilterValue;
   dateFrom: string;
   dateTo: string;
   search: string;
 };
-
-const naira = new Intl.NumberFormat("en-NG", {
-  style: "currency",
-  currency: "NGN",
-  maximumFractionDigits: 2,
-});
 
 const STATUS_OPTIONS: { value: ReviewFilters["status"]; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -76,6 +84,7 @@ const DEFAULT_FILTERS: ReviewFilters = {
   status: "pending",
   mdaId: "all",
   fiscalYear: "",
+  quarter: "all",
   dateFrom: "",
   dateTo: "",
   search: "",
@@ -85,6 +94,8 @@ export function ReviewRoute() {
   const { profile } = useAuth();
 
   const admin = isAdmin(profile);
+  // Reviewers review every MDA, so they bypass the per-MDA filter like admins.
+  const isGlobalReviewer = admin || isReviewer(profile);
   const reviewableIds = React.useMemo(
     () => reviewableMdaIds(profile),
     [profile],
@@ -92,6 +103,8 @@ export function ReviewRoute() {
 
   const [tab, setTab] = React.useState<EntryTab>("funding");
   const [filters, setFilters] = React.useState<ReviewFilters>(DEFAULT_FILTERS);
+  const [fundingPage, setFundingPage] = React.useState(1);
+  const [expenditurePage, setExpenditurePage] = React.useState(1);
 
   const [mdas, setMdas] = React.useState<
     Pick<Tables<"mdas">, "id" | "name" | "abbreviation">[]
@@ -104,6 +117,7 @@ export function ReviewRoute() {
   >([]);
   const [loadState, setLoadState] = React.useState<LoadState>("idle");
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [cachedAt, setCachedAt] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (!profile) return;
@@ -118,53 +132,65 @@ export function ReviewRoute() {
 
     (async () => {
       try {
-        // Reviewer scope: explicit MDA ids; admin: undefined to bypass filter.
-        // Caller has already shown "no assigned MDAs" if reviewer has zero.
-        const mdaScope = admin ? undefined : reviewableIds;
+        // Admins and reviewers see every MDA (undefined bypasses the filter);
+        // MDA-scoped viewers are limited to their explicit MDA ids.
+        const mdaScope = isGlobalReviewer ? undefined : reviewableIds;
         const status = filters.status === "all" ? undefined : filters.status;
         const fiscalYear = filters.fiscalYear
           ? Number(filters.fiscalYear)
           : undefined;
+        const quarter =
+          filters.quarter === "all" ? undefined : Number(filters.quarter);
         const mdaIdFilter =
           filters.mdaId !== "all" ? [filters.mdaId] : mdaScope;
 
         const skipFetch =
-          !admin && reviewableIds.length === 0;
+          !isGlobalReviewer && reviewableIds.length === 0;
 
-        const [mdaList, funding, expenditure] = await Promise.all([
-          listMdas(supabase!),
-          skipFetch
-            ? Promise.resolve([] as FundingEntryRow[])
-            : listFundingEntries(supabase!, {
-                mdaIds: mdaIdFilter,
-                status,
-                fiscalYear,
-                dateFrom: filters.dateFrom || undefined,
-                dateTo: filters.dateTo || undefined,
-                limit: 100,
-              }),
-          skipFetch
-            ? Promise.resolve([] as ExpenditureEntryRow[])
-            : listExpenditureEntries(supabase!, {
-                mdaIds: mdaIdFilter,
-                status,
-                fiscalYear,
-                dateFrom: filters.dateFrom || undefined,
-                dateTo: filters.dateTo || undefined,
-                limit: 100,
-              }),
-        ]);
+        const cacheKey = `review-queue:${isGlobalReviewer ? "global" : reviewableIds.slice().sort().join(",")}`;
+        const { data, fromCache, cachedAt: snapshotAt } =
+          await readThroughCache(cacheKey, async () => {
+            const [mdaList, funding, expenditure] = await Promise.all([
+              listMdas(supabase!),
+              skipFetch
+                ? Promise.resolve([] as FundingEntryRow[])
+                : listFundingEntries(supabase!, {
+                    mdaIds: mdaIdFilter,
+                    status,
+                    fiscalYear,
+                    quarter,
+                    dateFrom: filters.dateFrom || undefined,
+                    dateTo: filters.dateTo || undefined,
+                    limit: 100,
+                  }),
+              skipFetch
+                ? Promise.resolve([] as ExpenditureEntryRow[])
+                : listExpenditureEntries(supabase!, {
+                    mdaIds: mdaIdFilter,
+                    status,
+                    fiscalYear,
+                    quarter,
+                    dateFrom: filters.dateFrom || undefined,
+                    dateTo: filters.dateTo || undefined,
+                    limit: 100,
+                  }),
+            ]);
+            return {
+              mdas: mdaList.map((m) => ({
+                id: m.id,
+                name: m.name,
+                abbreviation: m.abbreviation,
+              })),
+              funding,
+              expenditure,
+            };
+          });
 
         if (!active) return;
-        setMdas(
-          mdaList.map((m) => ({
-            id: m.id,
-            name: m.name,
-            abbreviation: m.abbreviation,
-          })),
-        );
-        setFundingEntries(funding);
-        setExpenditureEntries(expenditure);
+        setMdas(data.mdas);
+        setFundingEntries(data.funding);
+        setExpenditureEntries(data.expenditure);
+        setCachedAt(fromCache ? snapshotAt : null);
         setLoadState("ready");
       } catch (error) {
         if (!active) return;
@@ -180,14 +206,14 @@ export function ReviewRoute() {
     return () => {
       active = false;
     };
-  }, [admin, filters, profile, reviewableIds]);
+  }, [isGlobalReviewer, filters, profile, reviewableIds]);
 
   // The MDA filter dropdown shows only MDAs the user can act on.
   const visibleMdas = React.useMemo(() => {
-    if (admin) return mdas;
+    if (isGlobalReviewer) return mdas;
     const allowed = new Set(reviewableIds);
     return mdas.filter((m) => allowed.has(m.id));
-  }, [admin, mdas, reviewableIds]);
+  }, [isGlobalReviewer, mdas, reviewableIds]);
 
   const searchedFunding = React.useMemo(
     () => filterFundingBySearch(fundingEntries, filters.search),
@@ -198,12 +224,45 @@ export function ReviewRoute() {
     [expenditureEntries, filters.search],
   );
 
-  const noScope = !admin && reviewableIds.length === 0;
+  const fundingPagination = React.useMemo(
+    () => paginateItems(searchedFunding, fundingPage),
+    [searchedFunding, fundingPage],
+  );
+  const expenditurePagination = React.useMemo(
+    () => paginateItems(searchedExpenditure, expenditurePage),
+    [searchedExpenditure, expenditurePage],
+  );
+
+  React.useEffect(() => {
+    setFundingPage(1);
+    setExpenditurePage(1);
+  }, [
+    filters.status,
+    filters.mdaId,
+    filters.fiscalYear,
+    filters.quarter,
+    filters.dateFrom,
+    filters.dateTo,
+  ]);
+
+  React.useEffect(() => {
+    if (fundingPage !== fundingPagination.page) {
+      setFundingPage(fundingPagination.page);
+    }
+  }, [fundingPage, fundingPagination.page]);
+
+  React.useEffect(() => {
+    if (expenditurePage !== expenditurePagination.page) {
+      setExpenditurePage(expenditurePagination.page);
+    }
+  }, [expenditurePage, expenditurePagination.page]);
+
+  const noScope = !isGlobalReviewer && reviewableIds.length === 0;
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        description="Approve, reject, or process submitted Funding and Expenditure entries. Reviewers act on their assigned MDAs; admins see every MDA across the state."
+        description="Approve, reject, or process submitted Funding and Expenditure entries across every MDA in the state."
         title="Review Queue"
       />
 
@@ -218,10 +277,9 @@ export function ReviewRoute() {
 
       {noScope ? (
         <Alert>
-          <AlertTitle>No reviewer assignments yet</AlertTitle>
+          <AlertTitle>No viewer assignments yet</AlertTitle>
           <AlertDescription>
-            Ask an admin to add a reviewer membership for the MDAs you should
-            cover.
+            Ask an admin to grant you the Viewer role to review entries.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -232,6 +290,8 @@ export function ReviewRoute() {
           <AlertDescription>{loadError}</AlertDescription>
         </Alert>
       ) : null}
+
+      <OfflineDataNotice cachedAt={cachedAt} />
 
       <ReviewFiltersPanel
         filters={filters}
@@ -278,7 +338,17 @@ export function ReviewRoute() {
                   title="Nothing to review"
                 />
               ) : (
-                <FundingQueueTable entries={searchedFunding} />
+                <>
+                  <FundingQueueTable entries={fundingPagination.items} />
+                  <LedgerEntryTableFooter
+                    page={fundingPagination.page}
+                    pageCount={fundingPagination.pageCount}
+                    rangeEnd={fundingPagination.rangeEnd}
+                    rangeStart={fundingPagination.rangeStart}
+                    total={fundingPagination.total}
+                    onPageChange={setFundingPage}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
@@ -303,7 +373,17 @@ export function ReviewRoute() {
                   title="Nothing to review"
                 />
               ) : (
-                <ExpenditureQueueTable entries={searchedExpenditure} />
+                <>
+                  <ExpenditureQueueTable entries={expenditurePagination.items} />
+                  <LedgerEntryTableFooter
+                    page={expenditurePagination.page}
+                    pageCount={expenditurePagination.pageCount}
+                    rangeEnd={expenditurePagination.rangeEnd}
+                    rangeStart={expenditurePagination.rangeStart}
+                    total={expenditurePagination.total}
+                    onPageChange={setExpenditurePage}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
@@ -330,7 +410,8 @@ function ReviewFiltersPanel({
   }
 
   return (
-    <div className="grid gap-3 rounded-lg border bg-card p-3 md:grid-cols-6">
+    <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
+      <div className="grid gap-3 md:grid-cols-6">
       <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground md:col-span-2">
         Search
         <Input
@@ -397,50 +478,13 @@ function ReviewFiltersPanel({
           />
         </label>
       </div>
+      </div>
+      <QuarterFilterPills
+        value={filters.quarter}
+        onChange={(quarter) => update("quarter", quarter)}
+      />
     </div>
   );
-}
-
-function filterFundingBySearch(rows: FundingEntryRow[], search: string) {
-  const q = search.trim().toLowerCase();
-  if (!q) return rows;
-  return rows.filter((row) => {
-    const haystack = [
-      row.public_id ?? "",
-      row.reference_no,
-      row.remarks ?? "",
-      row.mdas?.name ?? "",
-      row.mdas?.abbreviation ?? "",
-      row.programme_areas?.name ?? "",
-      row.funding_sources?.name ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(q);
-  });
-}
-
-function filterExpenditureBySearch(
-  rows: ExpenditureEntryRow[],
-  search: string,
-) {
-  const q = search.trim().toLowerCase();
-  if (!q) return rows;
-  return rows.filter((row) => {
-    const haystack = [
-      row.public_id ?? "",
-      row.voucher_ref_no,
-      row.remarks ?? "",
-      row.mdas?.name ?? "",
-      row.mdas?.abbreviation ?? "",
-      row.programme_areas?.name ?? "",
-      row.expenditure_categories?.name ?? "",
-      row.facilities?.name ?? "",
-    ]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(q);
-  });
 }
 
 function FundingQueueTable({ entries }: { entries: FundingEntryRow[] }) {
@@ -482,7 +526,7 @@ function FundingQueueTable({ entries }: { entries: FundingEntryRow[] }) {
               {entry.reference_no}
             </TableCell>
             <TableCell className="text-right tabular-nums">
-              {naira.format(Number(entry.amount))}
+              {formatNaira(Number(entry.amount))}
             </TableCell>
             <TableCell>
               <StatusBadge status={entry.status} />
@@ -578,7 +622,7 @@ function ExpenditureQueueTable({
               {entry.voucher_ref_no}
             </TableCell>
             <TableCell className="text-right tabular-nums">
-              {naira.format(Number(entry.amount))}
+              {formatNaira(Number(entry.amount))}
             </TableCell>
             <TableCell>
               <StatusBadge status={entry.status} />

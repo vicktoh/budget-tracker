@@ -3,19 +3,23 @@
 import * as React from "react";
 import {
   CalendarRangeIcon,
+  FileTextIcon,
   HashIcon,
   HospitalIcon,
   LandmarkIcon,
   LockIcon,
+  PlusIcon,
   ReceiptTextIcon,
   SaveIcon,
   StickyNoteIcon,
+  Trash2Icon,
   WalletIcon,
   type LucideIcon,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
+import { FileUpload } from "@/components/ui/file-upload";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -31,6 +35,12 @@ import {
   type ValidatedExpenditureEntry,
   validateExpenditureEntry,
 } from "@/lib/expenditure/validation";
+import {
+  allocationRemainingAmount,
+  emptyFundingAllocationDraft,
+  type FundingAllocationDraft,
+  type FundingOverAllocationWarning,
+} from "@/lib/expenditure/funding-allocations";
 
 type ReferenceLite = { id: string; name: string };
 
@@ -55,6 +65,31 @@ type AopActivityLite = {
   fiscal_year: number;
 };
 
+type ApprovedBudgetLineLite = {
+  id: string;
+  mda_id: string;
+  fiscal_year: number;
+  budget_class: "personnel" | "overhead" | "capital";
+  economic_code: string;
+  economic_description: string;
+  project_description: string | null;
+  approved_amount: number;
+};
+
+/**
+ * Maps a workbook budget class to the seeded expenditure-category name it rolls
+ * up under. Selecting a budget line auto-fills and locks the category so the
+ * line and category can never disagree.
+ */
+const BUDGET_CLASS_CATEGORY_NAME: Record<
+  ApprovedBudgetLineLite["budget_class"],
+  string
+> = {
+  personnel: "personnel costs",
+  overhead: "overhead / running costs",
+  capital: "capital expenditure",
+};
+
 /**
  * When set, the form runs in facility-user mode: PHC is forced on and the MDA,
  * LGA, and Facility are locked to the user's assignment. `facilities` should
@@ -66,23 +101,55 @@ export type ExpenditureFacilityScope = {
   mdaId: string;
 };
 
+export type ExpenditureVoucherAttachment = {
+  file: File;
+};
+
 export type ExpenditureEntryFormProps = {
   mdas: Pick<Tables<"mdas">, "id" | "name" | "abbreviation">[];
   programmeAreas: ReferenceLite[];
   expenditureCategories: ReferenceLite[];
   expenditureItems: ExpenditureItemLite[];
   paymentMethods: ReferenceLite[];
+  fundingSources: ReferenceLite[];
+  unspecifiedFundingSourceId?: string | null;
   lgas: ReferenceLite[];
   facilities: FacilityLite[];
   aopActivities: AopActivityLite[];
+  approvedBudgetLines?: ApprovedBudgetLineLite[];
+  /** Funding source that represents the state appropriation (Kano State Govt
+   * Budget Release). When any allocation uses it, the Expenditure Item field
+   * becomes a picker over that MDA/year's approved budget lines. */
+  stateBudgetFundingSourceId?: string | null;
+  /** Resolves committed spend against a budget line so the form can warn when an
+   * entry would push the line over its approved amount. Soft, non-blocking. */
+  evaluateBudgetLineBalance?: (
+    lineId: string,
+  ) => Promise<{ approved_amount: number; spent_amount: number }>;
   initial?: Partial<ExpenditureEntryDraft>;
+  fundingWarnings?: FundingOverAllocationWarning[];
+  evaluateFundingWarnings?: (
+    values: Pick<
+      ValidatedExpenditureEntry,
+      "mda_id" | "fiscal_year" | "programme_area_id" | "funding_allocations"
+    >,
+  ) => Promise<FundingOverAllocationWarning[]>;
+  onFundingWarningsChange?: (
+    warnings: FundingOverAllocationWarning[],
+  ) => void;
   serverErrors?: ExpenditureEntryFieldErrors;
   serverError?: string | null;
   submitting?: boolean;
   submitLabel?: string;
+  enableVoucherUpload?: boolean;
+  /** When false, PHC location fields are hidden and non-PHC submission is assumed. */
+  showPhcLocation?: boolean;
   facilityScope?: ExpenditureFacilityScope;
   onCancel?: () => void;
-  onSubmit: (values: ValidatedExpenditureEntry) => void;
+  onSubmit: (
+    values: ValidatedExpenditureEntry,
+    attachment?: ExpenditureVoucherAttachment,
+  ) => void;
 };
 
 export function ExpenditureEntryForm({
@@ -91,19 +158,31 @@ export function ExpenditureEntryForm({
   expenditureCategories,
   expenditureItems,
   paymentMethods,
+  fundingSources,
+  unspecifiedFundingSourceId = null,
   lgas,
   facilities,
   aopActivities,
+  approvedBudgetLines = [],
+  stateBudgetFundingSourceId = null,
+  evaluateBudgetLineBalance,
   initial,
+  fundingWarnings = [],
+  evaluateFundingWarnings,
+  onFundingWarningsChange,
   serverErrors,
   serverError,
   submitting,
   submitLabel = "Submit expenditure entry",
+  enableVoucherUpload = true,
+  showPhcLocation = false,
   facilityScope,
   onCancel,
   onSubmit,
 }: ExpenditureEntryFormProps) {
   const facilityLocked = Boolean(facilityScope);
+  const financialSectionEyebrow = showPhcLocation ? "04" : "03";
+  const notesSectionEyebrow = showPhcLocation ? "05" : "04";
   const [draft, setDraft] = React.useState<ExpenditureEntryDraft>(() => {
     const base = { ...emptyExpenditureDraft(), ...initial };
     if (facilityScope) {
@@ -118,6 +197,10 @@ export function ExpenditureEntryForm({
     return base;
   });
   const [errors, setErrors] = React.useState<ExpenditureEntryFieldErrors>({});
+  const [voucherFile, setVoucherFile] = React.useState<File | null>(null);
+  const [voucherFileError, setVoucherFileError] = React.useState<string | null>(
+    null,
+  );
   const [touched, setTouched] = React.useState<
     Partial<Record<keyof ExpenditureEntryDraft, boolean>>
   >({});
@@ -135,6 +218,7 @@ export function ExpenditureEntryForm({
         expenditure_category_id: item.expenditure_category_id,
       })),
       paymentMethods,
+      fundingSources,
       facilities: facilities.map((f) => ({
         id: f.id,
         lga_id: f.lga_id,
@@ -145,15 +229,30 @@ export function ExpenditureEntryForm({
         mda_id: a.mda_id,
         fiscal_year: a.fiscal_year,
       })),
+      approvedBudgetLines: approvedBudgetLines.map((l) => ({
+        id: l.id,
+        mda_id: l.mda_id,
+        fiscal_year: l.fiscal_year,
+      })),
+      unspecifiedFundingSourceId,
     }),
     [
       programmeAreas,
       expenditureCategories,
       expenditureItems,
       paymentMethods,
+      fundingSources,
       facilities,
       aopActivities,
+      approvedBudgetLines,
+      unspecifiedFundingSourceId,
     ],
+  );
+
+  const selectableFundingSources = React.useMemo(
+    () =>
+      fundingSources.filter((source) => source.id !== unspecifiedFundingSourceId),
+    [fundingSources, unspecifiedFundingSourceId],
   );
 
   const period = deriveFiscalPeriod(draft.transaction_date);
@@ -197,12 +296,237 @@ export function ExpenditureEntryForm({
     });
   }, [aopActivities, draft.mda_id, period]);
 
+  // Map each seeded expenditure category to the budget class it rolls up under,
+  // so selecting a budget line can auto-fill the category (and vice versa).
+  const categoryIdByClass = React.useMemo(() => {
+    const byName = new Map(
+      expenditureCategories.map((c) => [c.name.trim().toLowerCase(), c.id]),
+    );
+    return {
+      personnel: byName.get(BUDGET_CLASS_CATEGORY_NAME.personnel) ?? null,
+      overhead: byName.get(BUDGET_CLASS_CATEGORY_NAME.overhead) ?? null,
+      capital: byName.get(BUDGET_CLASS_CATEGORY_NAME.capital) ?? null,
+    } satisfies Record<ApprovedBudgetLineLite["budget_class"], string | null>;
+  }, [expenditureCategories]);
+
+  const classByCategoryId = React.useMemo(() => {
+    const map = new Map<string, ApprovedBudgetLineLite["budget_class"]>();
+    (
+      Object.entries(categoryIdByClass) as Array<
+        [ApprovedBudgetLineLite["budget_class"], string | null]
+      >
+    ).forEach(([cls, id]) => {
+      if (id) map.set(id, cls);
+    });
+    return map;
+  }, [categoryIdByClass]);
+
+  // The Expenditure Item field turns into an approved-budget-line picker whenever
+  // any funding allocation draws on the state budget.
+  const stateBudgetInUse =
+    Boolean(stateBudgetFundingSourceId) &&
+    draft.funding_allocations.some(
+      (allocation) => allocation.funding_source_id === stateBudgetFundingSourceId,
+    );
+
+  // Budget lines for the entry's MDA + fiscal year, narrowed to the selected
+  // category's class once one is chosen.
+  const filteredBudgetLines = React.useMemo(() => {
+    const selectedClass = draft.expenditure_category_id
+      ? classByCategoryId.get(draft.expenditure_category_id) ?? null
+      : null;
+    return approvedBudgetLines.filter((line) => {
+      if (draft.mda_id && line.mda_id !== draft.mda_id) return false;
+      if (period && line.fiscal_year !== period.fiscal_year) return false;
+      if (selectedClass && line.budget_class !== selectedClass) return false;
+      return true;
+    });
+  }, [
+    approvedBudgetLines,
+    draft.mda_id,
+    draft.expenditure_category_id,
+    period,
+    classByCategoryId,
+  ]);
+
+  const selectedBudgetLine = React.useMemo(
+    () =>
+      approvedBudgetLines.find(
+        (line) => line.id === draft.approved_budget_line_id,
+      ) ?? null,
+    [approvedBudgetLines, draft.approved_budget_line_id],
+  );
+
+  // Mutual exclusivity: state-budget entries classify via the budget line (clear
+  // the free-text item); non-state-budget entries can't keep a stale line.
+  React.useEffect(() => {
+    if (stateBudgetInUse) {
+      if (draft.expenditure_item_id) {
+        setDraft((prev) => ({ ...prev, expenditure_item_id: "" }));
+      }
+    } else if (draft.approved_budget_line_id) {
+      setDraft((prev) => ({ ...prev, approved_budget_line_id: "" }));
+    }
+  }, [stateBudgetInUse, draft.expenditure_item_id, draft.approved_budget_line_id]);
+
+  // Soft remaining-balance lookup for the selected line.
+  const [lineBalance, setLineBalance] = React.useState<{
+    approved_amount: number;
+    spent_amount: number;
+  } | null>(null);
+
+  React.useEffect(() => {
+    if (!evaluateBudgetLineBalance || !draft.approved_budget_line_id) {
+      setLineBalance(null);
+      return;
+    }
+    let cancelled = false;
+    void evaluateBudgetLineBalance(draft.approved_budget_line_id).then(
+      (result) => {
+        if (!cancelled) setLineBalance(result);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [evaluateBudgetLineBalance, draft.approved_budget_line_id]);
+
+  const enteredAmount = parseFloat(draft.amount.replace(/[\s,]/g, ""));
+  const lineRemaining = lineBalance
+    ? lineBalance.approved_amount - lineBalance.spent_amount
+    : selectedBudgetLine
+      ? selectedBudgetLine.approved_amount
+      : null;
+  const lineWouldOverspend =
+    lineRemaining !== null &&
+    Number.isFinite(enteredAmount) &&
+    enteredAmount > lineRemaining + 0.009;
+
+  const allocationRemaining = allocationRemainingAmount(
+    draft.amount,
+    draft.funding_allocations,
+  );
+
+  const fundingSourceOptions: ComboboxOption[] = selectableFundingSources.map(
+    (source) => ({
+      value: source.id,
+      label: source.name,
+    }),
+  );
+
+  function syncSingleAllocationAmount(
+    allocations: FundingAllocationDraft[],
+    amount: string,
+  ): FundingAllocationDraft[] {
+    if (allocations.length !== 1) return allocations;
+    return [{ ...allocations[0]!, amount }];
+  }
+
+  function setAllocationField(
+    index: number,
+    key: keyof FundingAllocationDraft,
+    value: string,
+  ) {
+    setDraft((prev) => {
+      const allocations = prev.funding_allocations.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, [key]: value } : row,
+      );
+      return { ...prev, funding_allocations: allocations };
+    });
+    const nextDraft = {
+      ...draft,
+      funding_allocations: draft.funding_allocations.map((row, rowIndex) =>
+        rowIndex === index ? { ...row, [key]: value } : row,
+      ),
+    };
+    const result = validateExpenditureEntry(nextDraft, reference);
+    setErrors(result.ok ? {} : result.errors);
+  }
+
+  function addAllocationRow() {
+    setDraft((prev) => {
+      const nextAllocations = [...prev.funding_allocations];
+      if (nextAllocations.length === 1) {
+        nextAllocations[0] = {
+          ...nextAllocations[0]!,
+          amount: "",
+        };
+      }
+      nextAllocations.push(emptyFundingAllocationDraft());
+      return { ...prev, funding_allocations: nextAllocations };
+    });
+  }
+
+  function removeAllocationRow(index: number) {
+    setDraft((prev) => {
+      const nextAllocations = prev.funding_allocations.filter(
+        (_, rowIndex) => rowIndex !== index,
+      );
+      const normalized =
+        nextAllocations.length === 0
+          ? [emptyFundingAllocationDraft()]
+          : syncSingleAllocationAmount(nextAllocations, prev.amount);
+      return { ...prev, funding_allocations: normalized };
+    });
+  }
+
+  const fundingWarningsRef = React.useRef(fundingWarnings);
+  fundingWarningsRef.current = fundingWarnings;
+
+  React.useEffect(() => {
+    if (!evaluateFundingWarnings || !onFundingWarningsChange) return;
+
+    const currentPeriod = deriveFiscalPeriod(draft.transaction_date);
+    const clearWarnings = () => {
+      if (fundingWarningsRef.current.length > 0) onFundingWarningsChange([]);
+    };
+
+    if (!draft.mda_id || !draft.programme_area_id || !currentPeriod) {
+      clearWarnings();
+      return;
+    }
+
+    const result = validateExpenditureEntry(draft, reference);
+    if (!result.ok) {
+      clearWarnings();
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void evaluateFundingWarnings({
+        mda_id: result.values.mda_id,
+        fiscal_year: result.values.fiscal_year,
+        programme_area_id: result.values.programme_area_id,
+        funding_allocations: result.values.funding_allocations,
+      }).then((warnings) => {
+        if (!cancelled) onFundingWarningsChange(warnings);
+      });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [
+    draft,
+    evaluateFundingWarnings,
+    onFundingWarningsChange,
+    reference,
+  ]);
+
   function setField<K extends keyof ExpenditureEntryDraft>(
     key: K,
     value: ExpenditureEntryDraft[K],
   ) {
     setDraft((prev) => {
       const next = { ...prev, [key]: value };
+      if (key === "amount") {
+        next.funding_allocations = syncSingleAllocationAmount(
+          prev.funding_allocations,
+          String(value),
+        );
+      }
       // Conditional cascades.
       if (key === "is_phc" && value === false) {
         next.lga_id = "";
@@ -248,6 +572,18 @@ export function ExpenditureEntryForm({
             next.aop_activity_id = "";
           }
         }
+        const line = approvedBudgetLines.find(
+          (l) => l.id === next.approved_budget_line_id,
+        );
+        if (line) {
+          const nextPeriod = deriveFiscalPeriod(next.transaction_date);
+          if (
+            (next.mda_id && line.mda_id !== next.mda_id) ||
+            (nextPeriod && line.fiscal_year !== nextPeriod.fiscal_year)
+          ) {
+            next.approved_budget_line_id = "";
+          }
+        }
       }
       return next;
     });
@@ -262,8 +598,58 @@ export function ExpenditureEntryForm({
     setTouched((prev) => ({ ...prev, [key]: true }));
   }
 
+  // Selecting a budget line auto-fills and locks the expenditure category to the
+  // line's class so the two can never disagree.
+  function handleSelectBudgetLine(value: string) {
+    markTouched("approved_budget_line_id");
+    const line = approvedBudgetLines.find((l) => l.id === value);
+    setDraft((prev) => {
+      const next = { ...prev, approved_budget_line_id: value };
+      const categoryId = line ? categoryIdByClass[line.budget_class] : null;
+      if (categoryId) next.expenditure_category_id = categoryId;
+      next.expenditure_item_id = "";
+      return next;
+    });
+    setErrors((prev) => ({
+      ...prev,
+      approved_budget_line_id: undefined,
+      expenditure_category_id: undefined,
+    }));
+  }
+
+  function validateVoucherFile(file: File | null): string | null {
+    if (!file) return null;
+    const allowedTypes = ["application/pdf"];
+    const isAllowedImage = file.type.startsWith("image/");
+    const isAllowedPdf =
+      allowedTypes.includes(file.type) || file.name.toLowerCase().endsWith(".pdf");
+    if (!isAllowedImage && !isAllowedPdf) {
+      return "Upload an image or PDF voucher only.";
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      return "Voucher file must be 10 MB or smaller.";
+    }
+    return null;
+  }
+
+  function handleVoucherFileChange(files: FileList | null) {
+    const file = files?.item(0) ?? null;
+    setVoucherFile(file);
+    setVoucherFileError(validateVoucherFile(file));
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const fileError = validateVoucherFile(voucherFile);
+    setVoucherFileError(fileError);
+    if (fileError) {
+      requestAnimationFrame(() => {
+        const upload = document.getElementById("voucher-upload");
+        upload?.scrollIntoView({ behavior: "smooth", block: "center" });
+        upload?.focus?.({ preventScroll: true });
+      });
+      return;
+    }
     const result = validateExpenditureEntry(draft, reference);
     if (!result.ok) {
       setErrors(result.errors);
@@ -281,7 +667,10 @@ export function ExpenditureEntryForm({
       return;
     }
     setErrors({});
-    onSubmit(result.values);
+    onSubmit(
+      result.values,
+      voucherFile ? { file: voucherFile } : undefined,
+    );
   }
 
   const mdaOptions: ComboboxOption[] = mdas.map((mda) => ({
@@ -300,6 +689,13 @@ export function ExpenditureEntryForm({
     value: item.id,
     label: item.name,
   }));
+  const budgetLineOptions: ComboboxOption[] = filteredBudgetLines.map((line) => {
+    const label =
+      line.budget_class === "capital" && line.project_description
+        ? line.project_description
+        : `${line.economic_code} — ${line.economic_description}`;
+    return { value: line.id, label };
+  });
   const paymentMethodOptions: ComboboxOption[] = paymentMethods.map((item) => ({
     value: item.id,
     label: item.name,
@@ -422,7 +818,7 @@ export function ExpenditureEntryForm({
             <FieldDescription>
               {facilityLocked
                 ? "Locked to the MDA your facility reports under."
-                : "Submitters can only pick MDAs they hold a submitter membership for. Admins see every MDA."}
+                : "Submitters can only pick MDAs they hold expenditure-entry access for. Admins see every MDA."}
             </FieldDescription>
           )}
         </Field>
@@ -471,10 +867,15 @@ export function ExpenditureEntryForm({
                 markTouched("expenditure_category_id");
                 setField("expenditure_category_id", value);
               }}
+              disabled={stateBudgetInUse && Boolean(selectedBudgetLine)}
             />
             {errors.expenditure_category_id ? (
               <FieldDescription className="text-status-rejected">
                 {errors.expenditure_category_id}
+              </FieldDescription>
+            ) : stateBudgetInUse && selectedBudgetLine ? (
+              <FieldDescription>
+                Set automatically from the selected budget line.
               </FieldDescription>
             ) : (
               <FieldDescription>
@@ -485,38 +886,98 @@ export function ExpenditureEntryForm({
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor="expenditure-item" className="flex items-center gap-2">
-              Expenditure Item
-              <span className="text-xs font-normal text-muted-foreground">
-                Optional
-              </span>
-            </FieldLabel>
-            <Combobox
-              id="expenditure-item"
-              options={itemOptions}
-              placeholder={
-                draft.expenditure_category_id
-                  ? "Select expenditure item"
-                  : "Pick a category first"
-              }
-              value={draft.expenditure_item_id || undefined}
-              onValueChange={(value) => {
-                markTouched("expenditure_item_id");
-                setField("expenditure_item_id", value);
-              }}
-              disabled={!draft.expenditure_category_id}
-            />
-            {errors.expenditure_item_id ? (
-              <FieldDescription className="text-status-rejected">
-                {errors.expenditure_item_id}
-              </FieldDescription>
-            ) : (
-              <FieldDescription>
-                Filtered by selected expenditure category.
-              </FieldDescription>
-            )}
-          </Field>
+          {stateBudgetInUse ? (
+            <Field>
+              <FieldLabel
+                htmlFor="approved-budget-line"
+                className="flex items-center gap-2"
+              >
+                Approved Budget Item
+                <span className="rounded-full border border-status-approved/30 bg-status-approved-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-status-approved">
+                  State budget
+                </span>
+              </FieldLabel>
+              <Combobox
+                id="approved-budget-line"
+                options={budgetLineOptions}
+                placeholder={
+                  !draft.mda_id || !period
+                    ? "Pick MDA and date first"
+                    : budgetLineOptions.length
+                      ? "Select approved budget line"
+                      : "No approved budget lines for this MDA / FY"
+                }
+                value={draft.approved_budget_line_id || undefined}
+                onValueChange={handleSelectBudgetLine}
+                disabled={
+                  !draft.mda_id || !period || budgetLineOptions.length === 0
+                }
+              />
+              {errors.approved_budget_line_id ? (
+                <FieldDescription className="text-status-rejected">
+                  {errors.approved_budget_line_id}
+                </FieldDescription>
+              ) : selectedBudgetLine ? (
+                <FieldDescription
+                  className={
+                    lineWouldOverspend ? "text-status-pending" : undefined
+                  }
+                >
+                  {`Approved: ₦${selectedBudgetLine.approved_amount.toLocaleString(
+                    "en-NG",
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                  )}`}
+                  {lineRemaining !== null
+                    ? ` · Remaining: ₦${lineRemaining.toLocaleString("en-NG", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : ""}
+                  {lineWouldOverspend
+                    ? " — this entry exceeds the remaining balance."
+                    : ""}
+                </FieldDescription>
+              ) : (
+                <FieldDescription>
+                  Choose the approved budget line this state-funded spend draws
+                  down. Sets the expenditure category automatically.
+                </FieldDescription>
+              )}
+            </Field>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="expenditure-item" className="flex items-center gap-2">
+                Expenditure Item
+                <span className="text-xs font-normal text-muted-foreground">
+                  Optional
+                </span>
+              </FieldLabel>
+              <Combobox
+                id="expenditure-item"
+                options={itemOptions}
+                placeholder={
+                  draft.expenditure_category_id
+                    ? "Select expenditure item"
+                    : "Pick a category first"
+                }
+                value={draft.expenditure_item_id || undefined}
+                onValueChange={(value) => {
+                  markTouched("expenditure_item_id");
+                  setField("expenditure_item_id", value);
+                }}
+                disabled={!draft.expenditure_category_id}
+              />
+              {errors.expenditure_item_id ? (
+                <FieldDescription className="text-status-rejected">
+                  {errors.expenditure_item_id}
+                </FieldDescription>
+              ) : (
+                <FieldDescription>
+                  Filtered by selected expenditure category.
+                </FieldDescription>
+              )}
+            </Field>
+          )}
 
           <Field>
             <FieldLabel htmlFor="aop-activity" className="flex items-center gap-2">
@@ -559,11 +1020,12 @@ export function ExpenditureEntryForm({
         {otherSelected ? (
           <div className="rounded-md border border-status-pending/30 bg-status-pending-bg px-4 py-3 text-sm text-status-pending">
             <strong className="font-semibold">Other selected.</strong>{" "}
-            Reviewers will need a remark below to interpret this entry.
+            Viewers will need a remark below to interpret this entry.
           </div>
         ) : null}
       </FormSection>
 
+      {showPhcLocation ? (
       <FormSection
         eyebrow="03"
         icon={HospitalIcon}
@@ -708,9 +1170,10 @@ export function ExpenditureEntryForm({
         </>
         )}
       </FormSection>
+      ) : null}
 
       <FormSection
-        eyebrow="04"
+        eyebrow={financialSectionEyebrow}
         icon={ReceiptTextIcon}
         title="Financial traceability"
         description="The voucher reference number must be unique within this MDA and fiscal year so the same voucher can never be counted twice."
@@ -780,6 +1243,153 @@ export function ExpenditureEntryForm({
           </Field>
         </div>
 
+        <div className="flex flex-col gap-4 rounded-md border bg-muted/20 p-4">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-sm font-semibold text-foreground">
+              Funding source breakdown
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Split this expenditure across one or more funding sources. Allocations
+              must sum exactly to the money amount.
+            </p>
+          </div>
+
+          {errors.funding_allocations ? (
+            <FieldDescription className="text-status-rejected">
+              {errors.funding_allocations}
+            </FieldDescription>
+          ) : null}
+
+          <div className="flex flex-col gap-3">
+            {draft.funding_allocations.map((row, index) => {
+              const rowErrors = errors.allocationRows?.[index];
+              const usedElsewhere = new Set(
+                draft.funding_allocations
+                  .filter((_, rowIndex) => rowIndex !== index)
+                  .map((allocation) => allocation.funding_source_id)
+                  .filter(Boolean),
+              );
+              const rowOptions = fundingSourceOptions.filter(
+                (option) =>
+                  option.value === row.funding_source_id ||
+                  !usedElsewhere.has(option.value),
+              );
+              const singleRow = draft.funding_allocations.length === 1;
+
+              return (
+                <div
+                  key={`allocation-${index}`}
+                  className="grid gap-4 rounded-md border bg-background p-4 md:grid-cols-[minmax(0,1fr)_12rem_auto]"
+                >
+                  <Field>
+                    <FieldLabel>Funding source</FieldLabel>
+                    <Combobox
+                      options={rowOptions}
+                      placeholder="Select funding source"
+                      value={row.funding_source_id || undefined}
+                      onValueChange={(value) => {
+                        setAllocationField(index, "funding_source_id", value);
+                      }}
+                    />
+                    {rowErrors?.funding_source_id ? (
+                      <FieldDescription className="text-status-rejected">
+                        {rowErrors.funding_source_id}
+                      </FieldDescription>
+                    ) : null}
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Allocated amount</FieldLabel>
+                    <div className="relative">
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground"
+                      >
+                        ₦
+                      </span>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={row.amount}
+                        disabled={singleRow}
+                        onChange={(event) => {
+                          setAllocationField(index, "amount", event.target.value);
+                        }}
+                        className="h-11 pl-7 tabular-nums"
+                      />
+                    </div>
+                    {singleRow ? (
+                      <FieldDescription>
+                        Mirrors the expenditure amount for single-source entries.
+                      </FieldDescription>
+                    ) : null}
+                    {rowErrors?.amount ? (
+                      <FieldDescription className="text-status-rejected">
+                        {rowErrors.amount}
+                      </FieldDescription>
+                    ) : null}
+                  </Field>
+
+                  <div className="flex items-end justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={draft.funding_allocations.length === 1}
+                      onClick={() => removeAllocationRow(index)}
+                    >
+                      <Trash2Icon aria-hidden="true" data-icon="inline-start" />
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <Button type="button" variant="outline" size="sm" onClick={addAllocationRow}>
+              <PlusIcon aria-hidden="true" data-icon="inline-start" />
+              Add funding source
+            </Button>
+            {allocationRemaining !== null ? (
+              <p
+                className={cn(
+                  "text-sm font-medium tabular-nums",
+                  Math.abs(allocationRemaining) < 0.01
+                    ? "text-status-approved"
+                    : allocationRemaining > 0
+                      ? "text-status-pending"
+                      : "text-status-rejected",
+                )}
+              >
+                {Math.abs(allocationRemaining) < 0.01
+                  ? "Fully allocated"
+                  : allocationRemaining > 0
+                    ? `₦${allocationRemaining.toLocaleString("en-NG", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} remaining to allocate`
+                    : `₦${Math.abs(allocationRemaining).toLocaleString("en-NG", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })} over-allocated`}
+              </p>
+            ) : null}
+          </div>
+
+          {fundingWarnings.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              {fundingWarnings.map((warning) => (
+                <Alert key={warning.funding_source_id} variant="warning">
+                  <AlertTitle>Funding exceeds recorded receipts</AlertTitle>
+                  <AlertDescription>{warning.message}</AlertDescription>
+                </Alert>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
         <Field>
           <FieldLabel htmlFor="payment-method" className="flex items-center gap-2">
             <WalletIcon aria-hidden="true" className="size-4" /> Payment Method
@@ -804,13 +1414,40 @@ export function ExpenditureEntryForm({
             </FieldDescription>
           )}
         </Field>
+
+        {enableVoucherUpload ? (
+          <div className="rounded-md border bg-muted/20 p-4">
+            <FileUpload
+              id="voucher-upload"
+              label="Voucher attachment"
+              accept="image/*,application/pdf,.pdf"
+              description="Optional. Upload one image or PDF voucher, up to 10 MB."
+              disabled={submitting}
+              error={voucherFileError}
+              selectedFile={voucherFile}
+              onChange={handleVoucherFileChange}
+              onClear={() => {
+                setVoucherFile(null);
+                setVoucherFileError(null);
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex items-start gap-3 rounded-md border border-dashed bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            <FileTextIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+            <p>
+              Voucher uploads are available while creating or editing pending
+              entries. Reviewed-entry corrections keep attachments unchanged.
+            </p>
+          </div>
+        )}
       </FormSection>
 
       <FormSection
-        eyebrow="05"
+        eyebrow={notesSectionEyebrow}
         icon={StickyNoteIcon}
         title="Notes & remarks"
-        description="Required when Programme Area, Expenditure Category, or Payment Method is set to Other. Otherwise optional context for reviewers."
+        description="Required when Programme Area, Expenditure Category, or Payment Method is set to Other. Otherwise optional context for viewers."
         last
       >
         <Field>
@@ -830,8 +1467,8 @@ export function ExpenditureEntryForm({
             id="remarks"
             placeholder={
               otherSelected
-                ? "Explain the Other selection so reviewers can interpret this entry."
-                : "Anything a reviewer should know — voucher details, conditions, supplier specifics, etc."
+                ? "Explain the Other selection so viewers can interpret this entry."
+                : "Anything a viewer should know — voucher details, conditions, supplier specifics, etc."
             }
             value={draft.remarks}
             onBlur={() => markTouched("remarks")}
@@ -851,7 +1488,7 @@ export function ExpenditureEntryForm({
         <p className="text-xs text-muted-foreground">
           Submitted entries enter the{" "}
           <span className="font-medium text-status-pending">pending</span>{" "}
-          queue and remain editable until a reviewer acts.
+          queue and remain editable until a viewer acts.
         </p>
         <div className="flex items-center justify-end gap-2">
           {onCancel ? (

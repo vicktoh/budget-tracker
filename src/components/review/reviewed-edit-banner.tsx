@@ -5,9 +5,9 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 
 /**
- * Banner shown above the entry form when a reviewer or admin is editing a
- * non-pending entry. The audit reason is mandatory and is captured here so
- * the eventual submit can call the `update_reviewed_*` RPC with it.
+ * Banner shown above the entry form when an admin is correcting a non-pending
+ * entry. The audit reason is mandatory and is captured here so the eventual
+ * submit can call the `update_reviewed_*` RPC with it.
  */
 export function ReviewedEditBanner({
   status,
@@ -26,8 +26,8 @@ export function ReviewedEditBanner({
           Reviewed entry edit
         </AlertTitle>
         <AlertDescription>
-          This entry is {status}. Reviewer or admin edits are recorded in the
-          audit trail. Capture a short reason for the change before saving.
+          This entry is {status}. Admin corrections are recorded in the audit
+          trail. Capture a short reason for the change before saving.
         </AlertDescription>
       </Alert>
       <label className="mt-4 flex flex-col gap-1 text-sm">

@@ -50,31 +50,42 @@ export function QuarterlyTrendChart({
   return (
     <div style={{ width: "100%", height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 4, right: 12, left: 8, bottom: 4 }}>
-          <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
+        <BarChart
+          accessibilityLayer
+          data={chartData}
+          margin={{ top: 8, right: 12, left: 4, bottom: 4 }}
+          barGap={4}
+          barCategoryGap="34%"
+        >
+          <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeOpacity={0.72} />
           <XAxis
             dataKey="label"
             stroke="hsl(var(--muted-foreground))"
             fontSize={12}
             tickLine={false}
+            axisLine={false}
+            tick={{ fill: "hsl(var(--foreground))", fontWeight: 600 }}
           />
           <YAxis
             tickFormatter={(value) => formatCompactNaira(Number(value))}
             stroke="hsl(var(--muted-foreground))"
             fontSize={11}
             width={72}
+            axisLine={false}
+            tickLine={false}
           />
           <Tooltip
             cursor={{ fill: "hsl(var(--muted))" }}
             contentStyle={{
-              borderRadius: 6,
+              borderRadius: 8,
               border: "1px solid hsl(var(--border))",
               fontSize: 12,
               backgroundColor: "hsl(var(--card))",
+              boxShadow: "0 12px 30px hsl(var(--foreground) / 0.12)",
             }}
             formatter={(value, name) => [formatNaira(Number(value)), String(name)]}
           />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Legend wrapperStyle={{ fontSize: 12, paddingTop: 10 }} iconType="circle" iconSize={8} />
           <Bar
             dataKey="total_funding_amount"
             name="Funding"
@@ -82,6 +93,8 @@ export function QuarterlyTrendChart({
             cursor={onSelectQuarter ? "pointer" : undefined}
             onClick={handleClick}
             fill={CHART_COLORS[0]}
+            maxBarSize={28}
+            isAnimationActive={false}
           >
             {chartData.map((row) => (
               <Cell
@@ -97,6 +110,8 @@ export function QuarterlyTrendChart({
             cursor={onSelectQuarter ? "pointer" : undefined}
             onClick={handleClick}
             fill={CHART_COLORS[1]}
+            maxBarSize={28}
+            isAnimationActive={false}
           >
             {chartData.map((row) => (
               <Cell

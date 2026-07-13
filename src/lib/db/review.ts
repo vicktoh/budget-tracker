@@ -3,6 +3,7 @@ import type { EntryType, Tables } from "@/lib/db/types";
 import type { ReviewAction } from "@/lib/review/transitions";
 import type { ValidatedFundingEntry } from "@/lib/funding/validation";
 import type { ValidatedExpenditureEntry } from "@/lib/expenditure/validation";
+import { allocationsToRpcPayload } from "@/lib/expenditure/funding-allocations";
 
 type Client = TypedSupabaseClient;
 
@@ -16,7 +17,9 @@ type RpcArgs = Record<string, unknown>;
 type RpcResult = { error: { message: string; code?: string } | null };
 type RpcCallable = (fn: string, args: RpcArgs) => Promise<RpcResult>;
 function asRpc(client: Client): RpcCallable {
-  return (client.rpc as unknown) as RpcCallable;
+  // Bind: SupabaseClient.rpc dereferences `this.rest`, so a detached method
+  // throws "Cannot read properties of undefined (reading 'rest')".
+  return (client.rpc.bind(client) as unknown) as RpcCallable;
 }
 
 export type EntryCommentRow = Tables<"entry_comments"> & {
@@ -185,6 +188,7 @@ export async function updateReviewedExpenditureEntry(
     p_voucher_ref_no: args.values.voucher_ref_no,
     p_payment_method_id: args.values.payment_method_id,
     p_remarks: args.values.remarks,
+    p_allocations: allocationsToRpcPayload(args.values.funding_allocations),
   });
   if (error) throw error;
 }

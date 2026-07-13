@@ -9,7 +9,11 @@ import {
   PlusIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
+import { LedgerEntryFilters } from "@/components/ledger/ledger-entry-filters";
+import { LedgerEntryTableFooter } from "@/components/ledger/ledger-entry-table-footer";
 import { PageHeader } from "@/components/layout/page-header";
+import { OfflineDataNotice } from "@/components/offline/offline-data-notice";
+import { PendingSyncCard } from "@/components/offline/pending-sync-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -24,26 +28,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  isAdmin,
-  submittableMdaIds,
-  viewableMdaIds,
-} from "@/lib/access";
+import { fundingSubmittableMdaIds, isAdmin } from "@/lib/access";
 import {
   listFundingEntries,
   type FundingEntryRow,
 } from "@/lib/db/funding-entries";
+import { listMdas } from "@/lib/db/reference-data";
+import type { Tables } from "@/lib/db/types";
 import { canEditFundingEntry } from "@/lib/funding/validation";
+import {
+  DEFAULT_LEDGER_ENTRY_FILTERS,
+  filterFundingBySearch,
+  paginateItems,
+  toLedgerListQueryOptions,
+  type LedgerEntryListFilters,
+} from "@/lib/ledger/entry-list-filters";
+import { formatCompactNaira, formatNaira } from "@/lib/format";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
+import { readThroughCache } from "@/lib/offline/data-cache";
 import { cn } from "@/lib/utils";
 
-type LoadState = "idle" | "loading" | "ready" | "error";
+type CachedMda = Pick<Tables<"mdas">, "id" | "name" | "abbreviation">;
 
-const naira = new Intl.NumberFormat("en-NG", {
-  style: "currency",
-  currency: "NGN",
-  maximumFractionDigits: 2,
-});
+type LoadState = "idle" | "loading" | "ready" | "error";
 
 export function FundingEntriesRoute() {
   const { user, profile } = useAuth();
@@ -51,15 +58,48 @@ export function FundingEntriesRoute() {
   const [loadState, setLoadState] = React.useState<LoadState>("idle");
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [entries, setEntries] = React.useState<FundingEntryRow[]>([]);
+  const [filters, setFilters] = React.useState<LedgerEntryListFilters>(
+    DEFAULT_LEDGER_ENTRY_FILTERS,
+  );
+  const [page, setPage] = React.useState(1);
+  const [mdas, setMdas] = React.useState<CachedMda[]>([]);
+  const [cachedAt, setCachedAt] = React.useState<string | null>(null);
 
   const admin = isAdmin(profile);
-  const submittableIds = React.useMemo(
-    () => submittableMdaIds(profile),
+  const assignedMdaIds = React.useMemo(
+    () => fundingSubmittableMdaIds(profile),
     [profile],
   );
-  const viewableIds = React.useMemo(() => viewableMdaIds(profile), [profile]);
 
-  const canCreate = admin || submittableIds.length > 0;
+  const canCreate = admin || assignedMdaIds.length > 0;
+  const noScope = !admin && assignedMdaIds.length === 0;
+  const scopedMdaIds = admin ? undefined : assignedMdaIds;
+
+  const visibleMdas = React.useMemo(() => {
+    if (admin) return mdas;
+    const allowed = new Set(assignedMdaIds);
+    return mdas.filter((mda) => allowed.has(mda.id));
+  }, [admin, assignedMdaIds, mdas]);
+
+  const filteredEntries = React.useMemo(
+    () => filterFundingBySearch(entries, filters.search),
+    [entries, filters.search],
+  );
+
+  const pagination = React.useMemo(
+    () => paginateItems(filteredEntries, page),
+    [filteredEntries, page],
+  );
+
+  React.useEffect(() => {
+    if (page !== pagination.page) {
+      setPage(pagination.page);
+    }
+  }, [page, pagination.page]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [filters.status, filters.mdaId, filters.fiscalYear, filters.quarter]);
 
   React.useEffect(() => {
     if (!profile) return;
@@ -67,17 +107,41 @@ export function FundingEntriesRoute() {
       setLoadState("ready");
       return;
     }
+    if (noScope) {
+      setEntries([]);
+      setMdas([]);
+      setLoadState("ready");
+      return;
+    }
+
     let active = true;
     setLoadState("loading");
     setLoadError(null);
+    const cacheKey = `funding-entries:${admin ? "admin" : assignedMdaIds.slice().sort().join(",")}`;
     (async () => {
       try {
-        const entryList = await listFundingEntries(supabase!, {
-          mdaIds: admin ? undefined : viewableIds,
-          limit: 50,
-        });
+        const { data, fromCache, cachedAt: snapshotAt } =
+          await readThroughCache(cacheKey, async () => {
+            const [mdaList, entryList] = await Promise.all([
+              listMdas(supabase!),
+              listFundingEntries(
+                supabase!,
+                toLedgerListQueryOptions(filters, scopedMdaIds),
+              ),
+            ]);
+            return {
+              mdas: mdaList.map((mda) => ({
+                id: mda.id,
+                name: mda.name,
+                abbreviation: mda.abbreviation,
+              })) as CachedMda[],
+              entries: entryList,
+            };
+          });
         if (!active) return;
-        setEntries(entryList);
+        setMdas(data.mdas);
+        setEntries(data.entries);
+        setCachedAt(fromCache ? snapshotAt : null);
         setLoadState("ready");
       } catch (error) {
         if (!active) return;
@@ -90,7 +154,7 @@ export function FundingEntriesRoute() {
     return () => {
       active = false;
     };
-  }, [admin, profile, viewableIds]);
+  }, [admin, assignedMdaIds, filters, noScope, profile, scopedMdaIds]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -109,7 +173,7 @@ export function FundingEntriesRoute() {
             New funding entry
           </Link>
         }
-        description="Record funding received against assigned MDAs. Entries enter the pending queue and remain editable until a reviewer acts."
+        description="Record funding received against assigned MDAs. Entries enter the pending queue and remain editable until a viewer acts."
         title="Funding Entries"
       />
 
@@ -130,26 +194,38 @@ export function FundingEntriesRoute() {
         </Alert>
       ) : null}
 
-      {!canCreate && profile?.role === "mda_user" ? (
+      {noScope ? (
         <Alert>
           <AlertTitle>No assigned MDAs yet</AlertTitle>
           <AlertDescription>
-            Ask an admin to add a submitter membership for the MDA you report on.
-            You can still view entries for any MDA you have membership in.
+            Ask an admin to add funding-entry access for the MDA you report on.
           </AlertDescription>
         </Alert>
       ) : null}
 
-      <FundingSummaryCards entries={entries} />
+      {!noScope ? (
+        <LedgerEntryFilters
+          filters={filters}
+          mdas={visibleMdas}
+          searchPlaceholder="Public ID, reference, remarks, programme area"
+          onChange={setFilters}
+        />
+      ) : null}
+
+      <OfflineDataNotice cachedAt={cachedAt} />
+
+      <FundingSummaryCards entries={filteredEntries} />
+
+      <PendingSyncCard domain="funding" />
 
       <Card>
         <CardHeader className="flex-row items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <CardTitle>Recent funding entries</CardTitle>
+            <CardTitle>Funding entries</CardTitle>
             <CardDescription>
               {admin
                 ? "All submitted funding entries across the state."
-                : "Entries for MDAs you can view. Pending entries you authored remain editable."}
+                : "Entries for MDAs you are assigned to. Pending entries you authored remain editable."}
             </CardDescription>
           </div>
         </CardHeader>
@@ -160,23 +236,33 @@ export function FundingEntriesRoute() {
               <Skeleton className="h-10" />
               <Skeleton className="h-10" />
             </div>
-          ) : entries.length === 0 ? (
+          ) : filteredEntries.length === 0 ? (
             <Empty
               description={
                 canCreate
-                  ? "Funding entries you record will appear here. Use the new entry button to capture your first one."
-                  : "There are no funding entries to display for the MDAs you can view."
+                  ? "Funding entries you record will appear here. Adjust filters or use the new entry button to capture your first one."
+                  : "There are no funding entries to display for your assigned MDAs."
               }
               icon={LandmarkIcon}
               title="No funding entries yet"
             />
           ) : (
-            <FundingEntriesTable
-              entries={entries}
-              isAdmin={admin}
-              submittableMdaIds={submittableIds}
-              userId={user?.id ?? null}
-            />
+            <>
+              <FundingEntriesTable
+                entries={pagination.items}
+                isAdmin={admin}
+                submittableMdaIds={assignedMdaIds}
+                userId={user?.id ?? null}
+              />
+              <LedgerEntryTableFooter
+                page={pagination.page}
+                pageCount={pagination.pageCount}
+                rangeEnd={pagination.rangeEnd}
+                rangeStart={pagination.rangeStart}
+                total={pagination.total}
+                onPageChange={setPage}
+              />
+            </>
           )}
         </CardContent>
       </Card>
@@ -208,7 +294,7 @@ function FundingSummaryCards({ entries }: { entries: FundingEntryRow[] }) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Awaiting reviewer action. Editable while pending.
+            Awaiting viewer action. Editable while pending.
           </p>
         </CardContent>
       </Card>
@@ -227,12 +313,12 @@ function FundingSummaryCards({ entries }: { entries: FundingEntryRow[] }) {
         <CardHeader>
           <CardDescription>Recorded total</CardDescription>
           <CardTitle className="text-2xl">
-            {naira.format(totals.totalAmount)}
+            {formatCompactNaira(totals.totalAmount)}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Across the most recent {entries.length} entries.
+            Across {entries.length} matching {entries.length === 1 ? "entry" : "entries"}.
           </p>
         </CardContent>
       </Card>
@@ -302,7 +388,7 @@ function FundingEntriesTable({
                 {entry.reference_no}
               </TableCell>
               <TableCell className="text-right tabular-nums">
-                {naira.format(Number(entry.amount))}
+                {formatNaira(Number(entry.amount))}
               </TableCell>
               <TableCell>
                 <StatusBadge status={entry.status} />

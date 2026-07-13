@@ -6,6 +6,11 @@ node_modules/
 .next/
 dist/
 *.tsbuildinfo
+
+# Serwist-generated service worker (built by `next build`)
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
 supabase/.temp/
 coverage/
 .DS_Store

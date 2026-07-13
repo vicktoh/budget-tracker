@@ -18,12 +18,14 @@ import { StatCard } from "@/components/reporting/stat-card";
 import { BudgetUtilizationBars } from "@/components/reporting/charts/budget-utilization-bars";
 import { HorizontalBarReport } from "@/components/reporting/charts/horizontal-bar-report";
 import { useReportingData } from "@/components/reporting/use-reporting-data";
+import { OfflineDataNotice } from "@/components/offline/offline-data-notice";
 import { useReportFilters } from "@/hooks/use-report-filters";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 import {
   aggregateAopPlannedVsActual,
   aggregateBudgetVsActual,
   aggregateExpenditureByCategory,
+  aggregateExpenditureByFundingSource,
   aggregateFundingBySource,
   aggregatePhcFacilitySummary,
   aggregatePhcLgaSummary,
@@ -35,7 +37,10 @@ import { formatCompactNaira, formatInteger, formatNaira, formatPercent } from "@
 import type { ReportFilters } from "@/lib/reporting/types";
 
 export function AdminInsightsRoute() {
-  const { dataset, options, loading, error } = useReportingData(supabase, {});
+  const { dataset, options, loading, error, cachedAt } = useReportingData(
+    supabase,
+    {},
+  );
   const { filters, setFilters, setFilter, clearFilters } = useReportFilters();
   const [tab, setTab] = React.useState<"overview" | "programme" | "phc" | "aop">("overview");
 
@@ -74,6 +79,8 @@ export function AdminInsightsRoute() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
+
+      <OfflineDataNotice cachedAt={cachedAt} />
 
       <ReportFiltersBar
         filters={filters}
@@ -162,6 +169,9 @@ function OverviewTab({ loading, dataset, filters, setFilter, status }: OverviewT
   const expenditureRows = dataset
     ? aggregateExpenditureByCategory(dataset.expenditure, filters, {})
     : [];
+  const expenditureBySourceRows = dataset
+    ? aggregateExpenditureByFundingSource(dataset.expenditure, filters, {})
+    : [];
 
   return (
     <div className="flex flex-col gap-5">
@@ -206,7 +216,7 @@ function OverviewTab({ loading, dataset, filters, setFilter, status }: OverviewT
           activeId={filters.mdaId}
           onSelect={(id) => setFilter("mdaId", id === filters.mdaId ? null : id)}
         />
-        <Table className="mt-4">
+        <Table className="mt-4" containerClassName="max-h-[70vh]">
           <TableHeader>
             <TableRow>
               <TableHead>MDA</TableHead>
@@ -273,6 +283,35 @@ function OverviewTab({ loading, dataset, filters, setFilter, status }: OverviewT
         </ChartCard>
 
         <ChartCard
+          title="Expenditure by funding source"
+          description="Spend attributed to each funding source from allocation splits."
+          loading={loading}
+          isEmpty={!loading && expenditureBySourceRows.length === 0}
+        >
+          <HorizontalBarReport
+            data={expenditureBySourceRows.map((row) => ({
+              id: row.funding_source_id,
+              label: row.funding_source_name,
+              value: row.total_amount,
+            }))}
+            activeId={filters.fundingSourceId}
+            onSelect={(id) =>
+              setFilter("fundingSourceId", id === filters.fundingSourceId ? null : id)
+            }
+          />
+          <SummaryTable
+            headers={["Funding source", "Expenditure", "Entries"]}
+            rows={expenditureBySourceRows.map((row) => [
+              row.funding_source_name,
+              formatNaira(row.total_amount),
+              formatInteger(row.entry_count),
+            ])}
+          />
+        </ChartCard>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <ChartCard
           title="Expenditure by category"
           description="Click a bar to filter all reports by that expenditure category."
           loading={loading}
@@ -330,7 +369,7 @@ function ProgrammeTab({ loading, dataset, filters, setFilter }: TabProps) {
             setFilter("programmeAreaId", id === filters.programmeAreaId ? null : id)
           }
         />
-        <Table className="mt-4">
+        <Table className="mt-4" containerClassName="max-h-[70vh]">
           <TableHeader>
             <TableRow>
               <TableHead>Programme area</TableHead>
@@ -447,7 +486,7 @@ function AopTab({
         loading={loading}
         isEmpty={!loading && aopRows.length === 0}
       >
-        <Table>
+        <Table containerClassName="max-h-[70vh]">
           <TableHeader>
             <TableRow>
               <TableHead>FY</TableHead>
@@ -498,7 +537,7 @@ function AopTab({
         emptyTitle="No unlinked expenditure"
         emptyDescription="Every expenditure entry in the current filters is linked to an AOP activity."
       >
-        <Table>
+        <Table containerClassName="max-h-[70vh]">
           <TableHeader>
             <TableRow>
               <TableHead>MDA</TableHead>
@@ -540,7 +579,7 @@ function SummaryTable({
 }) {
   if (rows.length === 0) return null;
   return (
-    <Table className="mt-4">
+    <Table className="mt-4" containerClassName="max-h-[70vh]">
       <TableHeader>
         <TableRow>
           {headers.map((header, index) => (

@@ -257,7 +257,7 @@ export function ReferenceRequestForm({
               id="ref-req-desc"
               value={draft.description ?? ""}
               onChange={(e) => setField("description", e.target.value)}
-              placeholder="A short note helps reviewers approve faster."
+              placeholder="A short note helps viewers approve faster."
               rows={3}
             />
           </Field>

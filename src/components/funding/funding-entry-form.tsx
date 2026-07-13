@@ -234,7 +234,7 @@ export function FundingEntryForm({
             </FieldDescription>
           ) : (
             <FieldDescription>
-              Submitters can only pick MDAs they hold a submitter membership for.
+              Submitters can only pick MDAs they hold funding-entry access for.
               Admins see every MDA.
             </FieldDescription>
           )}
@@ -297,7 +297,7 @@ export function FundingEntryForm({
         {otherSelected ? (
           <div className="rounded-md border border-status-pending/30 bg-status-pending-bg px-4 py-3 text-sm text-status-pending">
             <strong className="font-semibold">Other selected.</strong>{" "}
-            Reviewers will need a remark below to interpret this entry.
+            Viewers will need a remark below to interpret this entry.
           </div>
         ) : null}
       </FormSection>
@@ -377,7 +377,7 @@ export function FundingEntryForm({
         eyebrow="04"
         icon={StickyNoteIcon}
         title="Notes & remarks"
-        description="Required when Programme Area or Funding Source is set to Other. Otherwise optional context for reviewers."
+        description="Required when Programme Area or Funding Source is set to Other. Otherwise optional context for viewers."
         last
       >
         <Field>
@@ -397,8 +397,8 @@ export function FundingEntryForm({
             id="remarks"
             placeholder={
               otherSelected
-                ? "Explain the Other selection so reviewers can interpret this entry."
-                : "Anything a reviewer should know — release memo, conditions, donor specifics, etc."
+                ? "Explain the Other selection so viewers can interpret this entry."
+                : "Anything a viewer should know — release memo, conditions, donor specifics, etc."
             }
             value={draft.remarks}
             onBlur={() => markTouched("remarks")}
@@ -417,7 +417,7 @@ export function FundingEntryForm({
       <div className="sticky bottom-0 z-10 flex flex-col gap-3 border-t bg-background/95 px-6 py-4 backdrop-blur md:flex-row md:items-center md:justify-between md:px-10 supports-[backdrop-filter]:bg-background/85">
         <p className="text-xs text-muted-foreground">
           Submitted entries enter the <span className="font-medium text-status-pending">pending</span>{" "}
-          queue and remain editable until a reviewer acts.
+          queue and remain editable until a viewer acts.
         </p>
         <div className="flex items-center justify-end gap-2">
           {onCancel ? (

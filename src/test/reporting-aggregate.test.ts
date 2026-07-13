@@ -5,6 +5,7 @@ import {
   aggregateBudgetVsActual,
   aggregateCategoryShare,
   aggregateExpenditureByCategory,
+  aggregateExpenditureByFundingSource,
   aggregateFundingBySource,
   aggregateHeadlineKpis,
   aggregateLgaPhcShare,
@@ -237,6 +238,19 @@ describe("aggregateExpenditureByCategory", () => {
   });
 });
 
+describe("aggregateExpenditureByFundingSource", () => {
+  it("groups expenditure by allocation amounts without double-counting", () => {
+    const rows = aggregateExpenditureByFundingSource(
+      expenditureFixtures(),
+      emptyReportFilters(),
+    );
+    const federal = rows.find((row) => row.funding_source_id === FS_FED);
+    const international = rows.find((row) => row.funding_source_id === FS_INT);
+    expect(federal?.total_amount).toBe(600_000 + 350_000 + 100_000);
+    expect(international?.total_amount).toBe(200_000);
+  });
+});
+
 describe("aggregateProgrammeAreaSummary", () => {
   it("returns funding, expenditure, and signed gap per programme area", () => {
     const rows = aggregateProgrammeAreaSummary(
@@ -296,6 +310,25 @@ describe("aggregateAopPlannedVsActual", () => {
       emptyReportFilters(),
     );
     expect(rows.find((r) => r.aop_activity_id === "aop-archived")).toBeUndefined();
+  });
+
+  it("counts only approved and processed expenditure as linked spend", () => {
+    const rows = aggregateAopPlannedVsActual(
+      aopFixtures(),
+      [
+        ...expenditureFixtures(),
+        {
+          ...expenditureFixtures()[2],
+          id: "e-pending-linked",
+          aop_activity_id: AOP_1,
+          amount: 125_000,
+        },
+      ],
+      emptyReportFilters(),
+    );
+
+    expect(rows.find((row) => row.aop_activity_id === AOP_1)?.linked_expenditure_amount)
+      .toBe(600_000);
   });
 });
 

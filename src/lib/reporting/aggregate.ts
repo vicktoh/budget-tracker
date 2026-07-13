@@ -7,6 +7,12 @@ import type {
   ReportScope,
 } from "@/lib/reporting/types";
 import type { EntryStatusSlug } from "@/lib/db/types";
+import {
+  ECONOMIC_CLASS_LABEL,
+  ECONOMIC_CLASS_ORDER,
+  classifyCategory,
+  type EconomicClass,
+} from "@/lib/reporting/economic-class";
 
 /* -------------------------------------------------------------------------- */
 /* Filtering                                                                  */
@@ -68,6 +74,14 @@ export function filterExpenditure(
     if (filters.phc === "no" && row.is_phc) return false;
     if (filters.lgaId && row.lga_id !== filters.lgaId) return false;
     if (filters.facilityId && row.facility_id !== filters.facilityId) return false;
+    if (
+      filters.fundingSourceId &&
+      !row.funding_allocations.some(
+        (allocation) => allocation.funding_source_id === filters.fundingSourceId,
+      )
+    ) {
+      return false;
+    }
     return true;
   });
 }
@@ -144,7 +158,7 @@ export function aggregateStatusCounts(
   for (const row of e) {
     expenditureCounts[row.status] += 1;
     if (row.status === "approved" || row.status === "processed") {
-      totalExpenditure += row.amount;
+      totalExpenditure += expenditureAmountForFilters(row, filters);
     }
   }
   return {
@@ -185,7 +199,10 @@ export function aggregateBudgetVsActual(
   const expenditureByKey = new Map<string, number>();
   for (const row of filteredExpenditure) {
     const key = `${row.mda_id}::${row.fiscal_year}`;
-    expenditureByKey.set(key, (expenditureByKey.get(key) ?? 0) + row.amount);
+    expenditureByKey.set(
+      key,
+      (expenditureByKey.get(key) ?? 0) + expenditureAmountForFilters(row, filters),
+    );
   }
 
   return filteredBudgets
@@ -274,6 +291,66 @@ export function aggregateExpenditureByCategory(
         total_amount: row.amount,
         entry_count: 1,
       });
+    }
+  }
+  return Array.from(groups.values()).sort(
+    (a, b) => b.total_amount - a.total_amount,
+  );
+}
+
+export type ExpenditureByFundingSourceRow = {
+  funding_source_id: string;
+  funding_source_name: string;
+  total_amount: number;
+  entry_count: number;
+};
+
+function expenditureAmountForFilters(
+  row: ExpenditureEntryLite,
+  filters: ReportFilters,
+): number {
+  if (!filters.fundingSourceId) return row.amount;
+  return row.funding_allocations
+    .filter(
+      (allocation) => allocation.funding_source_id === filters.fundingSourceId,
+    )
+    .reduce((sum, allocation) => sum + allocation.amount, 0);
+}
+
+export function aggregateExpenditureByFundingSource(
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): ExpenditureByFundingSourceRow[] {
+  const filtered = filterExpenditure(expenditure, filters, scope);
+  const groups = new Map<string, ExpenditureByFundingSourceRow>();
+  for (const row of filtered) {
+    const allocations = filters.fundingSourceId
+      ? row.funding_allocations.filter(
+          (allocation) => allocation.funding_source_id === filters.fundingSourceId,
+        )
+      : row.funding_allocations;
+
+    for (const allocation of allocations) {
+      const existing = groups.get(allocation.funding_source_id);
+      if (existing) {
+        existing.total_amount += allocation.amount;
+      } else {
+        groups.set(allocation.funding_source_id, {
+          funding_source_id: allocation.funding_source_id,
+          funding_source_name: allocation.funding_source_name,
+          total_amount: allocation.amount,
+          entry_count: 0,
+        });
+      }
+    }
+
+    const touchedSources = new Set(
+      allocations.map((allocation) => allocation.funding_source_id),
+    );
+    for (const sourceId of touchedSources) {
+      const group = groups.get(sourceId);
+      if (group) group.entry_count += 1;
     }
   }
   return Array.from(groups.values()).sort(
@@ -433,7 +510,9 @@ export function aggregateAopPlannedVsActual(
   scope: ReportScope = {},
 ): AopPlannedVsActualRow[] {
   const filteredAop = filterAop(aopActivities, filters, scope);
-  const filteredExpenditure = filterExpenditure(expenditure, filters, scope);
+  // Planning performance is an official actual: pending and rejected entries
+  // must not inflate linked spend when the report status filter is "all".
+  const filteredExpenditure = actualExpenditure(expenditure, filters, scope);
 
   const linkedByActivity = new Map<string, number>();
   for (const row of filteredExpenditure) {
@@ -929,4 +1008,392 @@ export function aggregateUnlinkedExpenditure(
   return Array.from(groups.values()).sort(
     (a, b) => b.total_amount - a.total_amount,
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Year-over-year comparison (needs a prior fiscal year in the dataset)       */
+/* -------------------------------------------------------------------------- */
+
+export type YoyComparisonReport = {
+  current_fiscal_year: number | null;
+  prior_fiscal_year: number | null;
+  current_budget_amount: number;
+  prior_budget_amount: number;
+  current_actual_amount: number;
+  prior_actual_amount: number;
+  /** current budget / prior budget. Null when no prior budget. */
+  budget_multiple: number | null;
+  /** current actual / prior actual. Null when no prior actual. */
+  actual_multiple: number | null;
+};
+
+/**
+ * Compares the current filters' fiscal year against the immediately prior
+ * year, holding every other dimension of the filter constant. Returns zeros
+ * when a year has no data (e.g. before the FY2025 baseline is seeded).
+ */
+export function aggregateYoyComparison(
+  budgets: ApprovedBudgetLite[],
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): YoyComparisonReport {
+  const current = filters.fiscalYear;
+  const prior = current === null ? null : current - 1;
+
+  const budgetFor = (year: number | null) =>
+    year === null
+      ? 0
+      : sumAmounts(
+          filterBudgets(budgets, { ...filters, fiscalYear: year }, scope).map(
+            (row) => ({ amount: row.total_budget_amount }),
+          ),
+        );
+  const actualFor = (year: number | null) =>
+    year === null
+      ? 0
+      : sumAmounts(
+          actualExpenditure(expenditure, { ...filters, fiscalYear: year }, scope),
+        );
+
+  const currentBudget = budgetFor(current);
+  const priorBudget = budgetFor(prior);
+  const currentActual = actualFor(current);
+  const priorActual = actualFor(prior);
+
+  return {
+    current_fiscal_year: current,
+    prior_fiscal_year: prior,
+    current_budget_amount: currentBudget,
+    prior_budget_amount: priorBudget,
+    current_actual_amount: currentActual,
+    prior_actual_amount: priorActual,
+    budget_multiple: priorBudget === 0 ? null : currentBudget / priorBudget,
+    actual_multiple: priorActual === 0 ? null : currentActual / priorActual,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Exceptions (audit integrity checks derived from the ledger)                */
+/* -------------------------------------------------------------------------- */
+
+export type ExceptionKind =
+  | "unlinked_aop"
+  | "allocation_mismatch"
+  | "rejected";
+
+export type ExceptionRow = {
+  entry_id: string;
+  public_id: string;
+  voucher_ref_no: string;
+  mda_id: string;
+  mda_name: string;
+  programme_area_name: string;
+  expenditure_category_name: string;
+  amount: number;
+  kind: ExceptionKind;
+  detail: string;
+};
+
+export type ExceptionsReport = {
+  rows: ExceptionRow[];
+  counts: Record<ExceptionKind, number>;
+  /** Integrity exceptions that indicate a real data problem (mismatch + rejected). */
+  integrity_count: number;
+};
+
+/** Tolerance (naira) for comparing an entry amount to its allocation sum. */
+const ALLOCATION_TOLERANCE = 0.01;
+
+/**
+ * Ledger integrity findings for the audit report and hub signal chips:
+ *  - `allocation_mismatch`: funding allocations don't sum to the entry amount
+ *  - `rejected`: entry was rejected in review
+ *  - `unlinked_aop`: actual expenditure not linked to an AOP activity
+ * The status filter is ignored so rejected entries always surface.
+ */
+export function aggregateExceptions(
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): ExceptionsReport {
+  const rows: ExceptionRow[] = [];
+  const counts: Record<ExceptionKind, number> = {
+    unlinked_aop: 0,
+    allocation_mismatch: 0,
+    rejected: 0,
+  };
+
+  const all = filterExpenditure(expenditure, { ...filters, status: "all" }, scope);
+  for (const entry of all) {
+    const base = {
+      entry_id: entry.id,
+      public_id: entry.public_id,
+      voucher_ref_no: entry.voucher_ref_no,
+      mda_id: entry.mda_id,
+      mda_name: entry.mda_name,
+      programme_area_name: entry.programme_area_name,
+      expenditure_category_name: entry.expenditure_category_name,
+      amount: entry.amount,
+    };
+
+    if (entry.status === "rejected") {
+      counts.rejected += 1;
+      rows.push({ ...base, kind: "rejected", detail: "Entry rejected in review" });
+      continue; // a rejected entry's other checks are moot
+    }
+
+    const allocated = entry.funding_allocations.reduce(
+      (sum, allocation) => sum + allocation.amount,
+      0,
+    );
+    if (Math.abs(allocated - entry.amount) > ALLOCATION_TOLERANCE) {
+      counts.allocation_mismatch += 1;
+      rows.push({
+        ...base,
+        kind: "allocation_mismatch",
+        detail: `Allocations sum to ${allocated.toFixed(2)}, entry amount is ${entry.amount.toFixed(2)}`,
+      });
+    }
+
+    if (isActualStatus(entry.status) && entry.aop_activity_id === null) {
+      counts.unlinked_aop += 1;
+      rows.push({ ...base, kind: "unlinked_aop", detail: "No AOP activity linked" });
+    }
+  }
+
+  rows.sort((a, b) => b.amount - a.amount);
+  return {
+    rows,
+    counts,
+    integrity_count: counts.allocation_mismatch + counts.rejected,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Funding reconciliation (audit report)                                      */
+/* -------------------------------------------------------------------------- */
+
+export type ReconciliationRow = {
+  mda_id: string;
+  mda_name: string;
+  funding_source_id: string;
+  funding_source_name: string;
+  received_amount: number;
+  allocated_amount: number;
+  /** received − allocated. Negative = allocated beyond recorded funding. */
+  variance_amount: number;
+};
+
+/**
+ * Per MDA × funding source: funding received (approved/processed) vs the amount
+ * allocated to expenditure (approved/processed). Mirrors the server-side
+ * funding-pool balance and surfaces over-allocation for the audit report.
+ */
+export function aggregateReconciliation(
+  funding: FundingEntryLite[],
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): ReconciliationRow[] {
+  type Bucket = {
+    mda_id: string;
+    mda_name: string;
+    funding_source_id: string;
+    funding_source_name: string;
+    received: number;
+    allocated: number;
+  };
+  const groups = new Map<string, Bucket>();
+  const keyFor = (mdaId: string, sourceId: string) => `${mdaId}::${sourceId}`;
+
+  for (const row of actualFunding(funding, filters, scope)) {
+    const key = keyFor(row.mda_id, row.funding_source_id);
+    const bucket = groups.get(key);
+    if (bucket) {
+      bucket.received += row.amount;
+    } else {
+      groups.set(key, {
+        mda_id: row.mda_id,
+        mda_name: row.mda_name,
+        funding_source_id: row.funding_source_id,
+        funding_source_name: row.funding_source_name,
+        received: row.amount,
+        allocated: 0,
+      });
+    }
+  }
+
+  for (const row of actualExpenditure(expenditure, filters, scope)) {
+    for (const allocation of row.funding_allocations) {
+      const key = keyFor(row.mda_id, allocation.funding_source_id);
+      const bucket = groups.get(key);
+      if (bucket) {
+        bucket.allocated += allocation.amount;
+      } else {
+        groups.set(key, {
+          mda_id: row.mda_id,
+          mda_name: row.mda_name,
+          funding_source_id: allocation.funding_source_id,
+          funding_source_name: allocation.funding_source_name,
+          received: 0,
+          allocated: allocation.amount,
+        });
+      }
+    }
+  }
+
+  return Array.from(groups.values())
+    .map((bucket) => ({
+      mda_id: bucket.mda_id,
+      mda_name: bucket.mda_name,
+      funding_source_id: bucket.funding_source_id,
+      funding_source_name: bucket.funding_source_name,
+      received_amount: bucket.received,
+      allocated_amount: bucket.allocated,
+      variance_amount: bucket.received - bucket.allocated,
+    }))
+    .sort(
+      (a, b) =>
+        a.mda_name.localeCompare(b.mda_name) ||
+        b.allocated_amount - a.allocated_amount,
+    );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Economic & administrative classification (official BIR tables)             */
+/* -------------------------------------------------------------------------- */
+
+type EconomicActuals = Record<EconomicClass, number>;
+
+function zeroEconomic(): EconomicActuals {
+  return { personnel: 0, overhead: 0, capital: 0, other: 0 };
+}
+
+/** Splits actual expenditure into economic classes for a set of rows. */
+function economicActuals(rows: ExpenditureEntryLite[]): EconomicActuals {
+  const totals = zeroEconomic();
+  for (const row of rows) {
+    totals[classifyCategory(row.expenditure_category_name)] += row.amount;
+  }
+  return totals;
+}
+
+export type EconomicSummaryRow = {
+  economic_class: EconomicClass | "total";
+  label: string;
+  budget_amount: number;
+  actual_amount: number;
+  performance_rate: number | null;
+  balance_amount: number;
+};
+
+/**
+ * Sector-level budget vs actual by economic classification — Table 1 of the
+ * BIR. Budget uses the clean approved-budget split; actual is classified from
+ * expenditure categories. The `other` class has no budget line (budgets only
+ * carry personnel / other-recurrent / capital), so its budget is 0.
+ */
+export function aggregateEconomicSummary(
+  budgets: ApprovedBudgetLite[],
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): EconomicSummaryRow[] {
+  const filteredBudgets = filterBudgets(budgets, filters, scope);
+  const budget = {
+    personnel: 0,
+    overhead: 0,
+    capital: 0,
+    other: 0,
+  };
+  for (const row of filteredBudgets) {
+    budget.personnel += row.personnel_amount;
+    budget.overhead += row.other_recurrent_amount;
+    budget.capital += row.capital_amount;
+  }
+  const actual = economicActuals(actualExpenditure(expenditure, filters, scope));
+
+  const rows: EconomicSummaryRow[] = ECONOMIC_CLASS_ORDER.map((economicClass) => {
+    const b = budget[economicClass];
+    const a = actual[economicClass];
+    return {
+      economic_class: economicClass,
+      label: ECONOMIC_CLASS_LABEL[economicClass],
+      budget_amount: b,
+      actual_amount: a,
+      performance_rate: b === 0 ? null : a / b,
+      balance_amount: b - a,
+    };
+  });
+
+  const totalBudget = budget.personnel + budget.overhead + budget.capital;
+  const totalActual = actual.personnel + actual.overhead + actual.capital + actual.other;
+  rows.push({
+    economic_class: "total",
+    label: "Total",
+    budget_amount: totalBudget,
+    actual_amount: totalActual,
+    performance_rate: totalBudget === 0 ? null : totalActual / totalBudget,
+    balance_amount: totalBudget - totalActual,
+  });
+  return rows;
+}
+
+export type AdminClassificationRow = {
+  mda_id: string;
+  mda_name: string;
+  budget_amount: number;
+  personnel_amount: number;
+  overhead_amount: number;
+  capital_amount: number;
+  other_amount: number;
+  actual_total: number;
+  performance_rate: number | null;
+  balance_amount: number;
+};
+
+/**
+ * Per-MDA total expenditure by administrative classification, with the
+ * economic split per MDA — the per-MDA table of the BIR. Every MDA with an
+ * approved budget in scope appears, even at zero actual.
+ */
+export function aggregateAdminClassification(
+  budgets: ApprovedBudgetLite[],
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): AdminClassificationRow[] {
+  const filteredBudgets = filterBudgets(budgets, filters, scope);
+  const actualByMda = new Map<string, EconomicActuals>();
+  for (const row of actualExpenditure(expenditure, filters, scope)) {
+    const existing = actualByMda.get(row.mda_id) ?? zeroEconomic();
+    existing[classifyCategory(row.expenditure_category_name)] += row.amount;
+    actualByMda.set(row.mda_id, existing);
+  }
+
+  return filteredBudgets
+    .map((budget) => {
+      const actual = actualByMda.get(budget.mda_id) ?? zeroEconomic();
+      const actualTotal =
+        actual.personnel + actual.overhead + actual.capital + actual.other;
+      return {
+        mda_id: budget.mda_id,
+        mda_name: budget.mda_name,
+        budget_amount: budget.total_budget_amount,
+        personnel_amount: actual.personnel,
+        overhead_amount: actual.overhead,
+        capital_amount: actual.capital,
+        other_amount: actual.other,
+        actual_total: actualTotal,
+        performance_rate:
+          budget.total_budget_amount === 0
+            ? null
+            : actualTotal / budget.total_budget_amount,
+        balance_amount: budget.total_budget_amount - actualTotal,
+      };
+    })
+    .sort(
+      (a, b) => b.actual_total - a.actual_total || a.mda_name.localeCompare(b.mda_name),
+    );
 }

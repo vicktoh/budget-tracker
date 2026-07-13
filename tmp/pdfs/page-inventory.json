@@ -1,0 +1,2401 @@
+[
+  {
+    "quarter": 1,
+    "pdf_page": 1,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 2,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction ................................................................................................................................... 3",
+      "1.B Revenue Performance .................................................................................................................... 3",
+      "1.C Recurrent Expenditure Performance ............................................................................................. 4",
+      "1.D Capital Expenditure Performance .................................................................................................. 4",
+      "1.E Conclusions .................................................................................................................................... 4",
+      "1.F Summary Budget Implementation Graphs .................................................................................... 5",
+      "1.G Summary Budget Implementation Report ..................................................................................... 6",
+      "2.A Revenue by Administrative Classification ...................................................................................... 7"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 3,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 1: Budget Implementation ....................................................................................................................... 6",
+      "Table 2: Total Revenue by Administrative Classification ................................................................................... 7",
+      "Table 3: Total Revenue by Economic Classification ........................................................................................... 9",
+      "Table 4: Total Expenditure by Administrative Classification ........................................................................... 13",
+      "Table 5: Personnel Expenditure by Administrative Classification ................................................................... 18",
+      "Table 6: Overhead Expenditure by Administrative Classification ................................................................... 21",
+      "Table 7: Capital Expenditure by Administrative Classification ........................................................................ 25",
+      "Table 8: Other Expenditure by Administrative Classification .......................................................................... 29"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 4,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction",
+      "1.B Revenue Performance"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 5,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.C Recurrent Expenditure Performance",
+      "1.D Capital Expenditure Performance",
+      "1.E Conclusions"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 6,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.F Summary Budget Implementation Graphs"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 7,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.G Summary Budget Implementation Report",
+      "Table 1: Budget Implementation"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 8,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.A Revenue by Administrative Classification",
+      "Table 2: Total Revenue by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Revenue by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 9,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Revenue by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 10,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.B Revenue by Economic Classification",
+      "Table 3: Total Revenue by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 11,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 12,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 13,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 14,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.C Expenditure by Administrative Classification",
+      "Table 4: Total Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 15,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 16,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 17,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 22,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 18,
+    "category": "total",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 19,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 5: Personnel Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 20,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 21,
+    "category": "personnel",
+    "table_count": 0,
+    "health_admin_rows": 4,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 22,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 6: Overhead Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 23,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 24,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 25,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 22,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 26,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 7: Capital Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 27,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 28,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 10,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 29,
+    "category": "capital",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 30,
+    "category": "other",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 8: Other Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 31,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.D Expenditure by Economic Classification",
+      "Table 9: Total Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 32,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 33,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 34,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 35,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 36,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.E Expenditure by Functional Classification",
+      "Table 10: Total Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 37,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 38,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 11: Personnel Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Personnel Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 39,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 40,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 12: Overhead Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Overhead Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 41,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q1 - Overhead Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 42,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 13: Capital Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Capital Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 43,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 44,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 14: Other Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 45,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.F Expenditure by Programme Classification",
+      "Table 15: Total Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Total Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 46,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 16: Personnel Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 47,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 17: Overhead Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Overhead Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 48,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 18: Capital Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Capital Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 49,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 19: Other Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 50,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.A Overview"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 51,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.B Budget Implementation Reports by NCOA Segment",
+      "Table 20: Primary Healthcare Expenditure by Administrative Classification",
+      "Table 21: Primary Healthcare Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 52,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 22: Primary Healthcare Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 53,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 23: Primary Healthcare Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Primary Healthcare Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 54,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.C Primary Healthcare Capital Expenditure by Project",
+      "Table 24: Primary Healthcare Capital Expenditure by Project",
+      "Kano State Government Budget Performance Report 2025 Q1 - Capital Expenditure by Project"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 55,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.A Overview"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 56,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.B Budget Implementation Reports by NCOA Segment",
+      "Table 25: Basic Education Expenditure by Administrative Classification",
+      "Table 26: Basic Education Expenditure by Functional Classification",
+      "Table 27: Basic Education Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Basic Education Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 57,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 28: Basic Education Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q1 - Basic Education Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 1,
+    "pdf_page": 58,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.C Basic Education Capital Expenditure by Project",
+      "Table 29: Basic Education Capital Expenditure by Project",
+      "Kano State Government Budget Performance Report 2025 Q1 - Capital Expenditure by Project"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 1,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 2,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction ................................................................................................................................... 3",
+      "1.B Revenue Performance .................................................................................................................... 3",
+      "1.C Recurrent Expenditure Performance ............................................................................................. 3",
+      "1.D Capital Expenditure Performance .................................................................................................. 4",
+      "1.E Conclusions .................................................................................................................................... 4",
+      "1.F Summary Budget Implementation Graphs .................................................................................... 5",
+      "1.G Summary Budget Implementation Report ..................................................................................... 8",
+      "2.A Revenue by Administrative Classification ...................................................................................... 9"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 3,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 1: Budget Implementation Summary ...................................................................................................... 8",
+      "Table 2: Total Revenue by Administrative Classification ................................................................................... 9",
+      "Table 3: Total Revenue by Economic Classification ......................................................................................... 12",
+      "Table 4: Total Expenditure by Administrative Classification ........................................................................... 16",
+      "Table 5: Personnel Expenditure by Administrative Classification ................................................................... 20",
+      "Table 6: Overhead Expenditure by Administrative Classification ................................................................... 23",
+      "Table 7: Capital Expenditure by Administrative Classification ........................................................................ 27",
+      "Table 8: Other Expenditure by Administrative Classification .......................................................................... 30"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 4,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction",
+      "1.B Revenue Performance",
+      "1.C Recurrent Expenditure Performance"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 5,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.D Capital Expenditure Performance",
+      "1.E Conclusions"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 6,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.F Summary Budget Implementation Graphs"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 7,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 8,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 9,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.G Summary Budget Implementation Report",
+      "Table 1: Budget Implementation Summary"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 10,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.A Revenue by Administrative Classification",
+      "Table 2: Total Revenue by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Total Revenue by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 11,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 12,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 13,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.B Revenue by Economic Classification",
+      "Table 3: Total Revenue by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 14,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 15,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 16,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 17,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.C Expenditure by Administrative Classification",
+      "Table 4: Total Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 18,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 19,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 20,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 22,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 21,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 5: Personnel Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 22,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 23,
+    "category": "personnel",
+    "table_count": 0,
+    "health_admin_rows": 4,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 24,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 6: Overhead Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 25,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 26,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 27,
+    "category": "overhead",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 28,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 7: Capital Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 29,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 30,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 10,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 31,
+    "category": "other",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 8: Other Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 32,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.D Expenditure by Economic Classification",
+      "Table 9: Total Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 33,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 34,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 35,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 36,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 37,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.E Expenditure by Functional Classification",
+      "Table 10: Total Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Total Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 38,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 39,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 11: Personnel Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Personnel Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 40,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 41,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 12: Overhead Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Overhead Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 42,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 43,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 13: Capital Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Capital Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 44,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 45,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 14: Other Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Other Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 46,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.F Expenditure by Programme Classification",
+      "Table 15: Total Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Total Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 47,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 16: Personnel Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 48,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 17: Overhead Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 49,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 18: Capital Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Capital Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 50,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 19: Other Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 51,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.A Overview"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 52,
+    "category": null,
+    "table_count": 2,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.B Budget Implementation Reports by NCOA Segment",
+      "Table 20: Primary Healthcare Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Primary Healthcare Expenditure by Administrative Classification",
+      "Table 21: Primary Healthcare Expenditure by Functional Classification",
+      "Table 22: Primary Healthcare Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Primary Healthcare Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 53,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 23: Primary Healthcare Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Primary Healthcare Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 54,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.A Overview"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 55,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.B Budget Implementation Reports by NCOA Segment",
+      "Table 24: Basic Education Expenditure by Administrative Classification",
+      "Table 25: Basic Education Expenditure by Functional Classification",
+      "Table 26: Basic Education Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Basic Education Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 2,
+    "pdf_page": 56,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 27: Basic Education Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q2 - Basic Education Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 1,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 2,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction .................................................................................................................................. 3",
+      "1.B Revenue Performance ................................................................................................................. 3",
+      "1.C Recurrent Expenditure Performance ......................................................................................... 3",
+      "1.D Capital Expenditure Performance .............................................................................................. 3",
+      "1.E Conclusions ................................................................................................................................... 4",
+      "1.F Summary Budget Implementation Graphs ............................................................................... 5",
+      "1.G Summary Budget Implementation Report ............................................................................... 7",
+      "2.A Revenue by Administrative Classification ................................................................................. 8"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 3,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 1: Budget Implementation Summary ................................................................................................ 7",
+      "Table 2: Total Revenue by Administrative Classification........................................................................... 8",
+      "Table 3: Total Revenue by Economic Classification ................................................................................. 10",
+      "Table 4: Total Expenditure by Administrative Classification ................................................................... 14",
+      "Table 5: Personnel Expenditure by Administrative Classification .......................................................... 18",
+      "Table 6: Overhead Expenditure by Administrative Classification ........................................................... 21",
+      "Table 7: Capital Expenditure by Administrative Classification ................................................................ 25",
+      "Table 8: Other Expenditure by Administrative Classification .................................................................. 28"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 4,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction",
+      "1.B Revenue Performance",
+      "1.C Recurrent Expenditure Performance"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 5,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.D Capital Expenditure Performance",
+      "1.E Conclusions"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 6,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.F Summary Budget Implementation Graphs"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 7,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 8,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.G Summary Budget Implementation Report",
+      "Table 1: Budget Implementation Summary"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 9,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.A Revenue by Administrative Classification",
+      "Table 2: Total Revenue by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 10,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Revenue by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 11,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.B Revenue by Economic Classification",
+      "Table 3: Total Revenue by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 12,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 13,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 14,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 15,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.C Expenditure by Administrative Classification",
+      "Table 4: Total Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 16,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 17,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 18,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 23,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 19,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 5: Personnel Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 20,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 21,
+    "category": "personnel",
+    "table_count": 0,
+    "health_admin_rows": 4,
+    "headings": []
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 22,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 6: Overhead Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 23,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 24,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 25,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 23,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 26,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 7: Capital Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 27,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 28,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 10,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 29,
+    "category": "other",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 8: Other Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 30,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.D Expenditure by Economic Classification",
+      "Table 9: Total Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 31,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 32,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 33,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 34,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.E Expenditure by Functional Classification",
+      "Table 10: Total Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 35,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 36,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 11: Personnel Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Personnel Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 37,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 38,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 12: Overhead Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Overhead Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 39,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Overhead Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 40,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 13: Capital Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 41,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 42,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 14: Other Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Other Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 43,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.F Expenditure by Programme Classification",
+      "Table 15: Total Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Total Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 44,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 16: Personnel Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Personnel Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 45,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 17: Overhead Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 46,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 18: Capital Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 47,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 19: Other Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 48,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.A Overview"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 49,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.B Budget Implementation Reports by NCOA Segment",
+      "Table 20: Primary Healthcare Expenditure by Administrative Classification",
+      "Table 21: Primary Healthcare Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 50,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 22: Primary Healthcare Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Primary Healthcare Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 51,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 23: Primary Healthcare Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 52,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.C Primary Healthcare Capital Expenditure by Project",
+      "Table 24: Primary Healthcare Capital Expenditure by Project"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 53,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.A Overview"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 54,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.B Budget Implementation Reports by NCOA Segment",
+      "Table 25: Basic Education Expenditure by Administrative Classification",
+      "Table 26: Basic Education Expenditure by Functional Classification",
+      "Table 27: Basic Education Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 55,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 28: Basic Education Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q3 - Basic Education Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 56,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.C Basic Education Capital Expenditure by Project",
+      "Table 29: Basic Education Capital Expenditure by Project",
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Project"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 57,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "5.A Climate Changed Capital Expenditure",
+      "Table 30: Climate Change Adaptation Capital Expenditure Tracking",
+      "Kano State Government Budget Performance Report 2025 Q3 - Capital Expenditure by Project"
+    ]
+  },
+  {
+    "quarter": 3,
+    "pdf_page": 58,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 31: Climate Change Mitigation Capital Expenditure Tracking"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 1,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 2,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction .................................................................................................................................. 3",
+      "1.B Revenue Performance ................................................................................................................. 3",
+      "1.C Recurrent Expenditure Performance ......................................................................................... 4",
+      "1.D Capital Expenditure Performance .............................................................................................. 4",
+      "1.E Conclusions ................................................................................................................................... 4",
+      "1.F Summary Budget Implementation Graphs ............................................................................... 5",
+      "1.G Summary Budget Implementation Report ............................................................................... 7",
+      "2.A Revenue by Administrative Classification ................................................................................. 8"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 3,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 1: Budget Implementation Summary ................................................................................................ 7",
+      "Table 2: Total Revenue by Administrative Classification........................................................................... 8",
+      "Table 3: Total Revenue by Economic Classification ................................................................................. 10",
+      "Table 4: Total Expenditure by Administrative Classification ................................................................... 14",
+      "Table 5: Personnel Expenditure by Administrative Classification .......................................................... 18",
+      "Table 6: Overhead Expenditure by Administrative Classification ........................................................... 21",
+      "Table 7: Capital Expenditure by Administrative Classification ................................................................ 25",
+      "Table 8: Other Expenditure by Administrative Classification .................................................................. 28"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 4,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.A Introduction",
+      "1.B Revenue Performance"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 5,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.C Recurrent Expenditure Performance",
+      "1.D Capital Expenditure Performance",
+      "1.E Conclusions"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 6,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.F Summary Budget Implementation Graphs"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 7,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 8,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "1.G Summary Budget Implementation Report",
+      "Table 1: Budget Implementation Summary"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 9,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.A Revenue by Administrative Classification",
+      "Table 2: Total Revenue by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Revenue by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 10,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Revenue by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 11,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.B Revenue by Economic Classification",
+      "Table 3: Total Revenue by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 12,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 13,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Revenue by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 14,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 15,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.C Expenditure by Administrative Classification",
+      "Table 4: Total Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 16,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 17,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 18,
+    "category": "total",
+    "table_count": 1,
+    "health_admin_rows": 23,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 19,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 5: Personnel Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 20,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 21,
+    "category": "personnel",
+    "table_count": 1,
+    "health_admin_rows": 4,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Personnel Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 22,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 6: Overhead Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 23,
+    "category": "overhead",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 24,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 25,
+    "category": "overhead",
+    "table_count": 1,
+    "health_admin_rows": 23,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Overhead Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 26,
+    "category": "capital",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 7: Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 27,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Capital Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 28,
+    "category": "capital",
+    "table_count": 1,
+    "health_admin_rows": 10,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 29,
+    "category": "other",
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 8: Other Expenditure by Administrative Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 30,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.D Expenditure by Economic Classification",
+      "Table 9: Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 31,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 32,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 33,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 34,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 35,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.E Expenditure by Functional Classification",
+      "Table 10: Total Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 36,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 37,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 11: Personnel Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Personnel Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 38,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 39,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 12: Overhead Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Overhead Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 40,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 41,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 13: Capital Expenditure by Functional Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Capital Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 42,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": []
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 43,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 14: Other Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 44,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "2.F Expenditure by Programme Classification",
+      "Table 15: Total Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Total Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 45,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 16: Personnel Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 46,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 17: Overhead Expenditure by Programme Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Overhead Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 47,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 18: Capital Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 48,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 19: Other Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 49,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.A Overview"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 50,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.B Budget Implementation Reports by NCOA Segment",
+      "Table 20: Primary Healthcare Expenditure by Administrative Classification",
+      "Table 21: Primary Healthcare Expenditure by Functional Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 51,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 22: Primary Healthcare Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 52,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 23: Primary Healthcare Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Primary Healthcare Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 53,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "3.C Primary Healthcare Capital Expenditure by Project",
+      "Table 24: Primary Healthcare Capital Expenditure by Project"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 54,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.A Overview"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 55,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.B Budget Implementation Reports by NCOA Segment",
+      "Table 25: Basic Education Expenditure by Administrative Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Basic Education Expenditure by Administrative Classification",
+      "Table 26: Basic Education Expenditure by Functional Classification",
+      "Table 27: Basic Education Expenditure by Programme Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 56,
+    "category": null,
+    "table_count": 1,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 28: Basic Education Expenditure by Economic Classification",
+      "Kano State Government Budget Performance Report 2025 Q4 - Basic Education Expenditure by Economic Classification"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 57,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "4.C Basic Education Capital Expenditure by Project",
+      "Table 29: Basic Education Capital Expenditure by Project"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 58,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "5.A Climate Change Capital Expenditure",
+      "Table 30: Climate Change Adaptation Capital Expenditure TrackiNG"
+    ]
+  },
+  {
+    "quarter": 4,
+    "pdf_page": 59,
+    "category": null,
+    "table_count": 0,
+    "health_admin_rows": 0,
+    "headings": [
+      "Table 31: Climate Change Mitigation Capital Expenditure Tracking"
+    ]
+  }
+]

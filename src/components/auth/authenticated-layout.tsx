@@ -20,9 +20,9 @@ const authenticatedRoutes: AppRoute[] = [
   "/expenditure",
   "/review",
   "/admin/users",
+  "/admin/reports",
   "/admin",
   "/imports",
-  "/exports",
   "/settings",
 ];
 

@@ -39,12 +39,14 @@
     --input: 132 14% 87%;
     --ring: 151 70% 28%;
     --radius: 0.5rem;
-    /* Chart palette - green, teal, brown, amber, slate. Restrained, not rainbow. */
+    /* Chart palette - green, blue, rust, amber, olive. Restrained, not rainbow.
+       Validated as a categorical set on white: lightness band, chroma floor,
+       deutan/tritan separation, and 3:1 contrast all pass. */
     --chart-1: 151 70% 28%;
-    --chart-2: 176 77% 26%;
-    --chart-3: 29 53% 36%;
-    --chart-4: 36 71% 42%;
-    --chart-5: 143 6% 42%;
+    --chart-2: 210 75% 42%;
+    --chart-3: 25 75% 40%;
+    --chart-4: 36 80% 42%;
+    --chart-5: 100 35% 38%;
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 210 25% 16%;
@@ -102,5 +104,56 @@
 @layer components {
   .focus-ring {
     @apply outline-none ring-offset-2 ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  /* Report pages use quiet paper-like depth and sharper data typography. */
+  .report-document {
+    background-image:
+      linear-gradient(hsl(var(--card) / 0.96), hsl(var(--card) / 0.96)),
+      radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.08) 0.7px, transparent 0.8px);
+    background-size: auto, 18px 18px;
+  }
+
+  .report-table-shell {
+    scrollbar-color: hsl(var(--border)) transparent;
+    scrollbar-width: thin;
+  }
+
+  .report-table-shell td,
+  .report-table-shell th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .recharts-cartesian-grid line {
+    stroke-dasharray: 3 4;
+  }
+
+  .recharts-default-tooltip {
+    box-shadow: 0 12px 30px hsl(var(--foreground) / 0.12);
+  }
+
+  .recharts-legend-item-text {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+}
+
+@media print {
+  .report-document {
+    border: 0;
+    box-shadow: none;
+  }
+
+  .report-table-shell {
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  .report-table-shell thead {
+    display: table-header-group;
+  }
+
+  .report-table-shell tr,
+  .report-table-shell .group\/chart {
+    break-inside: avoid;
   }
 }

@@ -54,6 +54,8 @@ export type ReportScope = {
 /** Lightweight shape of a funding entry the reporting layer cares about. */
 export type FundingEntryLite = {
   id: string;
+  public_id: string;
+  reference_no: string;
   mda_id: string;
   mda_name: string;
   programme_area_id: string;
@@ -67,8 +69,16 @@ export type FundingEntryLite = {
   transaction_date: string;
 };
 
+export type ExpenditureFundingAllocationLite = {
+  funding_source_id: string;
+  funding_source_name: string;
+  amount: number;
+};
+
 export type ExpenditureEntryLite = {
   id: string;
+  public_id: string;
+  voucher_ref_no: string;
   mda_id: string;
   mda_name: string;
   programme_area_id: string;
@@ -86,6 +96,7 @@ export type ExpenditureEntryLite = {
   amount: number;
   status: EntryStatusSlug;
   transaction_date: string;
+  funding_allocations: ExpenditureFundingAllocationLite[];
 };
 
 export type ApprovedBudgetLite = {

@@ -9,6 +9,8 @@ This document explains the executable database artifacts produced from the workb
 - `supabase/seeds/001_reference_data.sql` seeds statuses, MDA types, MDAs, funding sources, expenditure categories, programme areas, payment methods, LGAs, and PHC facilities.
 - `supabase/seeds/002_budget_2026.sql` seeds 2026 approved MDA budgets from the workbook.
 - `supabase/seeds/003_aop_2026.sql` seeds 2026 AOP activities from the workbook.
+- `supabase/migrations/20260714120000_approved_budget_lines.sql` adds the `approved_budget_lines` line-item table (NCOA chart-of-accounts detail behind the aggregate `approved_budgets`) and the `expenditure_entries.approved_budget_line_id` binding.
+- `supabase/seeds/010_budget_lines_2026.sql` seeds the 2026 Kano health-sector budget lines from `KANO STATE HEALTH SECTOR APPROVED BUDGET (1).xlsx` and regenerates the `approved_budgets` aggregate for 2026 as a rollup of those lines.
 - `tools/generate_supabase_seed.py` regenerates the seed SQL files from `/Users/kunle/Downloads/Kano Health Finance Tracker.xlsx`.
 - `tools/verify_supabase_stubs.sql` provides local-only stubs for plain Postgres verification. Do not run it against a real Supabase project.
 
@@ -21,9 +23,11 @@ supabase db reset
 psql "$DATABASE_URL" -f supabase/seeds/001_reference_data.sql
 psql "$DATABASE_URL" -f supabase/seeds/002_budget_2026.sql
 psql "$DATABASE_URL" -f supabase/seeds/003_aop_2026.sql
+# ... 004–009 as needed ...
+psql "$DATABASE_URL" -f supabase/seeds/010_budget_lines_2026.sql
 ```
 
-If using the Supabase CLI seed flow later, keep the same ordering because budgets and AOP activities depend on MDAs.
+If using the Supabase CLI seed flow later, keep the same ordering because budgets and AOP activities depend on MDAs. `010_budget_lines_2026.sql` must run after `001` (needs MDAs) and after the `20260714120000_approved_budget_lines` migration; it supersedes the FY2026 rows written by `002` by regenerating them as a rollup of the seeded lines.
 
 ## Schema Highlights
 
@@ -35,6 +39,7 @@ If using the Supabase CLI seed flow later, keep the same ordering because budget
 - Admins can manage all reference data.
 - Reference values are deactivated rather than deleted once referenced.
 - Expenditure items are optional dropdown-backed values, not free text.
+- `approved_budget_lines` holds NCOA line-item detail (Admin × Economic × Function × Location × Fund × Programme, split into personnel/overhead/capital classes); the aggregate `approved_budgets` is a rollup of it. Expenditure funded from the state budget (`kano-state-govt-budget-release`) can bind to a specific line via `expenditure_entries.approved_budget_line_id`, which must match the entry's MDA and fiscal year.
 - PHC expenditure requires LGA and PHC facility.
 - Entry comments, attachments, audit events, imports, notifications, exports, and data-quality warnings are modeled from v1.
 - Reporting views use `security_invoker = true` so RLS remains effective.

@@ -21,6 +21,8 @@ export function fundingFixtures(): FundingEntryLite[] {
   return [
     {
       id: "f1",
+      public_id: "FL-2026-0001",
+      reference_no: "REF-f1",
       mda_id: MDA_HEALTH,
       mda_name: "Ministry of Health",
       programme_area_id: PA_PRIMARY,
@@ -35,6 +37,8 @@ export function fundingFixtures(): FundingEntryLite[] {
     },
     {
       id: "f2",
+      public_id: "FL-2026-0002",
+      reference_no: "REF-f2",
       mda_id: MDA_HEALTH,
       mda_name: "Ministry of Health",
       programme_area_id: PA_PRIMARY,
@@ -49,6 +53,8 @@ export function fundingFixtures(): FundingEntryLite[] {
     },
     {
       id: "f3",
+      public_id: "FL-2026-0003",
+      reference_no: "REF-f3",
       mda_id: MDA_PHCMB,
       mda_name: "PHCMB",
       programme_area_id: PA_PRIMARY,
@@ -63,6 +69,8 @@ export function fundingFixtures(): FundingEntryLite[] {
     },
     {
       id: "f4",
+      public_id: "FL-2025-0004",
+      reference_no: "REF-f4",
       mda_id: MDA_HEALTH,
       mda_name: "Ministry of Health",
       programme_area_id: PA_SECONDARY,
@@ -82,6 +90,8 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
   return [
     {
       id: "e1",
+      public_id: "EL-2026-0001",
+      voucher_ref_no: "VCH-e1",
       mda_id: MDA_HEALTH,
       mda_name: "Ministry of Health",
       programme_area_id: PA_PRIMARY,
@@ -99,9 +109,18 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       amount: 600_000,
       status: "approved",
       transaction_date: "2026-01-20",
+      funding_allocations: [
+        {
+          funding_source_id: FS_FED,
+          funding_source_name: "Federal Allocation",
+          amount: 600_000,
+        },
+      ],
     },
     {
       id: "e2",
+      public_id: "EL-2026-0002",
+      voucher_ref_no: "VCH-e2",
       mda_id: MDA_HEALTH,
       mda_name: "Ministry of Health",
       programme_area_id: PA_PRIMARY,
@@ -119,9 +138,18 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       amount: 200_000,
       status: "approved",
       transaction_date: "2026-04-05",
+      funding_allocations: [
+        {
+          funding_source_id: FS_INT,
+          funding_source_name: "International Donor",
+          amount: 200_000,
+        },
+      ],
     },
     {
       id: "e3",
+      public_id: "EL-2026-0003",
+      voucher_ref_no: "VCH-e3",
       mda_id: MDA_PHCMB,
       mda_name: "PHCMB",
       programme_area_id: PA_PRIMARY,
@@ -139,9 +167,18 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       amount: 350_000,
       status: "pending",
       transaction_date: "2026-05-12",
+      funding_allocations: [
+        {
+          funding_source_id: FS_FED,
+          funding_source_name: "Federal Allocation",
+          amount: 350_000,
+        },
+      ],
     },
     {
       id: "e4",
+      public_id: "EL-2025-0004",
+      voucher_ref_no: "VCH-e4",
       mda_id: MDA_HEALTH,
       mda_name: "Ministry of Health",
       programme_area_id: PA_SECONDARY,
@@ -159,6 +196,13 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       amount: 100_000,
       status: "rejected",
       transaction_date: "2025-09-01",
+      funding_allocations: [
+        {
+          funding_source_id: FS_FED,
+          funding_source_name: "Federal Allocation",
+          amount: 100_000,
+        },
+      ],
     },
   ];
 }

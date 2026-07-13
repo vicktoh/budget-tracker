@@ -176,10 +176,12 @@ begin
       updated_at = now();
 
   if mda_hq_id is not null then
+    -- The reviewer role now grants review access to every MDA automatically,
+    -- so no per-MDA reviewer membership is seeded.
     insert into public.user_mda_memberships (user_id, mda_id, membership_role)
     values
-      (mda_user_id, mda_hq_id, 'submitter'),
-      (reviewer_id, mda_hq_id, 'reviewer')
+      (mda_user_id, mda_hq_id, 'funding_submitter'),
+      (mda_user_id, mda_hq_id, 'expenditure_submitter')
     on conflict (user_id, mda_id, membership_role) do nothing;
   end if;
 

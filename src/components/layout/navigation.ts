@@ -3,7 +3,6 @@ import {
   BarChart3Icon,
   CalendarRangeIcon,
   DatabaseIcon,
-  DownloadIcon,
   FileInputIcon,
   InboxIcon,
   LandmarkIcon,
@@ -17,8 +16,8 @@ import {
   UploadIcon,
   UsersIcon,
 } from "lucide-react";
-import type { AppRole } from "@/lib/auth-types";
-import type { AppRoute } from "@/lib/access";
+import type { AppProfile } from "@/lib/auth-types";
+import { type AppRoute } from "@/lib/access";
 
 export type NavigationSection = "operations" | "entries" | "review" | "admin" | "personal";
 
@@ -26,7 +25,8 @@ export type NavigationItem = {
   label: string;
   path: AppRoute;
   icon: LucideIcon;
-  roles: AppRole[];
+  /** Legacy role hint; visibility is resolved via `canAccessRoute`. */
+  roles: AppProfile["role"][];
   section: NavigationSection;
 };
 
@@ -70,7 +70,7 @@ export const navigationItems: NavigationItem[] = [
     label: "Reports",
     path: "/admin/reports",
     icon: PieChartIcon,
-    roles: ["admin"],
+    roles: ["admin", "reviewer"],
     section: "admin",
   },
   {
@@ -120,13 +120,6 @@ export const navigationItems: NavigationItem[] = [
     path: "/imports",
     icon: UploadIcon,
     roles: ["admin"],
-    section: "admin",
-  },
-  {
-    label: "Exports",
-    path: "/exports",
-    icon: DownloadIcon,
-    roles: ["reviewer", "admin"],
     section: "admin",
   },
   {

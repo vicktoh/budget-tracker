@@ -11,7 +11,7 @@ import type {
 type Client = TypedSupabaseClient;
 
 const FUNDING_SELECT = `
-  id, mda_id, fiscal_year, quarter, amount, status, transaction_date,
+  id, public_id, reference_no, mda_id, fiscal_year, quarter, amount, status, transaction_date,
   programme_area_id, funding_source_id,
   mdas!inner(id, name),
   programme_areas!inner(id, name),
@@ -19,13 +19,18 @@ const FUNDING_SELECT = `
 `;
 
 const EXPENDITURE_SELECT = `
-  id, mda_id, fiscal_year, quarter, amount, status, transaction_date,
+  id, public_id, voucher_ref_no, mda_id, fiscal_year, quarter, amount, status, transaction_date,
   programme_area_id, expenditure_category_id, aop_activity_id, is_phc, lga_id, facility_id,
   mdas!inner(id, name),
   programme_areas!inner(id, name),
   expenditure_categories!inner(id, name),
   lgas(id, name),
-  facilities(id, name)
+  facilities(id, name),
+  expenditure_funding_allocations(
+    funding_source_id,
+    amount,
+    funding_sources!inner(id, name)
+  )
 `;
 
 const BUDGET_SELECT = `
@@ -56,6 +61,8 @@ function pickRelated(value: RelatedNamed): { id: string; name: string } | null {
 
 type RawFunding = {
   id: string;
+  public_id: string | null;
+  reference_no: string;
   mda_id: string;
   fiscal_year: number;
   quarter: number;
@@ -71,6 +78,8 @@ type RawFunding = {
 
 type RawExpenditure = {
   id: string;
+  public_id: string | null;
+  voucher_ref_no: string;
   mda_id: string;
   fiscal_year: number;
   quarter: number;
@@ -88,6 +97,13 @@ type RawExpenditure = {
   expenditure_categories: RelatedNamed;
   lgas: RelatedNamed;
   facilities: RelatedNamed;
+  expenditure_funding_allocations:
+    | Array<{
+        funding_source_id: string;
+        amount: number;
+        funding_sources: RelatedNamed;
+      }>
+    | null;
 };
 
 type RawBudget = {
@@ -125,6 +141,8 @@ async function loadFunding(
   const rows = (data ?? []) as unknown as RawFunding[];
   return rows.map((row) => ({
     id: row.id,
+    public_id: row.public_id ?? "",
+    reference_no: row.reference_no,
     mda_id: row.mda_id,
     mda_name: pickRelatedName(row.mdas),
     programme_area_id: row.programme_area_id,
@@ -155,6 +173,8 @@ async function loadExpenditure(
     const facility = pickRelated(row.facilities);
     return {
       id: row.id,
+      public_id: row.public_id ?? "",
+      voucher_ref_no: row.voucher_ref_no,
       mda_id: row.mda_id,
       mda_name: pickRelatedName(row.mdas),
       programme_area_id: row.programme_area_id,
@@ -172,6 +192,13 @@ async function loadExpenditure(
       amount: Number(row.amount),
       status: row.status,
       transaction_date: row.transaction_date,
+      funding_allocations: (row.expenditure_funding_allocations ?? []).map(
+        (allocation) => ({
+          funding_source_id: allocation.funding_source_id,
+          funding_source_name: pickRelatedName(allocation.funding_sources),
+          amount: Number(allocation.amount),
+        }),
+      ),
     };
   });
 }

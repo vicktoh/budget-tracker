@@ -27,6 +27,8 @@ import {
   type EntryAuditEventRow,
   type EntryCommentRow,
 } from "@/lib/db/review";
+import { listEntryDataQualityWarnings } from "@/lib/db/data-quality-warnings";
+import { formatFundingSourceSummary } from "@/lib/expenditure/funding-allocations";
 import type { EntryType } from "@/lib/db/types";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 
@@ -50,6 +52,9 @@ export function ReviewEntryDetailRoute({ mode }: { mode: Mode }) {
   const [comments, setComments] = React.useState<EntryCommentRow[]>([]);
   const [auditEvents, setAuditEvents] = React.useState<EntryAuditEventRow[]>([]);
   const [attachments, setAttachments] = React.useState<EntryAttachmentRow[]>([]);
+  const [dataQualityWarnings, setDataQualityWarnings] = React.useState<
+    Awaited<ReturnType<typeof listEntryDataQualityWarnings>>
+  >([]);
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [sidecarError, setSidecarError] = React.useState<string | null>(null);
@@ -71,7 +76,7 @@ export function ReviewEntryDetailRoute({ mode }: { mode: Mode }) {
 
     (async () => {
       try {
-        const [entryResult, commentsResult, attachmentsResult, auditResult] =
+        const [entryResult, commentsResult, attachmentsResult, auditResult, warningsResult] =
           await Promise.allSettled([
             mode.kind === "funding"
               ? getFundingEntry(supabase!, mode.entryId)
@@ -79,6 +84,7 @@ export function ReviewEntryDetailRoute({ mode }: { mode: Mode }) {
             listEntryComments(supabase!, entryType, mode.entryId),
             listEntryAttachments(supabase!, entryType, mode.entryId),
             listEntryAuditEvents(supabase!, entryType, mode.entryId),
+            listEntryDataQualityWarnings(supabase!, entryType, mode.entryId),
           ]);
 
         if (!active) return;
@@ -120,6 +126,11 @@ export function ReviewEntryDetailRoute({ mode }: { mode: Mode }) {
           setAuditEvents(auditResult.value);
         } else {
           setAuditEvents([]);
+        }
+        if (warningsResult.status === "fulfilled") {
+          setDataQualityWarnings(warningsResult.value);
+        } else {
+          setDataQualityWarnings([]);
         }
 
         if (sidecarMessages.length > 0) {
@@ -201,7 +212,7 @@ export function ReviewEntryDetailRoute({ mode }: { mode: Mode }) {
   const admin = isAdmin(profile);
   const canReview = admin || canReviewMda(profile, entry.mda_id);
   const canEditReviewed =
-    canReview && entry.status !== "pending" && entry.status !== "processed";
+    admin && entry.status !== "pending" && entry.status !== "processed";
 
   const sections: EntryReviewSection[] =
     mode.kind === "funding"
@@ -220,6 +231,17 @@ export function ReviewEntryDetailRoute({ mode }: { mode: Mode }) {
           <AlertTitle>Some details are limited</AlertTitle>
           <AlertDescription>{sidecarError}</AlertDescription>
         </Alert>
+      ) : null}
+
+      {dataQualityWarnings.length > 0 ? (
+        <div className="flex flex-col gap-2">
+          {dataQualityWarnings.map((warning) => (
+            <Alert key={warning.id} variant="warning">
+              <AlertTitle>Data quality warning</AlertTitle>
+              <AlertDescription>{warning.message}</AlertDescription>
+            </Alert>
+          ))}
+        </div>
       ) : null}
 
       <EntryReviewDetail
@@ -344,6 +366,23 @@ function buildExpenditureSections(
     {
       label: "Voucher Reference",
       value: <code className="font-mono text-xs">{row.voucher_ref_no}</code>,
+    },
+    {
+      label: "Funding sources",
+      value:
+        (row.expenditure_funding_allocations ?? []).length > 0 ? (
+          <div className="flex flex-col gap-1 text-sm">
+            {(row.expenditure_funding_allocations ?? []).map((allocation) => (
+              <span key={allocation.id}>
+                {allocation.funding_sources?.name ?? "Funding source"} ·{" "}
+                {naira.format(Number(allocation.amount))}
+              </span>
+            ))}
+          </div>
+        ) : (
+          formatFundingSourceSummary(row.expenditure_funding_allocations ?? [])
+        ),
+      full: true,
     },
     {
       label: "Amount",

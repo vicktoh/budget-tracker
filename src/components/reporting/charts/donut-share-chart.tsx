@@ -50,13 +50,14 @@ export function DonutShareChart({
     <div className="flex flex-col gap-3">
       <div className="relative" style={{ width: "100%", height }}>
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart accessibilityLayer>
             <Tooltip
               contentStyle={{
-                borderRadius: 6,
+                borderRadius: 8,
                 border: "1px solid hsl(var(--border))",
                 fontSize: 12,
                 backgroundColor: "hsl(var(--card))",
+                boxShadow: "0 12px 30px hsl(var(--foreground) / 0.12)",
               }}
               formatter={(value, name) => [formatNaira(Number(value)), String(name)]}
             />
@@ -66,8 +67,11 @@ export function DonutShareChart({
               nameKey="label"
               innerRadius="62%"
               outerRadius="90%"
-              paddingAngle={2}
-              strokeWidth={0}
+              paddingAngle={3}
+              cornerRadius={4}
+              stroke="hsl(var(--card))"
+              strokeWidth={2}
+              isAnimationActive={false}
             >
               {visible.map((datum, index) => (
                 <Cell key={datum.id} fill={datum.color ?? pickChartColor(index)} />
@@ -77,7 +81,7 @@ export function DonutShareChart({
         </ResponsiveContainer>
         {centerValue ? (
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-semibold tabular-nums leading-tight">
+            <span className="text-2xl font-semibold tabular-nums leading-tight tracking-[-0.03em]">
               {centerValue}
             </span>
             {centerLabel ? (
@@ -88,7 +92,7 @@ export function DonutShareChart({
       </div>
 
       {!hideLegend ? (
-        <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">
+        <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 border-t border-border/60 pt-3">
           {visible.map((datum, index) => (
             <li key={datum.id} className="flex items-center gap-1.5 text-xs">
               <span

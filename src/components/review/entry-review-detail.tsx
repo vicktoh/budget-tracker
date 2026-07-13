@@ -170,7 +170,7 @@ export function EntryReviewDetail({
               {entry.mdaLabel} · {naira.format(entry.amount)}
             </CardDescription>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+         {/*<div className="flex flex-wrap items-center gap-2">
             {actions.map((action) => (
               <Button
                 key={action}
@@ -216,7 +216,7 @@ export function EntryReviewDetail({
                 {resubmitting ? "Resubmitting…" : "Resubmit"}
               </Button>
             ) : null}
-          </div>
+          </div>*/}
         </CardHeader>
         <CardContent>
           <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
@@ -326,7 +326,7 @@ function CommentsCard({
         </CardTitle>
         <CardDescription>
           Anyone who can view this entry can add a comment. Approve/reject notes
-          are added automatically when reviewers act.
+          are added automatically when viewers act.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
@@ -334,7 +334,7 @@ function CommentsCard({
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : comments.length === 0 ? (
           <Empty
-            description="No comments on this entry yet. Reviewers and submitters can share context here."
+            description="No comments on this entry yet. Viewers and submitters can share context here."
             icon={MessageSquareTextIcon}
             title="No comments"
           />
@@ -465,7 +465,7 @@ function AuditCard({
           Audit history
         </CardTitle>
         <CardDescription>
-          Every status change and edit is recorded with the reviewer who
+          Every status change and edit is recorded with the viewer who
           performed it and any reason they captured.
         </CardDescription>
       </CardHeader>

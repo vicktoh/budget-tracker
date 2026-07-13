@@ -76,7 +76,11 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Token refresh fires when a backgrounded tab is focused again. The
+      // Supabase client already holds the new session; reloading the profile
+      // here would remount authenticated forms and wipe in-progress drafts.
+      if (event === "TOKEN_REFRESHED") return;
       void loadSession(session);
     });
 
