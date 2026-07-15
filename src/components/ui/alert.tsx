@@ -7,6 +7,8 @@ const alertVariants = cva("rounded-lg border bg-card p-4 text-sm", {
     variant: {
       default: "text-foreground",
       warning: "border-status-pending/30 bg-status-pending-bg text-foreground",
+      success:
+        "border-status-approved/30 bg-status-approved-bg text-foreground",
       destructive:
         "border-status-rejected/30 bg-status-rejected-bg text-foreground",
     },

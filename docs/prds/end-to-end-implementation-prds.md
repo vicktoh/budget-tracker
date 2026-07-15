@@ -487,3 +487,68 @@ Add end-to-end hardening across validation, permissions, RLS, imports, reporting
 - Current Supabase artifacts have been syntax- and seed-verified locally with stubs, but not applied to a real Supabase project in this workspace.
 - Storage policies currently allow admin management of the private attachment bucket; tighter object-level paths should be finalized with the frontend upload/download flow.
 - This phase should be run after the feature PRDs above are implemented, but test scaffolding can begin earlier around deep modules.
+
+## PRD 7: Facility-Level Expenditure Users And Admin User Management
+
+## Problem Statement
+
+PHC expenditure is currently entered by MDA-level users who manually toggle the PHC flag and pick an LGA and Facility on every Expenditure Entry. Facility staff cannot log their own spending directly, and there is no scoping that pins a user to a facility, so PHC scope depends on the submitter selecting the right values by hand. There is also no in-app way for an Admin to create accounts; users are seeded through SQL. We need facility staff to submit expenditure for their own facility with PHC context fixed, and we need Admins to provision and manage those accounts. This decision is recorded in ADR 0004.
+
+## Solution
+
+Introduce a distinct `facility_user` role scoped by a new `user_facility_assignments` table keyed by `(user_id, facility_id, mda_id)`, allowing multiple facilities per user but a single MDA. Facility users sign in and submit Expenditure Entries only, with `is_phc` forced true and MDA, LGA, and Facility hard-locked to their assignment and enforced server-side through Row Level Security and the expenditure validation trigger. Facility users see only their own facilities' expenditure, edit only their own pending entries, and have no funding, review, admin, import, or statewide surfaces. Review of facility-submitted expenditure remains with the MDA's reviewer and Admins, unchanged. Admins provision accounts through a new Admin Users surface backed by a trusted Next.js route handler using the service-role key: it creates the auth user with an admin-set temporary password, inserts the profile with the chosen role, inserts facility assignments for facility users, and records an audit event. The surface manages all roles, not facility users alone. Facility expenditure is a standalone direct-submission path that rolls into the Monthly Submission Cycle (PRD/Slice work) once that lands, rather than being re-entered there.
+
+## User Stories
+
+1. As an Admin, I want to create user accounts in the app, so that I can onboard staff without writing SQL.
+2. As an Admin, I want to assign a new user the role of Admin, Reviewer, MDA user, or facility user, so that each account gets the right access.
+3. As an Admin, I want to create a facility user and assign them one or more PHC facilities under a single MDA, so that facility staff report against the correct board.
+4. As an Admin, I want a temporary password generated or set at creation and shown once, so that I can hand off credentials without live email.
+5. As an Admin, I want user creation and facility assignment recorded as audit events, so that account provisioning is traceable.
+6. As an Admin, I want to deactivate or reassign a facility user, so that staff changes do not require database edits.
+7. As a facility user, I want to sign in securely, so that only authorized facility staff can submit expenditure for my facility.
+8. As a facility user, I want my MDA, LGA, Facility, and PHC status preselected and locked on the Expenditure Entry form, so that I cannot submit for another facility or misreport scope.
+9. As a facility user assigned to multiple facilities, I want to choose only from my assigned facilities, so that I submit against the right one.
+10. As a facility user, I want to enter transaction date, programme area, expenditure category, optional expenditure item, amount, payment method, voucher reference number, and remarks, so that my facility spending is captured consistently.
+11. As a facility user, I want fiscal year and quarter derived from transaction date and shown read-only, so that reporting periods are not mistyped.
+12. As a facility user, I want my submitted entries to default to pending, so that the existing review workflow handles them.
+13. As a facility user, I want to view and edit my own pending entries only, so that I can fix mistakes before review without touching reviewed records.
+14. As a facility user, I want to see only my assigned facilities' expenditure entries, so that other facilities' data stays private.
+15. As a Reviewer, I want facility-submitted expenditure to appear in my MDA review queue like any other entry, so that I review it without a separate workflow.
+16. As a developer, I want facility scope enforced by RLS and the expenditure trigger, so that locked PHC fields cannot be bypassed by a crafted request.
+
+## Implementation Decisions
+
+- Add `facility_user` to the `profiles.role` check, the `AppRole` type, capability helpers, route guards, and navigation together.
+- Add `user_facility_assignments(user_id, facility_id, mda_id)` with multiple facilities per user and a single MDA enforced across a user's rows.
+- Restrict facility users to the Expenditure Entry path; force `is_phc = true` and derive/lock `mda_id`, `lga_id`, and `facility_id` from the assignment.
+- Enforce facility scope server-side: an expenditure insert/update by a facility user must target one of their assigned facilities (and matching MDA/LGA), via RLS policies and the existing validation trigger, not just disabled form inputs.
+- Scope facility-user select access to their assigned facilities only; keep MDA submitter visibility (whole MDA) unchanged.
+- Leave the review workflow unchanged; the MDA reviewer and Admins act on facility-submitted entries.
+- Build a service-role-backed Admin Users route handler for create/update across all roles; never expose the service-role key to the browser and still enforce admin authorization in server code.
+- Use an admin-set temporary password at creation; defer forced first-login reset to security hardening.
+- Keep facility expenditure as standalone submission; cross-reference the Monthly Submission Cycle so facility entries roll into the MDA cycle when that work lands.
+
+## Testing Decisions
+
+- Test capability helpers and route guards for `facility_user`: expenditure access yes; funding, review, admin, imports, statewide dashboards no.
+- Test the expenditure form renders locked MDA/LGA/Facility/PHC context for a single-facility user and a constrained facility picker for a multi-facility user.
+- Test RLS: a facility user can insert/update expenditure only for assigned facilities with `is_phc = true`, and cannot read other facilities' entries.
+- Test the validation trigger rejects a facility-user write whose facility/LGA/MDA does not match their assignment even if RLS is bypassed by service-role paths.
+- Test pending-only edit access for facility users.
+- Test the Admin Users route handler creates auth user + profile + assignments + audit event, rejects non-admin callers, and keeps the service-role key server-side.
+- Test that facility-submitted entries surface in the assigned MDA's reviewer queue.
+
+## Out of Scope
+
+- Facility-level funding or budget release entry.
+- Facility-level review or approval powers.
+- Facility-scoped dashboards beyond the user's own submissions.
+- Self-service facility-user signup or password reset email (covered later by hardening).
+- Linking LGAs or facilities to MDAs in the schema; the reporting MDA lives on the assignment row in v1.
+- Re-entering facility expenditure inside the Monthly Submission Cycle; cycle integration reuses these entries.
+
+## Further Notes
+
+- A facility user's reporting MDA is carried on the assignment row because `facilities` has no MDA link in the current schema; PHC spending typically rolls up to PHCMB.
+- This PRD depends on the existing Expenditure Entry path (PRD 2) and the capability/auth foundation (PRD 1), and informs the PHC facility-cycle entry surface in the Monthly Submission Cycle work.

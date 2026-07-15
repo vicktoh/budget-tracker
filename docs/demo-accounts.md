@@ -19,6 +19,7 @@ ChangeMe123!
 | `admin@example.gov.ng` | `ChangeMe123!` | Admin | All MDAs (admin bypass) |
 | `mda@example.gov.ng` | `ChangeMe123!` | MDA user | Ministry of Health (HQ) — submitter |
 | `reviewer@example.gov.ng` | `ChangeMe123!` | Reviewer | Ministry of Health (HQ) — reviewer |
+| `facility@example.gov.ng` | `ChangeMe123!` | Facility user | Ministry of Health (HQ) — assigned PHC |
 
 ## Re-seeding
 

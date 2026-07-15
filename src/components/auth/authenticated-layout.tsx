@@ -12,24 +12,23 @@ import {
   type AppRoute,
 } from "@/lib/access";
 
-const authenticatedRoutes = new Set<AppRoute>([
+// Ordered most-specific first so nested routes resolve to their own guard
+// (e.g. /admin/users) before the broader prefix (/admin).
+const authenticatedRoutes: AppRoute[] = [
   "/mda",
   "/funding",
   "/expenditure",
   "/review",
+  "/admin/users",
+  "/admin/reports",
   "/admin",
   "/imports",
-  "/exports",
   "/settings",
-]);
+];
 
 function normalizeRoute(pathname: string): AppRoute | null {
-  if (authenticatedRoutes.has(pathname as AppRoute)) {
-    return pathname as AppRoute;
-  }
-
-  // Match nested workflow routes (e.g. /funding/new, /funding/:id/edit) to
-  // their top-level access entry so guards stay simple.
+  // Match nested workflow routes (e.g. /funding/new, /admin/users) to their
+  // top-level access entry so guards stay simple.
   for (const route of authenticatedRoutes) {
     if (pathname === route || pathname.startsWith(`${route}/`)) {
       return route;

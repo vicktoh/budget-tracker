@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LogInIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -39,7 +40,7 @@ export function SignInRoute() {
 
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password,
     });
     setLoading(false);
@@ -56,7 +57,15 @@ export function SignInRoute() {
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Kano Health Finance Tracker</CardTitle>
+          <Image
+            alt="Seal of Kano State"
+            className="mb-2 size-16 object-contain"
+            height={64}
+            priority
+            src="/kano-seal.png"
+            width={64}
+          />
+          <CardTitle>Kano Health Financing Flow Dashboard</CardTitle>
           <CardDescription>
             Sign in to manage MDA entries, review queues, reference data, and exports.
           </CardDescription>
@@ -77,7 +86,7 @@ export function SignInRoute() {
                 <Input
                   autoComplete="email"
                   id="email"
-                  placeholder="finance@example.gov.ng"
+                  placeholder="admin@example.gov.ng"
                   required
                   type="email"
                   value={email}
@@ -96,6 +105,14 @@ export function SignInRoute() {
                 />
                 <FieldDescription>
                   Sign in with the email and password issued by your administrator.
+                  {process.env.NODE_ENV === "development" ? (
+                    <>
+                      {" "}
+                      Local demo accounts use password{" "}
+                      <code className="text-xs">ChangeMe123!</code> — see{" "}
+                      <code className="text-xs">docs/demo-accounts.md</code>.
+                    </>
+                  ) : null}
                 </FieldDescription>
               </Field>
             </FieldGroup>

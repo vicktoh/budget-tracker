@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
@@ -8,10 +8,29 @@ const inter = Inter({
   variable: "--font-sans",
 });
 
+const APP_NAME = "Kano Health Financing Flow Dashboard";
+
 export const metadata: Metadata = {
-  title: "Kano Health Finance Tracker",
+  applicationName: APP_NAME,
+  title: {
+    default: APP_NAME,
+    template: `%s · ${APP_NAME}`,
+  },
   description:
     "Authenticated health finance operations for MDA entries, review workflows, and admin insights.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "KHFF Dashboard",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#157949",
 };
 
 export default function RootLayout({

@@ -30,7 +30,7 @@ Issue tracker publication note: no issue tracker configuration or triage label v
    - Type: AFK
    - Blocked by: Slices 1, 2
    - User stories covered: PRD 2 stories 1, 8-30
-5. [ ] Reviewer/Admin entry detail, comments, and status workflow
+5. [x] Reviewer/Admin entry detail, comments, and status workflow
    - Type: AFK
    - Blocked by: Slices 3, 4
    - User stories covered: PRD 3 stories 1-16, 23-25
@@ -38,11 +38,11 @@ Issue tracker publication note: no issue tracker configuration or triage label v
    - Type: AFK
    - Blocked by: Slice 5
    - User stories covered: PRD 3 stories 17-22; PRD 4 stories 27-29
-7. [ ] Reference Data management and Reference Value Requests
+7. [x] Reference Data management and Reference Value Requests
    - Type: AFK
    - Blocked by: Slices 1, 2
    - User stories covered: PRD 4 stories 1-16
-8. [ ] Approved Budget and AOP Activity management
+8. [x] Approved Budget and AOP Activity management
    - Type: AFK
    - Blocked by: Slices 1, 2, 7
    - User stories covered: PRD 4 stories 17-20
@@ -109,6 +109,14 @@ Issue tracker publication note: no issue tracker configuration or triage label v
     - Type: AFK
     - Blocked by: Slices 13, 14, 15, 16
     - User stories covered: PRD story 81
+
+### Facility User Slices (added after facility-level expenditure decision, ADR 0004)
+
+24. [x] Facility-level expenditure users and Admin user management
+    - Type: AFK
+    - Blocked by: Slices 1, 2, 4
+    - User stories covered: PRD 7 stories 1-16
+    - Note: standalone direct-submission path; cross-references Slice 16 (PHC facility-cycle entry) so facility entries roll into the MDA cycle when that work lands.
 
 ## Issue Drafts
 
@@ -227,7 +235,7 @@ Build the complete MDA Expenditure Entry path from dashboard/navigation to form 
 Status:
 - [ ] Not started
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 
 ## What to build
 
@@ -235,15 +243,20 @@ Build review queues and entry detail workflows for Funding Entries and Expenditu
 
 ## Acceptance criteria
 
-- [ ] Reviewers can see pending entries for assigned MDAs.
-- [ ] Admins can see entries statewide.
-- [ ] Review queues support status, fiscal year, MDA, and date filters.
-- [ ] Entry detail shows form fields, Public Entry ID, comments, attachments, audit history, and status.
-- [ ] Reviewers/Admins can approve, reject, and process entries according to allowed workflow transitions.
-- [ ] Rejection requires an Entry Comment with rejection reason.
-- [ ] Reviewed-entry edits require an audit reason.
-- [ ] Audit Events are created for status changes and reviewed-entry edits.
-- [ ] Tests cover allowed/forbidden transitions, rejection comments, audit reasons, and role/MDA scope.
+- [x] Reviewers can see pending entries for assigned MDAs. *(`src/routes/review.tsx` scopes list queries by `reviewableMdaIds(profile)`; reviewer SELECT RLS on `funding_entries`/`expenditure_entries` is unchanged.)*
+- [x] Admins can see entries statewide. *(Admins return `[]` from `reviewableMdaIds`, which leaves the list queries unfiltered.)*
+- [x] Review queues support status, fiscal year, MDA, and date filters. *(`ReviewFiltersPanel` + extended `ListFundingEntriesOptions` / `ListExpenditureEntriesOptions` with `fiscalYear`, `dateFrom`, `dateTo`.)*
+- [x] Entry detail shows form fields, Public Entry ID, comments, attachments, audit history, and status. *(`src/components/review/entry-review-detail.tsx` + `src/routes/review-entry-detail.tsx`; pages at `app/(authenticated)/review/{funding,expenditure}/[id]/page.tsx`.)*
+- [x] Reviewers/Admins can approve, reject, and process entries according to allowed workflow transitions. *(`src/lib/review/transitions.ts` state machine: pending->approved|rejected, approved->processed|rejected, rejected->pending via resubmit, processed terminal; enforced server-side by `public.review_entry` RPC.)*
+- [x] Rejection requires an Entry Comment with rejection reason. *(`ReviewActionDialog` requires non-empty text for reject; `review_entry` raises `22023` if neither reason nor comment is provided.)*
+- [x] Reviewed-entry edits require an audit reason. *(`ReviewedEditBanner` captures the reason; `public.update_reviewed_funding_entry` / `update_reviewed_expenditure_entry` reject empty reasons and `set_config('app.audit_reason', ...)` so the trigger records it.)*
+- [x] Audit Events are created for status changes and reviewed-entry edits. *(Existing `app_private.audit_row_change()` trigger picks up `app.audit_reason` set by the RPCs; reviewer access added via `audit_select_entry_reviewers` policy + `current_user_can_view_entry_audit` helper.)*
+- [x] Tests cover allowed/forbidden transitions, rejection comments, audit reasons, and role/MDA scope. *(`src/test/review-transitions.test.ts` covers the full 12-case state machine + `requiresComment` + `canResubmit`; existing `src/test/access.test.ts` covers reviewer vs admin scope. Full suite: 96 passing; `tsc --noEmit` clean; `next build` succeeds; migration applied to live project `znvcxidepemlmqdhavpl`.)*
+
+Implementation notes:
+- Review actions and audit-reason capture run through Postgres `security definer` RPCs (`review_entry`, `resubmit_entry`, `update_reviewed_*_entry`) so the state-machine and `app.audit_reason` set are atomic with the row write.
+- A `success` variant alert was reused from Slice 24; no new UI primitive was needed.
+- Submitters can return rejected entries to pending via `resubmit_entry`, surfaced as a Resubmit button on the review-detail page when the viewer is the original author.
 
 ## Blocked by
 
@@ -282,7 +295,7 @@ Add non-blocking Data Quality Warnings and workflow Notifications to the review 
 Status:
 - [ ] Not started
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 
 ## What to build
 
@@ -290,15 +303,20 @@ Build Admin Reference Data management and MDA Reference Value Request workflows.
 
 ## Acceptance criteria
 
-- [ ] Admins can manage MDA Types and MDAs.
-- [ ] Admins can manage Programme Areas, Funding Sources, Expenditure Categories, Expenditure Items, Payment Methods, Entry Statuses, LGAs, and Facilities.
-- [ ] Active Reference Data appears in entry forms.
-- [ ] Inactive Reference Data is hidden from new-entry choices but preserved for historical display.
-- [ ] Referenced values use deactivate/reactivate instead of destructive delete.
-- [ ] MDA users can submit Reference Value Requests.
-- [ ] Admins can approve requests by creating or updating Reference Data.
-- [ ] Rejected Reference Value Requests require a review comment.
-- [ ] Tests cover create, update, deactivate, reactivate, request approval, and request rejection.
+- [x] Admins can manage MDA Types and MDAs. *(`ReferenceDataManager` tabs for `mda_type` and `mda`; create/update via `createReferenceValue`/`updateReferenceValue` under the `reference_admin_*` RLS policies.)*
+- [x] Admins can manage Programme Areas, Funding Sources, Expenditure Categories, Expenditure Items, Payment Methods, LGAs, and Facilities. *(One tab per kind; `REFERENCE_REGISTRY` drives the form fields. Entry Statuses are intentionally left frozen — they're a system enum referenced by the review state machine.)*
+- [x] Active Reference Data appears in entry forms. *(Existing `loadEntryFormReferenceData` already filters `active = true`; no change needed.)*
+- [x] Inactive Reference Data is hidden from new-entry choices but preserved for historical display. *(The manager passes `includeInactive: true` so admins see deactivated rows; entry-form helpers default to active-only.)*
+- [x] Referenced values use deactivate/reactivate instead of destructive delete. *(`setReferenceActive(client, kind, id, active)` is the only mutation the UI offers; there is no delete button. Postgres FKs use `on delete restrict`, which the design depends on.)*
+- [x] MDA users can submit Reference Value Requests. *(`/reference-requests` route, `ReferenceRequestForm` with kind/label + related-MDA/LGA/category context; inserts under `reference_requests_insert_own` RLS.)*
+- [x] Admins can approve requests by creating or updating Reference Data. *(`/admin/reference-requests` queue; approve flow either links an existing row or creates a new one via `approveReferenceRequest({ kind: "create_new" | "use_existing" })`.)*
+- [x] Rejected Reference Value Requests require a review comment. *(`validateReferenceRequestDecision` rejects empty comments; Postgres CHECK on `reference_value_requests` is the final gate.)*
+- [x] Tests cover create, update, deactivate, reactivate, request approval, and request rejection. *(`src/test/reference-validation.test.ts` covers kind-aware validation and 23505 error mapping; `src/test/reference-requests.test.ts` covers request draft validation and approve/reject decision validation; `src/test/access.test.ts` extended for the three new routes. Full suite: 117 passing; `tsc --noEmit` clean; `next build` succeeds.)*
+
+Implementation notes:
+- The manager dispatches by `ReferenceKind` from a single registry (`src/lib/reference/types.ts`) so adding a new reference type is a one-place change.
+- Approve "create new" reuses `createReferenceValue` so a request approval and a manual create share the same code path and audit trail (`audit_*` triggers from the initial migration).
+- Entry Statuses (`pending | approved | rejected | processed`) intentionally stay system-managed; exposing them as an editable reference would let an admin break the review state machine.
 
 ## Blocked by
 
@@ -310,7 +328,7 @@ Build Admin Reference Data management and MDA Reference Value Request workflows.
 Status:
 - [ ] Not started
 - [ ] In progress
-- [ ] Complete
+- [x] Complete
 
 ## What to build
 
@@ -318,12 +336,17 @@ Build Admin planning-data workflows for Approved Budgets and AOP Activities. Adm
 
 ## Acceptance criteria
 
-- [ ] Admins can create and update Approved Budgets by fiscal year and MDA.
-- [ ] Approved Budget totals enforce personnel plus other recurrent and recurrent plus capital relationships.
-- [ ] Admins can create and update AOP Activities by fiscal year and MDA.
-- [ ] AOP Activities support source row identity for duplicate workbook activity-code/MDA pairs.
-- [ ] AOP Activity lists can be filtered by MDA and fiscal year.
-- [ ] Tests cover budget arithmetic, budget uniqueness, AOP filtering, and duplicate source-row preservation.
+- [x] Admins can create and update Approved Budgets by fiscal year and MDA. *(`/admin/budgets` route + `ApprovedBudgetsManager`; `createApprovedBudget` / `updateApprovedBudget` in `src/lib/db/planning.ts` write under the existing `plans_admin_approved_budgets` RLS policy.)*
+- [x] Approved Budget totals enforce personnel plus other recurrent and recurrent plus capital relationships. *(`validateApprovedBudget` derives `total_recurrent_amount = personnel + other_recurrent` and `total_budget_amount = total_recurrent + capital`; `previewBudgetTotals` drives a live totals panel; the Postgres CHECK constraints in the initial migration are the final gate, surfaced as a friendly arithmetic message via `mapBudgetWriteError`.)*
+- [x] Admins can create and update AOP Activities by fiscal year and MDA. *(`/admin/aop-activities` route + `AopActivitiesManager`; `createAopActivity` / `updateAopActivity` write under `plans_admin_aop_activities`. Deactivate/reactivate via `setAopActivityActive` mirrors the reference-data pattern so historical expenditure links stay intact.)*
+- [x] AOP Activities support source row identity for duplicate workbook activity-code/MDA pairs. *(Optional `source_row_number` field on the form; `mapAopActivityWriteError` translates a `23505` collision into "set a distinct source row to keep both" guidance.)*
+- [x] AOP Activity lists can be filtered by MDA and fiscal year. *(Top-of-page filters on both managers; `listAdminAopActivities` accepts `fiscalYear` / `mdaId` / `includeInactive` so future surfaces can reuse the same helper.)*
+- [x] Tests cover budget arithmetic, budget uniqueness, AOP filtering, and duplicate source-row preservation. *(`src/test/planning-validation.test.ts` covers required-field validation, derived totals, currency formatting, fiscal-year window, source-row integer validation, and the `23505`/`23514` write-error mappers; `src/test/access.test.ts` extended for the two new admin routes. Full suite: 136 passing; `tsc --noEmit` clean; `next build` succeeds.)*
+
+Implementation notes:
+- The validation layer mirrors the Postgres CHECK constraints (`total_recurrent_amount = personnel + other_recurrent`, `total_budget_amount = total_recurrent + capital`) so the UI catches arithmetic errors before round-tripping; the database is still the final authority and surfaces leftovers as friendly arithmetic messages.
+- AOP Activities use deactivate/reactivate (`active` flag) instead of destructive delete, matching the reference-data convention so historical expenditure entries that link an activity by id keep working.
+- `defaultFiscalYearOptions` exposes a 5-year window centred on today, used both for the picker in the editor dialog and to seed the filter so the admin always has the current FY plus near-term planning years available even before a row exists.
 
 ## Blocked by
 
@@ -538,6 +561,8 @@ Generate a server-side PDF confirmation when a cycle is submitted, archived per 
 - [ ] PHC-responsible MDAs see a facility-level expenditure subtable inside the cycle, with LGA and facility selection.
 - [ ] Tests cover PDF generation success, storage path, signed download URL, and PHC-mode visibility scoped to the right MDA configuration.
 
+Note: facility-level expenditure submitted by `facility_user` accounts (Slice 24) should roll into the relevant MDA cycle here rather than being re-entered.
+
 ## Blocked by
 
 - Slice 13: Monthly Submission Cycle Skeleton
@@ -673,6 +698,8 @@ Application-level security and operations work we can ship without government ho
 - [ ] Concurrent-session controls record active sessions per user and let admins terminate other sessions.
 - [ ] CI enforces ≥80% statement coverage on application code; PRs fail below the threshold.
 - [ ] No Kano-specific value (MDA list, programme codes, facility list, user accounts, budget figures) is hardcoded in application code; all live in config or database.
+- [ ] No role is hardcoded outside the capability layer; `admin`, `reviewer`, `mda_user`, and `facility_user` all flow through `AppRole`, capability helpers, and route guards.
+- [ ] Facility-user temporary passwords (Slice 24) are subject to forced first-login reset under this hardening slice.
 - [ ] Dependency register lists every third-party library, version, and licence; GPL or proprietary dependencies are flagged.
 
 ## Blocked by
@@ -705,21 +732,35 @@ None - can start immediately and should be picked up alongside Slice 13.
 
 Status:
 - [ ] Not started
-- [ ] In progress
+- [x] In progress
 - [ ] Complete
 
 ## What to build
 
 Upgrade the v1 "offline-tolerant draft" posture to a full PWA offline-first build: service worker app-shell caching, IndexedDB mirror of reference data and the current cycle, a sync queue processed in order on reconnection, and conflict surfacing instead of silent overwrite. This slice is intentionally scheduled after the cycle work is stable.
 
+Delivered in phases: **A** (offline outbox + sync engine), **B** (reference-data cache + offline forms), **C** (PWA: service worker via Serwist, web app manifest, installable app shell, install prompt), **E** (offline browsing of funding/expenditure lists, review queue, and dashboards via a read-through IndexedDB cache). **D** (conflict surfacing) remains.
+
 ## Acceptance criteria
 
-- [ ] Service worker registers and serves the app shell offline.
-- [ ] Reference data and the active cycle are mirrored in IndexedDB.
-- [ ] Cycle drafts captured offline persist and sync on reconnection.
-- [ ] Sync queue processes operations in the order they were captured.
-- [ ] Conflict detection compares server `updated_at` vs local snapshot; conflicts surface to the user with a chosen-version action, not silent overwrite.
-- [ ] Tests cover offline draft capture, queue ordering, conflict detection, and reconnect resync.
+- [x] Service worker registers and serves the app shell offline. — Serwist (`@serwist/next`), `app/sw.ts`, precaches the app shell + static assets, runtime caching via `defaultCache`; disabled in dev.
+- [x] Reference data and the active cycle are mirrored in IndexedDB. — funding/expenditure reference data cached in IndexedDB (`reference_cache` store) and used as an offline fallback for entry forms.
+- [x] Cycle drafts captured offline persist and sync on reconnection. — funding/expenditure submissions captured to the `sync_queue` store and replayed on reconnect.
+- [x] Sync queue processes operations in the order they were captured. — FIFO by capture sequence; stops on transient errors, continues past permanent ones.
+- [ ] Conflict detection compares server `updated_at` vs local snapshot; conflicts surface to the user with a chosen-version action, not silent overwrite. — **Phase D (pending).** Unique-ref/RLS failures currently surface as a "Failed" badge with the error rather than silently overwriting.
+- [x] Tests cover offline draft capture, queue ordering, conflict detection, and reconnect resync. — queue ordering, error classification, and sync-engine replay covered; conflict-resolution tests land with Phase D.
+
+## Offline browsing (Phase E)
+
+- Read-through cache: `src/lib/offline/data-cache.ts` (`readThroughCache`) backed by a dedicated `data_cache` IndexedDB store (DB v2). Live fetch first, mirrored to cache; on failure, the last synced snapshot is served instead of erroring.
+- Wired into the funding list, expenditure list, review queue, and `useReportingData` (MDA Dashboard, Admin Insights, Budget Performance Report).
+- `src/components/offline/offline-data-notice.tsx` shows a timestamped "showing cached data" banner; note that server-side filters (status/MDA/FY/quarter) do not re-apply to a cached snapshot, though client-side search still works.
+
+## PWA install / verification notes
+
+- Install prompt: `src/components/offline/install-prompt.tsx` (handles `beforeinstallprompt` + iOS standalone detection).
+- Manifest: `app/manifest.ts` → `/manifest.webmanifest`; icons in `public/icons` (192/512 + maskable), theme color `#157949`.
+- The compiled `public/sw.js` is generated by `next build` and git-ignored; the service worker is disabled under `next dev`, so verify offline behavior against a production build (`next build && next start`).
 
 ## Blocked by
 
@@ -727,3 +768,38 @@ Upgrade the v1 "offline-tolerant draft" posture to a full PWA offline-first buil
 - Slice 14: Budget Release Entries And Expenditure Release-Reconciliation Fields
 - Slice 15: Release Notes And Activity Progress Per Cycle
 - Slice 16: Submission Confirmation PDF And PHC Facility Cycle Entry
+
+## Issue 24: Facility-Level Expenditure Users And Admin User Management
+
+Status:
+- [ ] Not started
+- [ ] In progress
+- [x] Complete
+
+## What to build
+
+Introduce a `facility_user` role and a `user_facility_assignments` table so facility staff can sign in and submit Expenditure Entries for their own PHC facility with MDA, LGA, Facility, and PHC status preselected and locked. Add an Admin Users surface (service-role-backed route handler) for creating and managing accounts across all roles, including facility users with their facility assignments. Facility-user expenditure is standalone direct submission; review stays with the MDA reviewer and Admins. See ADR 0004 and PRD 7.
+
+## Acceptance criteria
+
+- [x] Migration adds `facility_user` to the `profiles.role` check and a `user_facility_assignments` table keyed by `(user_id, facility_id)` carrying the reporting `mda_id`, with multiple facilities allowed per user and a single MDA enforced across a user's rows. *(`supabase/migrations/202606080001_facility_users.sql`: role check rewrite, table + `enforce_single_mda_per_facility_user` trigger.)*
+- [x] `AppRole`, `getRoleLabel`, capability helpers, route roles, and navigation include `facility_user`; facility users can reach `/expenditure` but not `/funding`, `/review`, `/admin`, `/imports`, or statewide dashboards. *(`src/lib/access.ts`, `src/lib/auth-types.ts`, `src/components/layout/navigation.ts`; covered by `src/test/access.test.ts`.)*
+- [x] The Expenditure Entry form, for a facility user, forces `is_phc = true` and locks MDA, LGA, and Facility to the assignment (single facility fully locked; multiple facilities use a constrained picker from the assigned set). *(`facilityScope` prop in `src/components/expenditure/expenditure-entry-form.tsx`; wired in `src/routes/expenditure-entry-page.tsx`.)*
+- [x] RLS lets a facility user insert/update expenditure only for assigned facilities with `is_phc = true` and matching MDA/LGA, and select only their assigned facilities' entries. *(`expenditure_insert_by_facility_user`, `expenditure_update_pending_by_facility_user`, `expenditure_select_by_facility_assignment` policies.)*
+- [x] The expenditure validation trigger rejects a facility-user write whose facility/LGA/MDA does not match their assignment, even via service-role paths. *(`app_private.validate_expenditure_facility_scope` keyed on `entered_by` role.)*
+- [x] Facility users can view and edit only their own pending entries. *(Existing `canEditExpenditureEntry` gate + facility-scoped RLS update policy restricted to `status = 'pending'` and `entered_by = auth.uid()`.)*
+- [x] Facility-submitted entries appear in the assigned MDA's reviewer queue and follow the existing review workflow unchanged. *(Entries carry the assignment `mda_id`; existing reviewer membership/admin policies select them with no review-side changes.)*
+- [x] An Admin Users surface backed by a trusted Next.js route handler (service-role key, never client-exposed, admin authorization enforced in server code) creates an auth user, inserts the profile with the chosen role, inserts facility assignments for facility users, sets/shows a temporary password once, and records an audit event. *(`app/api/admin/users/route.ts` + `src/routes/admin-users.tsx` + `app/(authenticated)/admin/users/page.tsx`.)*
+- [x] The Admin Users surface manages all roles (`admin`, `reviewer`, `mda_user`, `facility_user`), not facility users alone. *(Role picker offers all four; mda_user/reviewer optionally get an MDA membership, facility_user gets facility assignments.)*
+- [x] Tests cover facility capability/route scope, locked PHC context, and admin-only user management. *(`src/test/access.test.ts`: facility route scope, default path, role label, submittable/viewable/review scope, unassigned handling, admin-only `/admin/users`. Full suite: 78 passing; `tsc --noEmit` and `next build` clean.)*
+
+Implementation notes:
+- The facility scope is enforced in three layers: UI locks (`facilityScope`), RLS policies, and a role-keyed trigger that holds even for service-role writes.
+- A demo `facility@example.gov.ng` account (password `ChangeMe123!`) is seeded with one PHC facility assignment in `supabase/seeds/004_demo_users.sql`.
+- A `success` Alert variant was added (`src/components/ui/alert.tsx`) for the credential confirmation.
+
+## Blocked by
+
+- Slice 1: Next.js App Shell And Authenticated Role Routing
+- Slice 2: Supabase Database Connection, Typed Access, And Capability Checks
+- Slice 4: Expenditure Entry Submit And Pending Edit Path

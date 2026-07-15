@@ -57,6 +57,7 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
               session.user.email?.split("@")[0] ?? "Kano finance user",
             role: "mda_user",
             memberships: [],
+            facilityAssignments: [],
           },
           loading: false,
         });
@@ -75,7 +76,11 @@ export function AuthProvider({ children, initialState }: AuthProviderProps) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      // Token refresh fires when a backgrounded tab is focused again. The
+      // Supabase client already holds the new session; reloading the profile
+      // here would remount authenticated forms and wipe in-progress drafts.
+      if (event === "TOKEN_REFRESHED") return;
       void loadSession(session);
     });
 
@@ -104,6 +109,7 @@ async function loadProfile(user: User): Promise<AppProfile> {
       full_name: user.email?.split("@")[0] ?? "Kano finance user",
       role: "mda_user",
       memberships: [],
+      facilityAssignments: [],
     };
   }
 

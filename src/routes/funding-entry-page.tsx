@@ -11,9 +11,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { StatusBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ReviewedEditBanner } from "@/components/review/reviewed-edit-banner";
 import {
+  fundingSubmittableMdaIds,
   isAdmin,
-  submittableMdaIds,
 } from "@/lib/access";
 import {
   getFundingEntry,
@@ -26,6 +27,7 @@ import {
   listMdas,
   listProgrammeAreas,
 } from "@/lib/db/reference-data";
+import { updateReviewedFundingEntry } from "@/lib/db/review";
 import {
   canEditFundingEntry,
   mapFundingEntryError,
@@ -34,7 +36,12 @@ import {
   type ValidatedFundingEntry,
 } from "@/lib/funding/validation";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
+import { getReference, putReference } from "@/lib/offline/idb";
+import { classifySyncError } from "@/lib/offline/queue";
+import { enqueueOperation, processQueue } from "@/lib/offline/sync-engine";
 import type { Tables } from "@/lib/db/types";
+
+const FUNDING_REFERENCE_CACHE_KEY = "funding-reference";
 
 type ReferenceData = {
   mdas: Pick<Tables<"mdas">, "id" | "name" | "abbreviation">[];
@@ -52,6 +59,9 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
   const [entry, setEntry] = React.useState<FundingEntryRow | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [cachedReferenceAt, setCachedReferenceAt] = React.useState<
+    string | null
+  >(null);
 
   const [submitting, setSubmitting] = React.useState(false);
   const [serverErrors, setServerErrors] =
@@ -60,18 +70,25 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
 
   const admin = isAdmin(profile);
   const submittableIds = React.useMemo(
-    () => submittableMdaIds(profile),
+    () => fundingSubmittableMdaIds(profile),
     [profile],
   );
+  const profileId = profile?.id ?? null;
+  const editEntryId = mode.kind === "edit" ? mode.entryId : null;
+  // Avoid swapping the form for a skeleton on background reloads — that
+  // unmounts FundingEntryForm and drops in-progress draft state.
+  const hasLoadedReferenceRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (!profile) return;
+    if (!profileId) return;
     if (!supabase || !hasSupabaseConfig) {
       setLoading(false);
       return;
     }
     let active = true;
-    setLoading(true);
+    if (!hasLoadedReferenceRef.current) {
+      setLoading(true);
+    }
     setLoadError(null);
     (async () => {
       try {
@@ -80,12 +97,12 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
             listMdas(supabase!),
             listProgrammeAreas(supabase!),
             listFundingSources(supabase!),
-            mode.kind === "edit"
-              ? getFundingEntry(supabase!, mode.entryId)
+            editEntryId
+              ? getFundingEntry(supabase!, editEntryId)
               : Promise.resolve(null),
           ]);
         if (!active) return;
-        setReference({
+        const nextReference: ReferenceData = {
           mdas: mdas.map((m) => ({
             id: m.id,
             name: m.name,
@@ -99,13 +116,35 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
             id: s.id,
             name: s.name,
           })),
-        });
+        };
+        setReference(nextReference);
+        setCachedReferenceAt(null);
         setEntry(fetchedEntry);
+        hasLoadedReferenceRef.current = true;
+        // Mirror reference data so the form can still render offline.
+        void putReference(FUNDING_REFERENCE_CACHE_KEY, nextReference);
       } catch (error) {
         if (!active) return;
-        setLoadError(
-          error instanceof Error ? error.message : "Failed to load form data.",
-        );
+        // Offline (or transient) load: fall back to the cached reference
+        // snapshot so a new entry can still be captured for later sync.
+        const cached =
+          !editEntryId
+            ? await getReference<ReferenceData>(
+                FUNDING_REFERENCE_CACHE_KEY,
+              ).catch(() => null)
+            : null;
+        if (!active) return;
+        if (cached) {
+          setReference(cached.data);
+          setCachedReferenceAt(cached.cachedAt);
+          hasLoadedReferenceRef.current = true;
+        } else if (!hasLoadedReferenceRef.current) {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load form data.",
+          );
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -113,7 +152,7 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
     return () => {
       active = false;
     };
-  }, [mode, profile]);
+  }, [editEntryId, profileId]);
 
   const visibleMdas = React.useMemo(() => {
     if (!reference) return [];
@@ -122,7 +161,7 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
     return reference.mdas.filter((mda) => allowed.has(mda.id));
   }, [admin, reference, submittableIds]);
 
-  const editable =
+  const pendingEditable =
     mode.kind === "new" ||
     (entry
       ? canEditFundingEntry(
@@ -139,30 +178,147 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
         )
       : true);
 
+  // Admin correction path for non-pending entries. `processed` is terminal;
+  // pending edits flow through the submitter path above.
+  const reviewedEditMode =
+    mode.kind === "edit" &&
+    entry !== null &&
+    (entry.status === "approved" || entry.status === "rejected") &&
+    admin;
+
+  const editable = pendingEditable || reviewedEditMode;
+  const [reviewReason, setReviewReason] = React.useState("");
+
+  // Capture a create/pending-update to the offline outbox so it syncs on
+  // reconnect. Returns true when queued.
+  async function queueOffline(values: ValidatedFundingEntry): Promise<boolean> {
+    if (!user) return false;
+    await enqueueOperation({
+      kind: mode.kind === "edit" ? "funding.update" : "funding.create",
+      payload: values,
+      enteredBy: user.id,
+      targetEntryId: mode.kind === "edit" ? mode.entryId : undefined,
+    });
+    // Nudge the engine in case connectivity just returned.
+    void processQueue(supabase);
+    return true;
+  }
+
   async function handleSubmit(values: ValidatedFundingEntry) {
-    if (!supabase || !user) return;
+    if (!user) return;
     setSubmitting(true);
     setServerErrors({});
     setServerError(null);
+
+    // Reviewed-entry corrections need server-side rules + an audit reason, so
+    // they remain online-only.
+    if (mode.kind === "edit" && reviewedEditMode) {
+      if (!supabase) {
+        setServerError(
+          "Reviewed-entry corrections need an internet connection. Reconnect and try again.",
+        );
+        setSubmitting(false);
+        return;
+      }
+      try {
+        const trimmed = reviewReason.trim();
+        if (trimmed.length === 0) {
+          setServerError(
+            "An audit reason is required for reviewed-entry edits.",
+          );
+          setSubmitting(false);
+          return;
+        }
+        await updateReviewedFundingEntry(supabase, {
+          entryId: mode.entryId,
+          reason: trimmed,
+          values,
+        });
+        toast.success(
+          `Updated reviewed funding entry ${entry?.public_id ?? mode.entryId.slice(0, 8)}.`,
+        );
+        router.push("/funding");
+      } catch (error) {
+        // Reviewed edits can't be queued (they need server-side rules), so a
+        // genuine network failure surfaces the reconnect prompt rather than a
+        // generic error.
+        if (classifySyncError(error) === "retry") {
+          setServerError(
+            "Reviewed-entry corrections need an internet connection. Reconnect and try again.",
+          );
+          setSubmitting(false);
+          return;
+        }
+        const mapped = mapFundingEntryError(
+          error as { code?: string; message?: string },
+        );
+        if (mapped.field) setServerErrors({ [mapped.field]: mapped.message });
+        else setServerError(mapped.message);
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // Unconfigured path: no server to reach, so queue locally. When Supabase
+    // IS configured we do NOT pre-block on navigator.onLine — we attempt the
+    // real insert below and only fall back to the outbox if it actually fails
+    // with a network error, so a false-negative "offline" flag can't divert a
+    // genuinely-online submit.
+    if (!supabase) {
+      try {
+        await queueOffline(values);
+        toast.success("Saved offline. It will sync when you reconnect.", {
+          description:
+            "The entry is stored on this device and submitted automatically once you're back online.",
+        });
+        router.push("/funding");
+      } catch {
+        setServerError(
+          "We couldn't save this entry offline on this device. Try again.",
+        );
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     try {
-      let saved: FundingEntryRow;
       if (mode.kind === "edit") {
-        saved = await updatePendingFundingEntry(supabase, mode.entryId, values);
+        const saved = await updatePendingFundingEntry(
+          supabase,
+          mode.entryId,
+          values,
+        );
         toast.success(
           `Updated funding entry ${saved.public_id ?? saved.id.slice(0, 8)}.`,
         );
       } else {
-        saved = await insertFundingEntry(supabase, values, user.id);
+        const saved = await insertFundingEntry(supabase, values, user.id);
         toast.success(
           `Submitted funding entry ${saved.public_id ?? saved.id.slice(0, 8)}.`,
           {
             description:
-              "It is pending reviewer approval. You can still edit while pending.",
+              "It is pending viewer approval. You can still edit while pending.",
           },
         );
       }
       router.push("/funding");
     } catch (error) {
+      // A network failure mid-submit shouldn't lose the entry — fall back to
+      // the offline outbox instead of surfacing a hard error.
+      if (classifySyncError(error) === "retry") {
+        try {
+          await queueOffline(values);
+          toast.success(
+            "Connection dropped — saved offline. It will sync automatically.",
+          );
+          router.push("/funding");
+          return;
+        } catch {
+          // fall through to the mapped error below
+        }
+      }
       const mapped = mapFundingEntryError(
         error as { code?: string; message?: string },
       );
@@ -195,11 +351,11 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
   const isEdit = mode.kind === "edit";
   const title = isEdit ? "Edit funding entry" : "New funding entry";
   const subtitle = isEdit
-    ? "Updates apply only while the entry is pending. After review, edits require an audit reason."
-    : "Capture a funding receipt for an assigned MDA. Reviewers see it in the pending queue.";
+    ? "Updates apply only while the entry is pending. After review, only admins can correct fields with an audit reason."
+    : "Capture a funding receipt for an assigned MDA. Viewers see it in the pending queue.";
 
   return (
-    <div className="-m-4 flex flex-col bg-background md:-m-6">
+    <div className="-mx-4 -mb-4 flex flex-col bg-background md:-mx-6 md:-mb-6">
       <header className="border-b bg-card/60">
         <div className="flex flex-col gap-6 px-6 pb-8 pt-6 md:px-10 md:pb-10 md:pt-8">
           <div>
@@ -270,7 +426,9 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
               <AlertDescription>
                 {entry?.status === "pending"
                   ? "Only the original submitter on an assigned MDA can edit a pending funding entry."
-                  : `This entry is ${entry?.status}. Reviewed entries require an audit reason to change — coming in the reviewer slice.`}
+                  : entry?.status === "processed"
+                    ? "Processed entries are terminal and cannot be edited."
+                    : `This entry is ${entry?.status}. Only admins can correct reviewed entry fields.`}
               </AlertDescription>
             </Alert>
             <div className="mt-4 flex justify-end">
@@ -284,7 +442,7 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
             <Alert>
               <AlertTitle>No assigned MDAs yet</AlertTitle>
               <AlertDescription>
-                Ask an admin to add a submitter membership for the MDA you report on
+                Ask an admin to add funding-entry access for the MDA you report on
                 before recording funding entries.
               </AlertDescription>
             </Alert>
@@ -295,18 +453,46 @@ export function FundingEntryPage({ mode }: { mode: Mode }) {
             </div>
           </div>
         ) : reference ? (
-          <FundingEntryForm
-            mdas={visibleMdas}
-            programmeAreas={reference.programmeAreas}
-            fundingSources={reference.fundingSources}
-            initial={initial}
-            serverErrors={serverErrors}
-            serverError={serverError}
-            submitting={submitting}
-            submitLabel={isEdit ? "Save changes" : "Submit funding entry"}
-            onCancel={handleCancel}
-            onSubmit={handleSubmit}
-          />
+          <>
+            {cachedReferenceAt ? (
+              <div className="px-6 pt-6 md:px-10">
+                <Alert variant="warning">
+                  <AlertTitle>Working from cached reference data</AlertTitle>
+                  <AlertDescription>
+                    You appear to be offline. This form is using reference data
+                    saved on {new Date(cachedReferenceAt).toLocaleString()}.
+                    Your entry will be saved on this device and synced when you
+                    reconnect.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            ) : null}
+            {reviewedEditMode && entry ? (
+              <ReviewedEditBanner
+                status={entry.status as "approved" | "rejected"}
+                reason={reviewReason}
+                onReasonChange={setReviewReason}
+              />
+            ) : null}
+            <FundingEntryForm
+              mdas={visibleMdas}
+              programmeAreas={reference.programmeAreas}
+              fundingSources={reference.fundingSources}
+              initial={initial}
+              serverErrors={serverErrors}
+              serverError={serverError}
+              submitting={submitting}
+              submitLabel={
+                reviewedEditMode
+                  ? "Save with audit reason"
+                  : isEdit
+                    ? "Save changes"
+                    : "Submit funding entry"
+              }
+              onCancel={handleCancel}
+              onSubmit={handleSubmit}
+            />
+          </>
         ) : null}
       </div>
     </div>
@@ -336,4 +522,3 @@ function FormSkeleton() {
     </div>
   );
 }
-

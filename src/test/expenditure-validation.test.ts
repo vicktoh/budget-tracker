@@ -25,6 +25,10 @@ const ITEM_DRUGS = "cccc2222-cccc-cccc-cccc-cccccccccccc";
 const PAYMENT_TRANSFER = "dddd1111-dddd-dddd-dddd-dddddddddddd";
 const PAYMENT_OTHER = "dddd2222-dddd-dddd-dddd-dddddddddddd";
 
+const FS_BHCPF = "gggg1111-gggg-gggg-gggg-gggggggggggg";
+const FS_STATE = "gggg2222-gggg-gggg-gggg-gggggggggggg";
+const FS_UNSPECIFIED = "gggg3333-gggg-gggg-gggg-gggggggggggg";
+
 const LGA_KANO_MUNI = "eeee1111-eeee-eeee-eeee-eeeeeeeeeeee";
 const LGA_FAGGE = "eeee2222-eeee-eeee-eeee-eeeeeeeeeeee";
 
@@ -35,6 +39,10 @@ const FAC_HOSPITAL_KANO = "ffff3333-ffff-ffff-ffff-ffffffffffff";
 const AOP_A_2026 = "aaaa-aop-1";
 const AOP_B_2026 = "aaaa-aop-2";
 const AOP_A_2025 = "aaaa-aop-3";
+
+const LINE_A_2026 = "aaaa-line-1";
+const LINE_B_2026 = "aaaa-line-2";
+const LINE_A_2025 = "aaaa-line-3";
 
 const reference: ExpenditureValidationReference = {
   programmeAreas: [
@@ -54,6 +62,12 @@ const reference: ExpenditureValidationReference = {
     { id: PAYMENT_TRANSFER, name: "Bank Transfer" },
     { id: PAYMENT_OTHER, name: "Other" },
   ],
+  fundingSources: [
+    { id: FS_BHCPF, name: "BHCPF Allocation" },
+    { id: FS_STATE, name: "Kano State Govt Budget Release" },
+    { id: FS_UNSPECIFIED, name: "Unspecified" },
+  ],
+  unspecifiedFundingSourceId: FS_UNSPECIFIED,
   facilities: [
     { id: FAC_PHC_KANO, lga_id: LGA_KANO_MUNI, facility_type: "PHC" },
     { id: FAC_PHC_FAGGE, lga_id: LGA_FAGGE, facility_type: "PHC" },
@@ -63,6 +77,11 @@ const reference: ExpenditureValidationReference = {
     { id: AOP_A_2026, mda_id: MDA_A, fiscal_year: 2026 },
     { id: AOP_B_2026, mda_id: MDA_B, fiscal_year: 2026 },
     { id: AOP_A_2025, mda_id: MDA_A, fiscal_year: 2025 },
+  ],
+  approvedBudgetLines: [
+    { id: LINE_A_2026, mda_id: MDA_A, fiscal_year: 2026 },
+    { id: LINE_B_2026, mda_id: MDA_B, fiscal_year: 2026 },
+    { id: LINE_A_2025, mda_id: MDA_A, fiscal_year: 2025 },
   ],
 };
 
@@ -75,11 +94,15 @@ function draft(
     programme_area_id: PROG_PHC,
     expenditure_category_id: CAT_DRUGS,
     expenditure_item_id: "",
+    approved_budget_line_id: "",
     aop_activity_id: "",
     is_phc: false,
     lga_id: "",
     facility_id: "",
     amount: "1500000",
+    funding_allocations: [
+      { funding_source_id: FS_BHCPF, amount: "1500000" },
+    ],
     voucher_ref_no: "VCH-2026-001",
     payment_method_id: PAYMENT_TRANSFER,
     remarks: "",
@@ -116,6 +139,25 @@ describe("validateExpenditureEntry", () => {
       expect(result.values.lga_id).toBeNull();
       expect(result.values.facility_id).toBeNull();
       expect(result.values.remarks).toBeNull();
+      expect(result.values.funding_allocations).toEqual([
+        { funding_source_id: FS_BHCPF, amount: 1500000 },
+      ]);
+    }
+  });
+
+  it("requires funding allocations to sum to the expenditure amount", () => {
+    const result = validateExpenditureEntry(
+      draft({
+        funding_allocations: [
+          { funding_source_id: FS_BHCPF, amount: "500000" },
+          { funding_source_id: FS_STATE, amount: "500000" },
+        ],
+      }),
+      reference,
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.funding_allocations).toMatch(/sum exactly/i);
     }
   });
 
@@ -283,6 +325,51 @@ describe("validateExpenditureEntry", () => {
       expect(result.ok).toBe(false);
       if (!result.ok) {
         expect(result.errors.expenditure_item_id).toMatch(/category/i);
+      }
+    });
+  });
+
+  describe("Approved budget line / MDA + fiscal year", () => {
+    it("accepts a line matching the entry MDA and fiscal year", () => {
+      const result = validateExpenditureEntry(
+        draft({ approved_budget_line_id: LINE_A_2026 }),
+        reference,
+      );
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.values.approved_budget_line_id).toBe(LINE_A_2026);
+      }
+    });
+
+    it("rejects a line from a different MDA", () => {
+      const result = validateExpenditureEntry(
+        draft({ mda_id: MDA_A, approved_budget_line_id: LINE_B_2026 }),
+        reference,
+      );
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.errors.approved_budget_line_id).toMatch(
+          /MDA and fiscal year/i,
+        );
+      }
+    });
+
+    it("rejects a line from a different fiscal year", () => {
+      const result = validateExpenditureEntry(
+        draft({
+          transaction_date: "2026-04-15",
+          approved_budget_line_id: LINE_A_2025,
+        }),
+        reference,
+      );
+      expect(result.ok).toBe(false);
+    });
+
+    it("leaves the line null when none is selected", () => {
+      const result = validateExpenditureEntry(draft(), reference);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.values.approved_budget_line_id).toBeNull();
       }
     });
   });

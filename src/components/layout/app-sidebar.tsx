@@ -1,17 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ActivityIcon,
-  PanelLeftCloseIcon,
-  PanelLeftOpenIcon,
-} from "lucide-react";
+import { PanelLeftCloseIcon, PanelLeftOpenIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { AppProfile } from "@/lib/auth-types";
+import { canAccessRoute } from "@/lib/access";
 import {
   navigationItems,
   sectionLabels,
@@ -31,7 +29,7 @@ export function AppSidebar({
 }) {
   const pathname = usePathname();
   const visibleItems = navigationItems.filter((item) =>
-    item.roles.includes(profile.role),
+    canAccessRoute(profile, item.path),
   );
 
   const grouped = sectionOrder
@@ -56,16 +54,22 @@ export function AppSidebar({
             "focus-ring flex min-w-0 items-center gap-2 rounded-md px-1 py-1",
             collapsed && "justify-center",
           )}
-          aria-label="Kano Health Finance Tracker home"
+          aria-label="Kano Health Financing Flow Dashboard home"
         >
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <ActivityIcon aria-hidden="true" className="size-4" />
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-white p-0.5 ring-1 ring-sidebar-border">
+            <Image
+              alt="Seal of Kano State"
+              className="size-full object-contain"
+              height={32}
+              src="/kano-seal.png"
+              width={32}
+            />
           </span>
           {!collapsed ? (
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-[13px] font-bold">Kano Health</span>
+              <span className="truncate text-[13px] font-bold">Kano Health Financing</span>
               <span className="truncate text-[11px] text-muted-foreground">
-                Finance Tracker
+                Flow Dashboard
               </span>
             </span>
           ) : null}

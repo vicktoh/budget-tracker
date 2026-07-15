@@ -4,6 +4,8 @@ import * as React from "react";
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopHeader } from "@/components/layout/top-header";
+import { InstallPrompt } from "@/components/offline/install-prompt";
+import { SyncManager } from "@/components/offline/sync-manager";
 import { useAuth } from "@/components/auth/auth-provider";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -24,7 +26,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopHeader profile={profile} />
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+          <main className="flex-1 p-4 md:p-6">
+            <InstallPrompt />
+            <SyncManager />
+            {children}
+          </main>
         </div>
       </div>
     </div>

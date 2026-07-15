@@ -8,6 +8,7 @@
  *  - PHC entries require LGA + Facility; non-PHC entries clear them
  *  - Facility must belong to the selected LGA; PHC must use a PHC facility
  *  - AOP activity must match expenditure MDA + fiscal year (derived)
+ *  - Approved budget line must match expenditure MDA + fiscal year (derived)
  *  - Expenditure Item must match the selected Expenditure Category
  *  - Remarks required when programme area, expenditure category, or
  *    payment method is "Other"
@@ -18,6 +19,13 @@
  * fast, friendly feedback.
  */
 import type { Tables } from "@/lib/db/types";
+import {
+  emptyFundingAllocationsDraft,
+  parseAllocationAmount,
+  sumAllocationAmounts,
+  type FundingAllocationDraft,
+  type ValidatedFundingAllocation,
+} from "@/lib/expenditure/funding-allocations";
 
 export type ExpenditureEntryDraft = {
   transaction_date: string;
@@ -25,11 +33,13 @@ export type ExpenditureEntryDraft = {
   programme_area_id: string;
   expenditure_category_id: string;
   expenditure_item_id: string;
+  approved_budget_line_id: string;
   aop_activity_id: string;
   is_phc: boolean;
   lga_id: string;
   facility_id: string;
   amount: string;
+  funding_allocations: FundingAllocationDraft[];
   voucher_ref_no: string;
   payment_method_id: string;
   remarks: string;
@@ -37,7 +47,9 @@ export type ExpenditureEntryDraft = {
 
 export type ExpenditureEntryFieldErrors = Partial<
   Record<keyof ExpenditureEntryDraft, string>
->;
+> & {
+  allocationRows?: Array<Partial<Record<keyof FundingAllocationDraft, string>>>;
+};
 
 export type ValidatedExpenditureEntry = {
   transaction_date: string;
@@ -45,11 +57,13 @@ export type ValidatedExpenditureEntry = {
   programme_area_id: string;
   expenditure_category_id: string;
   expenditure_item_id: string | null;
+  approved_budget_line_id: string | null;
   aop_activity_id: string | null;
   is_phc: boolean;
   lga_id: string | null;
   facility_id: string | null;
   amount: number;
+  funding_allocations: ValidatedFundingAllocation[];
   voucher_ref_no: string;
   payment_method_id: string;
   remarks: string | null;
@@ -80,6 +94,12 @@ type AopActivityLike = {
   fiscal_year: number;
 };
 
+type ApprovedBudgetLineLike = {
+  id: string;
+  mda_id: string;
+  fiscal_year: number;
+};
+
 export function emptyExpenditureDraft(
   today = new Date(),
 ): ExpenditureEntryDraft {
@@ -89,11 +109,13 @@ export function emptyExpenditureDraft(
     programme_area_id: "",
     expenditure_category_id: "",
     expenditure_item_id: "",
+    approved_budget_line_id: "",
     aop_activity_id: "",
     is_phc: false,
     lga_id: "",
     facility_id: "",
     amount: "",
+    funding_allocations: emptyFundingAllocationsDraft(),
     voucher_ref_no: "",
     payment_method_id: "",
     remarks: "",
@@ -130,8 +152,11 @@ export type ExpenditureValidationReference = {
   expenditureCategories: ReferenceLike[];
   expenditureItems: ExpenditureItemLike[];
   paymentMethods: ReferenceLike[];
+  fundingSources: ReferenceLike[];
   facilities: FacilityLike[];
   aopActivities: AopActivityLike[];
+  approvedBudgetLines: ApprovedBudgetLineLike[];
+  unspecifiedFundingSourceId?: string | null;
 };
 
 export function validateExpenditureEntry(
@@ -224,6 +249,25 @@ export function validateExpenditureEntry(
     }
   }
 
+  // Approved budget line must match MDA and fiscal year.
+  let resolvedApprovedBudgetLineId: string | null = null;
+  if (draft.approved_budget_line_id) {
+    const line = reference.approvedBudgetLines.find(
+      (l) => l.id === draft.approved_budget_line_id,
+    );
+    if (line) {
+      if (
+        (draft.mda_id && line.mda_id !== draft.mda_id) ||
+        (period && line.fiscal_year !== period.fiscal_year)
+      ) {
+        errors.approved_budget_line_id =
+          "Approved budget line must match the entry's MDA and fiscal year.";
+      } else {
+        resolvedApprovedBudgetLineId = draft.approved_budget_line_id;
+      }
+    }
+  }
+
   // AOP activity must match MDA and fiscal year.
   let resolvedAopActivityId: string | null = null;
   if (draft.aop_activity_id) {
@@ -263,6 +307,70 @@ export function validateExpenditureEntry(
       "Add remarks to explain the Other selection before submitting.";
   }
 
+  const validatedAllocations: ValidatedFundingAllocation[] = [];
+  const seenSourceIds = new Set<string>();
+  const allocationRows: Array<Partial<Record<keyof FundingAllocationDraft, string>>> =
+    [];
+  if (!draft.funding_allocations.length) {
+    errors.funding_allocations =
+      "Add at least one funding source allocation.";
+  } else {
+    draft.funding_allocations.forEach((row, index) => {
+      const rowErrors: Partial<Record<keyof FundingAllocationDraft, string>> = {};
+      if (!row.funding_source_id) {
+        rowErrors.funding_source_id = "Select a funding source.";
+      } else if (
+        reference.unspecifiedFundingSourceId &&
+        row.funding_source_id === reference.unspecifiedFundingSourceId
+      ) {
+        rowErrors.funding_source_id =
+          "Pick the actual funding source for this expenditure.";
+      } else if (seenSourceIds.has(row.funding_source_id)) {
+        rowErrors.funding_source_id =
+          "Each funding source can only appear once.";
+      }
+
+      const allocationAmount = parseAllocationAmount(row.amount);
+      if (allocationAmount === null) {
+        rowErrors.amount = "Enter the allocation amount.";
+      } else if (allocationAmount <= 0) {
+        rowErrors.amount = "Allocation amount must be greater than zero.";
+      }
+
+      if (row.funding_source_id && !rowErrors.funding_source_id) {
+        seenSourceIds.add(row.funding_source_id);
+      }
+      if (
+        allocationAmount !== null &&
+        allocationAmount > 0 &&
+        !rowErrors.funding_source_id
+      ) {
+        validatedAllocations.push({
+          funding_source_id: row.funding_source_id,
+          amount: allocationAmount,
+        });
+      }
+
+      allocationRows[index] = rowErrors;
+    });
+  }
+
+  const hasAllocationRowErrors = allocationRows.some(
+    (row) => row && Object.keys(row).length > 0,
+  );
+  if (hasAllocationRowErrors) {
+    errors.allocationRows = allocationRows;
+  }
+
+  if (
+    amount !== null &&
+    validatedAllocations.length > 0 &&
+    Math.abs(sumAllocationAmounts(draft.funding_allocations) - amount) > 0.009
+  ) {
+    errors.funding_allocations =
+      "Funding allocations must sum exactly to the expenditure amount.";
+  }
+
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };
   }
@@ -275,11 +383,13 @@ export function validateExpenditureEntry(
       programme_area_id: draft.programme_area_id,
       expenditure_category_id: draft.expenditure_category_id,
       expenditure_item_id: resolvedExpenditureItemId,
+      approved_budget_line_id: resolvedApprovedBudgetLineId,
       aop_activity_id: resolvedAopActivityId,
       is_phc: draft.is_phc,
       lga_id: resolvedLgaId,
       facility_id: resolvedFacilityId,
       amount: amount as number,
+      funding_allocations: validatedAllocations,
       voucher_ref_no,
       payment_method_id: draft.payment_method_id,
       remarks: remarks || null,
@@ -310,6 +420,9 @@ export function mapExpenditureEntryError(error: {
   }
   if (code === "23514" && /amount/i.test(message)) {
     return { field: "amount", message: "Amount must be greater than zero." };
+  }
+  if (/funding allocation/i.test(message) || /funding source/i.test(message)) {
+    return { field: "funding_allocations", message };
   }
   if (/Remarks are required when Other is selected\./i.test(message)) {
     return {
@@ -343,6 +456,13 @@ export function mapExpenditureEntryError(error: {
       field: "expenditure_item_id",
       message:
         "Expenditure item must match the selected expenditure category.",
+    };
+  }
+  if (/Approved budget line must match expenditure MDA and fiscal year/i.test(message)) {
+    return {
+      field: "approved_budget_line_id",
+      message:
+        "Approved budget line must match the entry's MDA and fiscal year.",
     };
   }
   if (code === "42501" || /row-level security/i.test(message)) {

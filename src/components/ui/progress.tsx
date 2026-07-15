@@ -5,7 +5,7 @@ type ProgressProps = {
   value: number;
   max?: number;
   className?: string;
-  tone?: "primary" | "amber" | "teal" | "brown";
+  tone?: "primary" | "amber" | "teal" | "brown" | "red";
   label?: string;
 };
 
@@ -14,6 +14,7 @@ const toneClassName: Record<NonNullable<ProgressProps["tone"]>, string> = {
   amber: "bg-[hsl(var(--status-pending))]",
   teal: "bg-[hsl(var(--status-processed))]",
   brown: "bg-[hsl(29_53%_36%)]",
+  red: "bg-[hsl(var(--status-rejected))]",
 };
 
 export function Progress({
