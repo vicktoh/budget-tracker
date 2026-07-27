@@ -39,12 +39,7 @@ const PREVIEW_ROWS = 25;
 const EXCEPTION_LABEL: Record<ExceptionRow["kind"], string> = {
   unlinked_aop: "No AOP activity linked",
   allocation_mismatch: "Allocation mismatch",
-  rejected: "Rejected in review",
 };
-
-function statusLabel(status: string): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
 
 export function AuditReportRoute() {
   return (
@@ -83,13 +78,11 @@ function AuditReportBody({
   const exceptionAmountByKind: Record<ExceptionRow["kind"], number> = {
     unlinked_aop: 0,
     allocation_mismatch: 0,
-    rejected: 0,
   };
   for (const row of exceptions.rows) exceptionAmountByKind[row.kind] += row.amount;
   const flaggedTotal =
     exceptionAmountByKind.unlinked_aop +
-    exceptionAmountByKind.allocation_mismatch +
-    exceptionAmountByKind.rejected;
+    exceptionAmountByKind.allocation_mismatch;
   const fundingTotal = funding.reduce((sum, row) => sum + row.amount, 0);
   const expenditureTotal = expenditure.reduce((sum, row) => sum + row.amount, 0);
   const positiveVariance = reconciliation.reduce(
@@ -154,7 +147,7 @@ function AuditReportBody({
       const sections: AuditPdfSection[] = [
         {
           title: "Section A.1 — Expenditure register",
-          columns: ["Entry", "Voucher", "Date", "MDA", "Programme", "Category", "Amount (₦)", "Status"],
+          columns: ["Entry", "Voucher", "Date", "MDA", "Programme", "Category", "Amount (₦)"],
           rows: expenditure.map((row) => [
             row.public_id,
             row.voucher_ref_no,
@@ -163,13 +156,12 @@ function AuditReportBody({
             row.programme_area_name,
             row.expenditure_category_name,
             formatNaira(row.amount),
-            statusLabel(row.status),
           ]),
           rightAlign: [6],
         },
         {
           title: "Section A.2 — Funding register",
-          columns: ["Entry", "Reference", "Date", "MDA", "Programme", "Source", "Amount (₦)", "Status"],
+          columns: ["Entry", "Reference", "Date", "MDA", "Programme", "Source", "Amount (₦)"],
           rows: funding.map((row) => [
             row.public_id,
             row.reference_no,
@@ -178,7 +170,6 @@ function AuditReportBody({
             row.programme_area_name,
             row.funding_source_name,
             formatNaira(row.amount),
-            statusLabel(row.status),
           ]),
           rightAlign: [6],
         },
@@ -359,8 +350,7 @@ function AuditReportBody({
         <h2 className="text-lg font-semibold tracking-tight">Section B — Exceptions</h2>
         <p className="text-sm text-muted-foreground">
           {exceptions.integrity_count} integrity exception
-          {exceptions.integrity_count === 1 ? "" : "s"} (allocation mismatches + rejected
-          entries); {exceptions.counts.unlinked_aop} entr
+          {exceptions.integrity_count === 1 ? "" : "s"} (allocation mismatches); {exceptions.counts.unlinked_aop} entr
           {exceptions.counts.unlinked_aop === 1 ? "y" : "ies"} unlinked to an AOP activity.
         </p>
         {exceptions.rows.length === 0 ? (
@@ -376,12 +366,6 @@ function AuditReportBody({
               >
                 <DonutShareChart
                   data={[
-                    {
-                      id: "rejected",
-                      label: EXCEPTION_LABEL.rejected,
-                      value: exceptionAmountByKind.rejected,
-                      color: STATUS_COLORS.rejected,
-                    },
                     {
                       id: "allocation_mismatch",
                       label: EXCEPTION_LABEL.allocation_mismatch,
@@ -444,8 +428,7 @@ function AuditReportBody({
 
       <p className="border-t pt-4 text-xs text-muted-foreground">
         Registers show the first {PREVIEW_ROWS} rows on screen; the PDF and CSV exports
-        contain every row. Amounts are approved and processed unless a status column shows
-        otherwise. {periodLabel}.
+        contain every row. All recorded entries are included. {periodLabel}.
       </p>
     </article>
   );
@@ -496,7 +479,6 @@ const expenditureColumns: ReportTableColumn<ExpenditureEntryLite>[] = [
   { key: "mda", header: "MDA", render: (row) => row.mda_name },
   { key: "category", header: "Category", render: (row) => row.expenditure_category_name },
   { key: "amount", header: "Amount", align: "right", render: (row) => formatNaira(row.amount) },
-  { key: "status", header: "Status", render: (row) => statusLabel(row.status) },
 ];
 
 const fundingColumns: ReportTableColumn<FundingEntryLite>[] = [
@@ -506,7 +488,6 @@ const fundingColumns: ReportTableColumn<FundingEntryLite>[] = [
   { key: "mda", header: "MDA", render: (row) => row.mda_name },
   { key: "source", header: "Source", render: (row) => row.funding_source_name },
   { key: "amount", header: "Amount", align: "right", render: (row) => formatNaira(row.amount) },
-  { key: "status", header: "Status", render: (row) => statusLabel(row.status) },
 ];
 
 const exceptionColumns: ReportTableColumn<ExceptionRow>[] = [
@@ -552,7 +533,6 @@ const expenditureCsvColumns: CsvColumn<ExpenditureEntryLite>[] = [
   { header: "Programme", value: (row) => row.programme_area_name },
   { header: "Category", value: (row) => row.expenditure_category_name },
   { header: "Amount", value: (row) => row.amount },
-  { header: "Status", value: (row) => row.status },
 ];
 
 const fundingCsvColumns: CsvColumn<FundingEntryLite>[] = [
@@ -563,7 +543,6 @@ const fundingCsvColumns: CsvColumn<FundingEntryLite>[] = [
   { header: "Programme", value: (row) => row.programme_area_name },
   { header: "Source", value: (row) => row.funding_source_name },
   { header: "Amount", value: (row) => row.amount },
-  { header: "Status", value: (row) => row.status },
 ];
 
 const exceptionCsvColumns: CsvColumn<ExceptionRow>[] = [

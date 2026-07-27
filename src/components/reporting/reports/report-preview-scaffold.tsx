@@ -2,7 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowLeftIcon, DownloadIcon, Loader2Icon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  BarChart3Icon,
+  DownloadIcon,
+  FileCheck2Icon,
+  Loader2Icon,
+  MegaphoneIcon,
+  ShieldCheckIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -25,6 +33,13 @@ import type { ReportFilters, ReportQuarter } from "@/lib/reporting/types";
 import type { ReportingDataset } from "@/lib/reporting/types";
 import { cn } from "@/lib/utils";
 
+const REPORT_ICON = {
+  cso: MegaphoneIcon,
+  bir: FileCheck2Icon,
+  audit: ShieldCheckIcon,
+  mbp: BarChart3Icon,
+} satisfies Record<ReportTemplateId, typeof FileCheck2Icon>;
+
 export type ReportBodyProps = {
   dataset: ReportingDataset;
   effectiveFilters: ReportFilters;
@@ -43,6 +58,7 @@ export function ReportPreviewScaffold({
   templateId,
   compactPeriod = true,
   toolbarExtras,
+  renderToolbarExtras,
   hideDownload = false,
   children,
 }: {
@@ -51,6 +67,7 @@ export function ReportPreviewScaffold({
   compactPeriod?: boolean;
   /** Extra toolbar controls rendered before Download (e.g. publisher switch). */
   toolbarExtras?: React.ReactNode;
+  renderToolbarExtras?: (context: { fiscalYear: number | null; quarter: ReportQuarter | null; loading: boolean }) => React.ReactNode;
   /** Suppress the built-in canvas Download button (report supplies its own). */
   hideDownload?: boolean;
   children: (props: ReportBodyProps) => React.ReactNode;
@@ -70,6 +87,7 @@ export function ReportPreviewScaffold({
   const quarter = effectiveFilters.quarter;
   const label = makePeriodLabel(fiscalYear, quarter);
   const slug = makePeriodSlug(fiscalYear, quarter);
+  const ReportIcon = REPORT_ICON[templateId];
 
   const handleDownload = React.useCallback(async () => {
     if (!reportRef.current || exporting) return;
@@ -100,7 +118,7 @@ export function ReportPreviewScaffold({
   return (
     <div className="report-preview flex flex-col gap-5">
       <div
-        className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-3 py-2.5 shadow-[0_1px_2px_hsl(var(--foreground)/0.03)]"
+        className="flex flex-wrap items-center gap-3 rounded-lg border bg-card px-3 py-2.5"
         data-pdf-exclude
       >
         <Link
@@ -110,14 +128,20 @@ export function ReportPreviewScaffold({
           <ArrowLeftIcon aria-hidden className="size-4" />
           All reports
         </Link>
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-semibold tracking-tight">
-            {template.title}
-          </h1>
-          <p className="text-xs text-muted-foreground">{label}</p>
+        <div className="flex min-w-0 items-center gap-2.5 border-l pl-3">
+          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-accent text-primary">
+            <ReportIcon aria-hidden className="size-4" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-semibold tracking-tight">
+              {template.title}
+            </h1>
+            <p className="text-xs text-muted-foreground">{template.audience} · {label}</p>
+          </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {toolbarExtras}
+          {renderToolbarExtras?.({ fiscalYear, quarter, loading })}
           {hideDownload ? null : (
             <Button
               type="button"

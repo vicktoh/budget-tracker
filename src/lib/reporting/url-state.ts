@@ -1,14 +1,5 @@
-import type { EntryStatusSlug } from "@/lib/db/types";
 import type { ReportFilters } from "@/lib/reporting/types";
 import { emptyReportFilters } from "@/lib/reporting/types";
-
-const STATUSES: ReadonlySet<string> = new Set([
-  "all",
-  "pending",
-  "approved",
-  "processed",
-  "rejected",
-] satisfies Array<ReportFilters["status"]>);
 
 const PHC: ReadonlySet<string> = new Set(["any", "yes", "no"] satisfies Array<
   ReportFilters["phc"]
@@ -16,7 +7,6 @@ const PHC: ReadonlySet<string> = new Set(["any", "yes", "no"] satisfies Array<
 
 /** Param keys used in the URL. Kept short for tidy share links. */
 const KEYS = {
-  status: "status",
   fiscalYear: "fy",
   quarter: "q",
   dateFrom: "from",
@@ -40,11 +30,6 @@ export function parseReportFilters(
     if (params instanceof URLSearchParams) return params.get(key);
     return params.get(key) ?? null;
   };
-
-  const status = get(KEYS.status);
-  if (status && STATUSES.has(status)) {
-    filters.status = status as EntryStatusSlug | "all";
-  }
 
   const fy = get(KEYS.fiscalYear);
   if (fy) {
@@ -85,7 +70,6 @@ export function parseReportFilters(
  */
 export function serializeReportFilters(filters: ReportFilters): URLSearchParams {
   const params = new URLSearchParams();
-  if (filters.status !== "all") params.set(KEYS.status, filters.status);
   if (filters.fiscalYear !== null) params.set(KEYS.fiscalYear, String(filters.fiscalYear));
   if (filters.quarter !== null) params.set(KEYS.quarter, String(filters.quarter));
   if (filters.dateFrom) params.set(KEYS.dateFrom, filters.dateFrom);
@@ -104,7 +88,6 @@ export function serializeReportFilters(filters: ReportFilters): URLSearchParams 
 export function hasActiveFilter(filters: ReportFilters): boolean {
   const empty = emptyReportFilters();
   return (
-    filters.status !== empty.status ||
     filters.fiscalYear !== empty.fiscalYear ||
     filters.quarter !== empty.quarter ||
     filters.dateFrom !== empty.dateFrom ||

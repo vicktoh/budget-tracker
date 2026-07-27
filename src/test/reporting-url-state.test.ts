@@ -11,18 +11,17 @@ describe("parseReportFilters", () => {
     expect(parseReportFilters(new URLSearchParams())).toEqual(emptyReportFilters());
   });
 
-  it("ignores invalid status and phc values", () => {
+  it("ignores obsolete status and invalid phc values", () => {
     const params = new URLSearchParams("status=oops&phc=maybe");
     expect(parseReportFilters(params)).toEqual(emptyReportFilters());
   });
 
   it("parses every supported field", () => {
     const params = new URLSearchParams(
-      "status=approved&fy=2026&q=2&from=2026-01-01&to=2026-06-30" +
+      "fy=2026&q=2&from=2026-01-01&to=2026-06-30" +
         "&mda=mda-1&pa=pa-1&fs=fs-1&ec=ec-1&lga=lga-1&fac=fac-1&phc=yes",
     );
     expect(parseReportFilters(params)).toEqual({
-      status: "approved",
       fiscalYear: 2026,
       quarter: 2,
       dateFrom: "2026-01-01",
@@ -58,7 +57,6 @@ describe("serializeReportFilters", () => {
 
   it("round-trips a fully populated filter", () => {
     const filters = {
-      status: "rejected" as const,
       fiscalYear: 2025,
       quarter: 4 as const,
       dateFrom: "2025-01-01",
@@ -82,9 +80,6 @@ describe("hasActiveFilter", () => {
   });
 
   it("returns true when any field deviates from the default", () => {
-    expect(
-      hasActiveFilter({ ...emptyReportFilters(), status: "approved" }),
-    ).toBe(true);
     expect(
       hasActiveFilter({ ...emptyReportFilters(), fiscalYear: 2026 }),
     ).toBe(true);

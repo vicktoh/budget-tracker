@@ -2,6 +2,7 @@ import type { TypedSupabaseClient } from "@/lib/supabase/client";
 import type {
   AopActivityLite,
   ApprovedBudgetLite,
+  BudgetLineRevenueLite,
   ExpenditureEntryLite,
   FundingEntryLite,
   ReportingDataset,
@@ -11,7 +12,7 @@ import type {
 type Client = TypedSupabaseClient;
 
 const FUNDING_SELECT = `
-  id, public_id, reference_no, mda_id, fiscal_year, quarter, amount, status, transaction_date,
+  id, public_id, reference_no, mda_id, fiscal_year, quarter, amount, transaction_date,
   programme_area_id, funding_source_id,
   mdas!inner(id, name),
   programme_areas!inner(id, name),
@@ -19,11 +20,12 @@ const FUNDING_SELECT = `
 `;
 
 const EXPENDITURE_SELECT = `
-  id, public_id, voucher_ref_no, mda_id, fiscal_year, quarter, amount, status, transaction_date,
+  id, public_id, voucher_ref_no, mda_id, fiscal_year, quarter, amount, transaction_date,
   programme_area_id, expenditure_category_id, aop_activity_id, is_phc, lga_id, facility_id,
   mdas!inner(id, name),
   programme_areas!inner(id, name),
   expenditure_categories!inner(id, name),
+  approved_budget_lines(budget_class, programme_code),
   lgas(id, name),
   facilities(id, name),
   expenditure_funding_allocations(
@@ -43,6 +45,12 @@ const BUDGET_SELECT = `
 const AOP_SELECT = `
   id, fiscal_year, mda_id, activity_code, description, budgeted_cost, active,
   mdas!inner(id, name)
+`;
+
+const REVENUE_SELECT = `
+  id, fiscal_year, mda_id, stream, economic_code, economic_description, approved_amount,
+  mdas!inner(id, name),
+  budget_line_revenue_actuals(quarter, amount)
 `;
 
 type RelatedNamed = { id: string; name: string } | { id: string; name: string }[] | null;
@@ -67,7 +75,6 @@ type RawFunding = {
   fiscal_year: number;
   quarter: number;
   amount: number;
-  status: FundingEntryLite["status"];
   transaction_date: string;
   programme_area_id: string;
   funding_source_id: string;
@@ -84,7 +91,6 @@ type RawExpenditure = {
   fiscal_year: number;
   quarter: number;
   amount: number;
-  status: ExpenditureEntryLite["status"];
   transaction_date: string;
   programme_area_id: string;
   expenditure_category_id: string;
@@ -95,6 +101,10 @@ type RawExpenditure = {
   mdas: RelatedNamed;
   programme_areas: RelatedNamed;
   expenditure_categories: RelatedNamed;
+  approved_budget_lines:
+    | { budget_class: string; programme_code: string | null }
+    | Array<{ budget_class: string; programme_code: string | null }>
+    | null;
   lgas: RelatedNamed;
   facilities: RelatedNamed;
   expenditure_funding_allocations:
@@ -152,7 +162,6 @@ async function loadFunding(
     fiscal_year: row.fiscal_year,
     quarter: row.quarter,
     amount: Number(row.amount),
-    status: row.status,
     transaction_date: row.transaction_date,
   }));
 }
@@ -171,6 +180,9 @@ async function loadExpenditure(
   return rows.map((row) => {
     const lga = pickRelated(row.lgas);
     const facility = pickRelated(row.facilities);
+    const budgetLine = Array.isArray(row.approved_budget_lines)
+      ? row.approved_budget_lines[0] ?? null
+      : row.approved_budget_lines;
     return {
       id: row.id,
       public_id: row.public_id ?? "",
@@ -181,6 +193,8 @@ async function loadExpenditure(
       programme_area_name: pickRelatedName(row.programme_areas),
       expenditure_category_id: row.expenditure_category_id,
       expenditure_category_name: pickRelatedName(row.expenditure_categories),
+      budget_class: budgetLine?.budget_class ?? null,
+      programme_code: budgetLine?.programme_code ?? null,
       aop_activity_id: row.aop_activity_id,
       is_phc: row.is_phc,
       lga_id: row.lga_id,
@@ -190,7 +204,6 @@ async function loadExpenditure(
       fiscal_year: row.fiscal_year,
       quarter: row.quarter,
       amount: Number(row.amount),
-      status: row.status,
       transaction_date: row.transaction_date,
       funding_allocations: (row.expenditure_funding_allocations ?? []).map(
         (allocation) => ({
@@ -226,6 +239,47 @@ async function loadBudgets(
   }));
 }
 
+type RawRevenue = {
+  id: string;
+  fiscal_year: number;
+  mda_id: string;
+  stream: string;
+  economic_code: string;
+  economic_description: string;
+  approved_amount: number;
+  mdas: RelatedNamed;
+  budget_line_revenue_actuals:
+    | Array<{ quarter: number; amount: number }>
+    | null;
+};
+
+async function loadRevenues(
+  client: Client,
+  scope: ReportScope,
+): Promise<BudgetLineRevenueLite[]> {
+  let query = client.from("budget_line_revenues").select(REVENUE_SELECT);
+  if (scope.mdaIds && scope.mdaIds.length > 0) {
+    query = query.in("mda_id", scope.mdaIds);
+  }
+  const { data, error } = await query;
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as RawRevenue[];
+  return rows.map((row) => ({
+    id: row.id,
+    fiscal_year: row.fiscal_year,
+    mda_id: row.mda_id,
+    mda_name: pickRelatedName(row.mdas),
+    stream: row.stream === "capital_receipt" ? "capital_receipt" : "recurrent",
+    economic_code: row.economic_code,
+    economic_description: row.economic_description,
+    approved_amount: Number(row.approved_amount),
+    actuals: (row.budget_line_revenue_actuals ?? []).map((actual) => ({
+      quarter: Number(actual.quarter),
+      amount: Number(actual.amount),
+    })),
+  }));
+}
+
 async function loadAopActivities(
   client: Client,
   scope: ReportScope,
@@ -251,18 +305,30 @@ async function loadAopActivities(
 
 /**
  * Loads every row the reporting layer needs in one round-trip. Filtering and
- * aggregation are applied client-side so chart filters (status, FY, MDA, etc.)
+ * aggregation are applied client-side so chart filters (FY, MDA, period, etc.)
  * compose without re-fetching. RLS still bounds the dataset on the server.
  */
 export async function loadReportingDataset(
   client: Client,
   scope: ReportScope = {},
 ): Promise<ReportingDataset> {
-  const [funding, expenditure, budgets, aopActivities] = await Promise.all([
+  const [funding, expenditure, budgets, revenues, aopActivities, publicationResult] = await Promise.all([
     loadFunding(client, scope),
     loadExpenditure(client, scope),
     loadBudgets(client, scope),
+    loadRevenues(client, scope),
     loadAopActivities(client, scope),
+    client.from("budget_implementation_report_publications")
+      .select("id, fiscal_year, quarter, version, published_at")
+      .order("version", { ascending: false }),
   ]);
-  return { funding, expenditure, budgets, aopActivities };
+  if (publicationResult.error) throw publicationResult.error;
+  return {
+    funding,
+    expenditure,
+    budgets,
+    revenues,
+    aopActivities,
+    publications: (publicationResult.data ?? []) as unknown as ReportingDataset["publications"],
+  };
 }

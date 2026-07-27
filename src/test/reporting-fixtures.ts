@@ -1,6 +1,7 @@
 import type {
   AopActivityLite,
   ApprovedBudgetLite,
+  BudgetLineRevenueLite,
   ExpenditureEntryLite,
   FundingEntryLite,
 } from "@/lib/reporting/types";
@@ -32,7 +33,6 @@ export function fundingFixtures(): FundingEntryLite[] {
       fiscal_year: 2026,
       quarter: 1,
       amount: 1_000_000,
-      status: "approved",
       transaction_date: "2026-01-15",
     },
     {
@@ -48,7 +48,6 @@ export function fundingFixtures(): FundingEntryLite[] {
       fiscal_year: 2026,
       quarter: 1,
       amount: 500_000,
-      status: "pending",
       transaction_date: "2026-02-10",
     },
     {
@@ -64,7 +63,6 @@ export function fundingFixtures(): FundingEntryLite[] {
       fiscal_year: 2026,
       quarter: 2,
       amount: 750_000,
-      status: "processed",
       transaction_date: "2026-04-01",
     },
     {
@@ -80,7 +78,6 @@ export function fundingFixtures(): FundingEntryLite[] {
       fiscal_year: 2025,
       quarter: 4,
       amount: 250_000,
-      status: "rejected",
       transaction_date: "2025-12-20",
     },
   ];
@@ -98,6 +95,8 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       programme_area_name: "Primary Health",
       expenditure_category_id: EC_PERSONNEL,
       expenditure_category_name: "Personnel",
+      budget_class: null,
+      programme_code: "04010110010001",
       aop_activity_id: AOP_1,
       is_phc: false,
       lga_id: null,
@@ -107,7 +106,6 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       fiscal_year: 2026,
       quarter: 1,
       amount: 600_000,
-      status: "approved",
       transaction_date: "2026-01-20",
       funding_allocations: [
         {
@@ -127,6 +125,8 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       programme_area_name: "Primary Health",
       expenditure_category_id: EC_DRUGS,
       expenditure_category_name: "Drugs & Supplies",
+      budget_class: null,
+      programme_code: "04060100000004",
       aop_activity_id: null,
       is_phc: true,
       lga_id: LGA_KANO,
@@ -136,7 +136,6 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       fiscal_year: 2026,
       quarter: 2,
       amount: 200_000,
-      status: "approved",
       transaction_date: "2026-04-05",
       funding_allocations: [
         {
@@ -156,6 +155,8 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       programme_area_name: "Primary Health",
       expenditure_category_id: EC_DRUGS,
       expenditure_category_name: "Drugs & Supplies",
+      budget_class: null,
+      programme_code: "04030110010004",
       aop_activity_id: null,
       is_phc: true,
       lga_id: LGA_KANO,
@@ -165,7 +166,6 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       fiscal_year: 2026,
       quarter: 2,
       amount: 350_000,
-      status: "pending",
       transaction_date: "2026-05-12",
       funding_allocations: [
         {
@@ -185,6 +185,8 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       programme_area_name: "Secondary Health",
       expenditure_category_id: EC_PERSONNEL,
       expenditure_category_name: "Personnel",
+      budget_class: null,
+      programme_code: null,
       aop_activity_id: null,
       is_phc: false,
       lga_id: null,
@@ -194,7 +196,6 @@ export function expenditureFixtures(): ExpenditureEntryLite[] {
       fiscal_year: 2025,
       quarter: 3,
       amount: 100_000,
-      status: "rejected",
       transaction_date: "2025-09-01",
       funding_allocations: [
         {
@@ -263,6 +264,47 @@ export function aopFixtures(): AopActivityLite[] {
       description: "Archived",
       budgeted_cost: 100_000,
       active: false,
+    },
+  ];
+}
+
+export function revenueFixtures(): BudgetLineRevenueLite[] {
+  return [
+    {
+      id: "rev-1",
+      fiscal_year: 2026,
+      mda_id: MDA_HEALTH,
+      mda_name: "Ministry of Health",
+      stream: "recurrent",
+      economic_code: "12020441",
+      economic_description: "Applications forms & fees",
+      approved_amount: 1_000_000,
+      actuals: [
+        { quarter: 1, amount: 200_000 },
+        { quarter: 2, amount: 300_000 },
+      ],
+    },
+    {
+      id: "rev-2",
+      fiscal_year: 2026,
+      mda_id: MDA_PHCMB,
+      mda_name: "PHCMB",
+      stream: "capital_receipt",
+      economic_code: "13020103",
+      economic_description: "Current grant from LGAs",
+      approved_amount: 4_000_000,
+      actuals: [{ quarter: 2, amount: 5_000_000 }],
+    },
+    {
+      id: "rev-3",
+      fiscal_year: 2025,
+      mda_id: MDA_HEALTH,
+      mda_name: "Ministry of Health",
+      stream: "recurrent",
+      economic_code: "12020105",
+      economic_description: "Prior year line",
+      approved_amount: 900_000,
+      actuals: [{ quarter: 1, amount: 900_000 }],
     },
   ];
 }

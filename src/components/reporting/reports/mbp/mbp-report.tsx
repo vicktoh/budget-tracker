@@ -54,10 +54,9 @@ function MbpReportBody({
   const actualMdaIds = new Set(
     filterExpenditure(
       dataset.expenditure,
-      { ...effectiveFilters, status: "all" },
+      effectiveFilters,
       {},
     )
-      .filter((row) => row.status === "approved" || row.status === "processed")
       .map((row) => row.mda_id),
   );
   const zeroSpendMdas = rows.filter((row) => !actualMdaIds.has(row.mda_id)).length;
@@ -108,7 +107,7 @@ function MbpReportBody({
           {
             label: "Actual expenditure",
             value: formatCompactNaira(kpis.total_expenditure_amount),
-            helper: `Approved and processed expenditure for ${periodLabel}.`,
+            helper: `Recorded expenditure for ${periodLabel}.`,
           },
           {
             label: "Overall execution",
@@ -122,7 +121,7 @@ function MbpReportBody({
           {
             label: "MDAs with zero spend",
             value: `${formatInteger(zeroSpendMdas)} of ${formatInteger(rows.length)}`,
-            helper: "Budgeted MDAs with no approved or processed expenditure recorded.",
+            helper: "Budgeted MDAs with no expenditure recorded.",
             tone: zeroSpendMdas > 0 ? "investigate" : "strong",
           },
         ]}
@@ -163,7 +162,7 @@ function MbpReportBody({
           {
             label: "Linked expenditure",
             value: formatCompactNaira(aopLinked),
-            helper: `${formatInteger(startedActivities)} activities have approved or processed spend.`,
+            helper: `${formatInteger(startedActivities)} activities have recorded spend.`,
             tone: aopLinked === 0 && aopPlanned > 0 ? "critical" : "default",
           },
           {

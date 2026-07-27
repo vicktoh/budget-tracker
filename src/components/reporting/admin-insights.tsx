@@ -30,7 +30,7 @@ import {
   aggregatePhcFacilitySummary,
   aggregatePhcLgaSummary,
   aggregateProgrammeAreaSummary,
-  aggregateStatusCounts,
+  aggregateEntrySummary,
   aggregateUnlinkedExpenditure,
 } from "@/lib/reporting/aggregate";
 import { formatCompactNaira, formatInteger, formatNaira, formatPercent } from "@/lib/format";
@@ -62,8 +62,8 @@ export function AdminInsightsRoute() {
   }
 
   const empty = dataset === null;
-  const status = dataset
-    ? aggregateStatusCounts(dataset.funding, dataset.expenditure, filters, {})
+  const summary = dataset
+    ? aggregateEntrySummary(dataset.funding, dataset.expenditure, filters, {})
     : null;
 
   return (
@@ -110,7 +110,7 @@ export function AdminInsightsRoute() {
           <OverviewTab
             empty={empty}
             loading={loading}
-            status={status}
+            summary={summary}
             dataset={dataset}
             filters={filters}
             setFilter={setFilter}
@@ -152,10 +152,10 @@ type TabProps = {
 
 type OverviewTabProps = TabProps & {
   empty: boolean;
-  status: ReturnType<typeof aggregateStatusCounts> | null;
+  summary: ReturnType<typeof aggregateEntrySummary> | null;
 };
 
-function OverviewTab({ loading, dataset, filters, setFilter, status }: OverviewTabProps) {
+function OverviewTab({ loading, dataset, filters, setFilter, summary }: OverviewTabProps) {
   const budgetRows = dataset
     ? aggregateBudgetVsActual(
         dataset.budgets,
@@ -177,25 +177,24 @@ function OverviewTab({ loading, dataset, filters, setFilter, status }: OverviewT
     <div className="flex flex-col gap-5">
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          label="Pending"
-          value={status ? formatInteger(status.funding.pending + status.expenditure.pending) : "—"}
-          tone="pending"
-          helper="Statewide entries awaiting review"
+          label="Total entries"
+          value={summary ? formatInteger(summary.fundingCount + summary.expenditureCount) : "—"}
+          helper="All active ledger entries"
         />
         <StatCard
-          label="Approved"
-          value={status ? formatInteger(status.funding.approved + status.expenditure.approved) : "—"}
-          tone="approved"
+          label="Published quarters"
+          value={dataset ? formatInteger(new Set(dataset.publications.map((row) => `${row.fiscal_year}:${row.quarter}`)).size) : "—"}
+          helper="Quarterly BIR locks"
         />
         <StatCard
-          label="Processed"
-          value={status ? formatInteger(status.funding.processed + status.expenditure.processed) : "—"}
-          tone="processed"
+          label="Open quarters"
+          value={dataset ? formatInteger(Math.max(0, (filters.fiscalYear ? 4 : Math.max(1, new Set([...dataset.funding.map((r) => r.fiscal_year), ...dataset.expenditure.map((r) => r.fiscal_year)]).size) * 4) - new Set(dataset.publications.filter((row) => !filters.fiscalYear || row.fiscal_year === filters.fiscalYear).map((row) => `${row.fiscal_year}:${row.quarter}`)).size)) : "—"}
+          helper="Available for routine writes"
         />
         <StatCard
-          label="Rejected"
-          value={status ? formatInteger(status.funding.rejected + status.expenditure.rejected) : "—"}
-          tone="rejected"
+          label="Recorded expenditure"
+          value={summary ? formatCompactNaira(summary.totalExpenditure) : "—"}
+          helper="Immediately reportable"
         />
       </section>
 

@@ -1,18 +1,23 @@
 import type {
   AopActivityLite,
   ApprovedBudgetLite,
+  BudgetLineRevenueLite,
   ExpenditureEntryLite,
   FundingEntryLite,
   ReportFilters,
   ReportScope,
 } from "@/lib/reporting/types";
-import type { EntryStatusSlug } from "@/lib/db/types";
 import {
   ECONOMIC_CLASS_LABEL,
   ECONOMIC_CLASS_ORDER,
-  classifyCategory,
+  classifyEntry,
   type EconomicClass,
 } from "@/lib/reporting/economic-class";
+import {
+  HEALTH_SECTOR_OBJECTIVES,
+  UNCLASSIFIED_OBJECTIVE,
+  resolveObjective,
+} from "@/lib/reporting/health-sector-objectives";
 
 /* -------------------------------------------------------------------------- */
 /* Filtering                                                                  */
@@ -40,7 +45,6 @@ export function filterFunding(
 ): FundingEntryLite[] {
   return rows.filter((row) => {
     if (!withinScope(scope, row.mda_id)) return false;
-    if (filters.status !== "all" && row.status !== filters.status) return false;
     if (filters.fiscalYear !== null && row.fiscal_year !== filters.fiscalYear) return false;
     if (filters.quarter !== null && row.quarter !== filters.quarter) return false;
     if (!withinDateRange(row.transaction_date, filters.dateFrom, filters.dateTo)) return false;
@@ -58,7 +62,6 @@ export function filterExpenditure(
 ): ExpenditureEntryLite[] {
   return rows.filter((row) => {
     if (!withinScope(scope, row.mda_id)) return false;
-    if (filters.status !== "all" && row.status !== filters.status) return false;
     if (filters.fiscalYear !== null && row.fiscal_year !== filters.fiscalYear) return false;
     if (filters.quarter !== null && row.quarter !== filters.quarter) return false;
     if (!withinDateRange(row.transaction_date, filters.dateFrom, filters.dateTo)) return false;
@@ -116,56 +119,134 @@ function filterAop(
 /* Aggregations                                                               */
 /* -------------------------------------------------------------------------- */
 
-export type StatusCounts = Record<EntryStatusSlug, number>;
-
-export type StatusCountsReport = {
-  funding: StatusCounts;
-  expenditure: StatusCounts;
+export type EntrySummaryReport = {
+  fundingCount: number;
+  expenditureCount: number;
   totalFunding: number;
   totalExpenditure: number;
 };
 
-const ZERO_COUNTS = (): StatusCounts => ({
-  pending: 0,
-  approved: 0,
-  processed: 0,
-  rejected: 0,
-});
+export type MdaReportingCoverageRow = {
+  mda_id: string;
+  mda_name: string;
+  funding_amount: number;
+  funding_entry_count: number;
+  expenditure_amount: number;
+  expenditure_entry_count: number;
+  personnel_amount: number;
+  personnel_entry_count: number;
+  overhead_amount: number;
+  overhead_entry_count: number;
+  capital_amount: number;
+  capital_entry_count: number;
+  latest_entry_date: string | null;
+  status: "complete" | "partial" | "missing";
+  gaps: Array<"Funding entries" | "Expenditure entries">;
+};
 
 /**
- * Counts and totals by status for both ledgers. Status filter is intentionally
- * ignored here because the cards drive the status filter.
+ * Treats the presence of both ledger types as the baseline reporting signal
+ * for an MDA in the selected period. This is an operational coverage signal,
+ * not an approval state: entries remain reportable immediately on submission.
  */
-export function aggregateStatusCounts(
+export function aggregateMdaReportingCoverage(
+  mdas: Array<{ id: string; name: string }>,
   funding: FundingEntryLite[],
   expenditure: ExpenditureEntryLite[],
   filters: ReportFilters,
   scope: ReportScope = {},
-): StatusCountsReport {
-  const filtersForCounts: ReportFilters = { ...filters, status: "all" };
-  const f = filterFunding(funding, filtersForCounts, scope);
-  const e = filterExpenditure(expenditure, filtersForCounts, scope);
-  const fundingCounts = ZERO_COUNTS();
-  const expenditureCounts = ZERO_COUNTS();
-  let totalFunding = 0;
-  let totalExpenditure = 0;
-  for (const row of f) {
-    fundingCounts[row.status] += 1;
-    if (row.status === "approved" || row.status === "processed") {
-      totalFunding += row.amount;
-    }
-  }
-  for (const row of e) {
-    expenditureCounts[row.status] += 1;
-    if (row.status === "approved" || row.status === "processed") {
-      totalExpenditure += expenditureAmountForFilters(row, filters);
-    }
-  }
+): MdaReportingCoverageRow[] {
+  const visibleMdas = mdas.filter(
+    (mda) =>
+      withinScope(scope, mda.id) &&
+      (filters.mdaId === null || filters.mdaId === mda.id),
+  );
+  const filteredFunding = filterFunding(funding, filters, scope);
+  const filteredExpenditure = filterExpenditure(expenditure, filters, scope);
+
+  return visibleMdas
+    .map<MdaReportingCoverageRow>((mda) => {
+      const fundingRows = filteredFunding.filter((row) => row.mda_id === mda.id);
+      const expenditureRows = filteredExpenditure.filter(
+        (row) => row.mda_id === mda.id,
+      );
+      const economicClasses = expenditureRows.reduce(
+        (totals, row) => {
+          const economicClass = classifyEntry(row);
+          if (economicClass !== "other") {
+            totals[economicClass].amount += expenditureAmountForFilters(row, filters);
+            totals[economicClass].count += 1;
+          }
+          return totals;
+        },
+        {
+          personnel: { amount: 0, count: 0 },
+          overhead: { amount: 0, count: 0 },
+          capital: { amount: 0, count: 0 },
+        },
+      );
+      const gaps: MdaReportingCoverageRow["gaps"] = [];
+      if (fundingRows.length === 0) gaps.push("Funding entries");
+      if (expenditureRows.length === 0) gaps.push("Expenditure entries");
+
+      const latestEntryDate = [...fundingRows, ...expenditureRows].reduce<
+        string | null
+      >(
+        (latest, row) =>
+          latest === null || row.transaction_date > latest
+            ? row.transaction_date
+            : latest,
+        null,
+      );
+
+      return {
+        mda_id: mda.id,
+        mda_name: mda.name,
+        funding_amount: fundingRows.reduce((sum, row) => sum + row.amount, 0),
+        funding_entry_count: fundingRows.length,
+        expenditure_amount: expenditureRows.reduce(
+          (sum, row) => sum + expenditureAmountForFilters(row, filters),
+          0,
+        ),
+        expenditure_entry_count: expenditureRows.length,
+        personnel_amount: economicClasses.personnel.amount,
+        personnel_entry_count: economicClasses.personnel.count,
+        overhead_amount: economicClasses.overhead.amount,
+        overhead_entry_count: economicClasses.overhead.count,
+        capital_amount: economicClasses.capital.amount,
+        capital_entry_count: economicClasses.capital.count,
+        latest_entry_date: latestEntryDate,
+        status:
+          gaps.length === 0 ? "complete" : gaps.length === 2 ? "missing" : "partial",
+        gaps,
+      };
+    })
+    .sort(
+      (a, b) =>
+        coverageStatusOrder(a.status) - coverageStatusOrder(b.status) ||
+        a.mda_name.localeCompare(b.mda_name),
+    );
+}
+
+function coverageStatusOrder(status: MdaReportingCoverageRow["status"]): number {
+  if (status === "missing") return 0;
+  if (status === "partial") return 1;
+  return 2;
+}
+
+export function aggregateEntrySummary(
+  funding: FundingEntryLite[],
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): EntrySummaryReport {
+  const f = filterFunding(funding, filters, scope);
+  const e = filterExpenditure(expenditure, filters, scope);
   return {
-    funding: fundingCounts,
-    expenditure: expenditureCounts,
-    totalFunding,
-    totalExpenditure,
+    fundingCount: f.length,
+    expenditureCount: e.length,
+    totalFunding: f.reduce((sum, row) => sum + row.amount, 0),
+    totalExpenditure: e.reduce((sum, row) => sum + expenditureAmountForFilters(row, filters), 0),
   };
 }
 
@@ -358,6 +439,208 @@ export function aggregateExpenditureByFundingSource(
   );
 }
 
+export type HealthSectorObjectiveRow = {
+  /** Four-digit programme segment, or "unclassified". */
+  code: string;
+  label: string;
+  description: string;
+  actual_amount: number;
+  entry_count: number;
+  /** Share of the report's total expenditure. Null when nothing was spent. */
+  share_of_total: number | null;
+};
+
+/**
+ * Splits actual expenditure across the state's health sector objectives —
+ * the BPR dashboard's "Expenditure by Health Sector Objectives (Programme
+ * Segment Level)" view.
+ *
+ * The segment comes from the bound budget line's programme code, so entries
+ * with no bound line land in an explicit `unclassified` bucket rather than
+ * silently vanishing. Objectives with no spend are kept (with zero) so the
+ * report shows which parts of the strategy attracted nothing.
+ */
+export function aggregateHealthSectorObjectives(
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): HealthSectorObjectiveRow[] {
+  const filtered = actualExpenditure(expenditure, filters, scope);
+
+  const totals = new Map<string, { amount: number; count: number }>();
+  for (const row of filtered) {
+    const objective = resolveObjective(row.programme_code) ?? UNCLASSIFIED_OBJECTIVE;
+    const existing = totals.get(objective.code);
+    if (existing) {
+      existing.amount += row.amount;
+      existing.count += 1;
+    } else {
+      totals.set(objective.code, { amount: row.amount, count: 1 });
+    }
+  }
+
+  const grandTotal = sumAmounts(filtered);
+  const toRow = (
+    objective: { code: string; label: string; description: string },
+  ): HealthSectorObjectiveRow => {
+    const hit = totals.get(objective.code);
+    const amount = hit?.amount ?? 0;
+    return {
+      code: objective.code,
+      label: objective.label,
+      description: objective.description,
+      actual_amount: amount,
+      entry_count: hit?.count ?? 0,
+      share_of_total: grandTotal === 0 ? null : amount / grandTotal,
+    };
+  };
+
+  const rows = HEALTH_SECTOR_OBJECTIVES.map(toRow);
+  // Only show the unclassified bucket when it actually holds something.
+  if (totals.has(UNCLASSIFIED_OBJECTIVE.code)) {
+    rows.push(toRow(UNCLASSIFIED_OBJECTIVE));
+  }
+  return rows;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Revenue (budget_line_revenues — the money side the ledger doesn't model)   */
+/* -------------------------------------------------------------------------- */
+
+function filterRevenues(
+  rows: BudgetLineRevenueLite[],
+  filters: ReportFilters,
+  scope: ReportScope,
+): BudgetLineRevenueLite[] {
+  return rows.filter((row) => {
+    if (!withinScope(scope, row.mda_id)) return false;
+    if (filters.fiscalYear !== null && row.fiscal_year !== filters.fiscalYear) return false;
+    if (filters.mdaId && row.mda_id !== filters.mdaId) return false;
+    return true;
+  });
+}
+
+/**
+ * Collections on a revenue line for the selected period. A null quarter means
+ * year-to-date (every quarter recorded so far), matching how the BPR reports.
+ */
+function collectedAmount(
+  row: BudgetLineRevenueLite,
+  quarter: number | null,
+): number {
+  let total = 0;
+  for (const actual of row.actuals) {
+    if (quarter !== null && actual.quarter !== quarter) continue;
+    total += actual.amount;
+  }
+  return total;
+}
+
+export type RevenueStream = "recurrent" | "capital_receipt";
+
+export const REVENUE_STREAM_LABEL: Record<RevenueStream, string> = {
+  recurrent: "Recurrent revenue",
+  capital_receipt: "Capital receipts",
+};
+
+export type RevenuePerformanceRow = {
+  stream: RevenueStream | "total";
+  label: string;
+  budget_amount: number;
+  actual_amount: number;
+  /** Collected minus budgeted. Negative means a shortfall. */
+  variance_amount: number;
+  /** Collected / budgeted. Null when nothing was budgeted. */
+  performance_rate: number | null;
+};
+
+/** Revenue collected against the approved revenue budget, split by stream. */
+export function aggregateRevenuePerformance(
+  revenues: BudgetLineRevenueLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): RevenuePerformanceRow[] {
+  const filtered = filterRevenues(revenues, filters, scope);
+  const streams: RevenueStream[] = ["recurrent", "capital_receipt"];
+
+  const rows = streams.map<RevenuePerformanceRow>((stream) => {
+    const inStream = filtered.filter((row) => row.stream === stream);
+    const budget = inStream.reduce((sum, row) => sum + row.approved_amount, 0);
+    const actual = inStream.reduce(
+      (sum, row) => sum + collectedAmount(row, filters.quarter),
+      0,
+    );
+    return {
+      stream,
+      label: REVENUE_STREAM_LABEL[stream],
+      budget_amount: budget,
+      actual_amount: actual,
+      variance_amount: actual - budget,
+      performance_rate: budget === 0 ? null : actual / budget,
+    };
+  });
+
+  const budgetTotal = rows.reduce((sum, row) => sum + row.budget_amount, 0);
+  const actualTotal = rows.reduce((sum, row) => sum + row.actual_amount, 0);
+  rows.push({
+    stream: "total",
+    label: "Total revenue",
+    budget_amount: budgetTotal,
+    actual_amount: actualTotal,
+    variance_amount: actualTotal - budgetTotal,
+    performance_rate: budgetTotal === 0 ? null : actualTotal / budgetTotal,
+  });
+  return rows;
+}
+
+export type RevenueCompositionRow = {
+  economic_code: string;
+  economic_description: string;
+  stream: RevenueStream;
+  actual_amount: number;
+  share_of_total: number | null;
+};
+
+/**
+ * Revenue actually collected, by economic code — the composition pie on the
+ * BPR dashboard. Lines that collected nothing are dropped; a composition chart
+ * of zeroes is noise.
+ */
+export function aggregateRevenueComposition(
+  revenues: BudgetLineRevenueLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): RevenueCompositionRow[] {
+  const filtered = filterRevenues(revenues, filters, scope);
+  const groups = new Map<string, RevenueCompositionRow>();
+  let grandTotal = 0;
+
+  for (const row of filtered) {
+    const amount = collectedAmount(row, filters.quarter);
+    if (amount === 0) continue;
+    grandTotal += amount;
+    const existing = groups.get(row.economic_code);
+    if (existing) {
+      existing.actual_amount += amount;
+    } else {
+      groups.set(row.economic_code, {
+        economic_code: row.economic_code,
+        economic_description: row.economic_description,
+        stream: row.stream,
+        actual_amount: amount,
+        share_of_total: null,
+      });
+    }
+  }
+
+  return Array.from(groups.values())
+    .map((row) => ({
+      ...row,
+      share_of_total: grandTotal === 0 ? null : row.actual_amount / grandTotal,
+    }))
+    .sort((a, b) => b.actual_amount - a.actual_amount);
+}
+
 export type ProgrammeAreaSummaryRow = {
   programme_area_id: string;
   programme_area_name: string;
@@ -510,8 +793,6 @@ export function aggregateAopPlannedVsActual(
   scope: ReportScope = {},
 ): AopPlannedVsActualRow[] {
   const filteredAop = filterAop(aopActivities, filters, scope);
-  // Planning performance is an official actual: pending and rejected entries
-  // must not inflate linked spend when the report status filter is "all".
   const filteredExpenditure = actualExpenditure(expenditure, filters, scope);
 
   const linkedByActivity = new Map<string, number>();
@@ -550,23 +831,15 @@ export function aggregateAopPlannedVsActual(
 /* Infographic report aggregations                                            */
 /*                                                                            */
 /* These power the Admin Reports page. "Actual" amounts follow the same       */
-/* convention as `aggregateStatusCounts`: only approved + processed entries   */
-/* count toward official totals, regardless of the status filter.            */
+/* Every active ledger entry is immediately reportable.                      */
 /* -------------------------------------------------------------------------- */
 
-function isActualStatus(status: EntryStatusSlug): boolean {
-  return status === "approved" || status === "processed";
-}
-
-/** Applies filters (ignoring status) and keeps only approved/processed rows. */
 function actualFunding(
   rows: FundingEntryLite[],
   filters: ReportFilters,
   scope: ReportScope,
 ): FundingEntryLite[] {
-  return filterFunding(rows, { ...filters, status: "all" }, scope).filter((row) =>
-    isActualStatus(row.status),
-  );
+  return filterFunding(rows, filters, scope);
 }
 
 function actualExpenditure(
@@ -574,9 +847,7 @@ function actualExpenditure(
   filters: ReportFilters,
   scope: ReportScope,
 ): ExpenditureEntryLite[] {
-  return filterExpenditure(rows, { ...filters, status: "all" }, scope).filter((row) =>
-    isActualStatus(row.status),
-  );
+  return filterExpenditure(rows, filters, scope);
 }
 
 function sumAmounts(rows: Array<{ amount: number }>): number {
@@ -1079,8 +1350,7 @@ export function aggregateYoyComparison(
 
 export type ExceptionKind =
   | "unlinked_aop"
-  | "allocation_mismatch"
-  | "rejected";
+  | "allocation_mismatch";
 
 export type ExceptionRow = {
   entry_id: string;
@@ -1098,7 +1368,7 @@ export type ExceptionRow = {
 export type ExceptionsReport = {
   rows: ExceptionRow[];
   counts: Record<ExceptionKind, number>;
-  /** Integrity exceptions that indicate a real data problem (mismatch + rejected). */
+  /** Integrity exceptions that indicate a real data problem. */
   integrity_count: number;
 };
 
@@ -1108,9 +1378,7 @@ const ALLOCATION_TOLERANCE = 0.01;
 /**
  * Ledger integrity findings for the audit report and hub signal chips:
  *  - `allocation_mismatch`: funding allocations don't sum to the entry amount
- *  - `rejected`: entry was rejected in review
  *  - `unlinked_aop`: actual expenditure not linked to an AOP activity
- * The status filter is ignored so rejected entries always surface.
  */
 export function aggregateExceptions(
   expenditure: ExpenditureEntryLite[],
@@ -1121,10 +1389,9 @@ export function aggregateExceptions(
   const counts: Record<ExceptionKind, number> = {
     unlinked_aop: 0,
     allocation_mismatch: 0,
-    rejected: 0,
   };
 
-  const all = filterExpenditure(expenditure, { ...filters, status: "all" }, scope);
+  const all = filterExpenditure(expenditure, filters, scope);
   for (const entry of all) {
     const base = {
       entry_id: entry.id,
@@ -1136,12 +1403,6 @@ export function aggregateExceptions(
       expenditure_category_name: entry.expenditure_category_name,
       amount: entry.amount,
     };
-
-    if (entry.status === "rejected") {
-      counts.rejected += 1;
-      rows.push({ ...base, kind: "rejected", detail: "Entry rejected in review" });
-      continue; // a rejected entry's other checks are moot
-    }
 
     const allocated = entry.funding_allocations.reduce(
       (sum, allocation) => sum + allocation.amount,
@@ -1156,7 +1417,7 @@ export function aggregateExceptions(
       });
     }
 
-    if (isActualStatus(entry.status) && entry.aop_activity_id === null) {
+    if (entry.aop_activity_id === null) {
       counts.unlinked_aop += 1;
       rows.push({ ...base, kind: "unlinked_aop", detail: "No AOP activity linked" });
     }
@@ -1166,7 +1427,7 @@ export function aggregateExceptions(
   return {
     rows,
     counts,
-    integrity_count: counts.allocation_mismatch + counts.rejected,
+    integrity_count: counts.allocation_mismatch,
   };
 }
 
@@ -1186,8 +1447,8 @@ export type ReconciliationRow = {
 };
 
 /**
- * Per MDA × funding source: funding received (approved/processed) vs the amount
- * allocated to expenditure (approved/processed). Mirrors the server-side
+ * Per MDA × funding source: recorded funding received vs the amount
+ * allocated to recorded expenditure. Mirrors the server-side
  * funding-pool balance and surfaces over-allocation for the audit report.
  */
 export function aggregateReconciliation(
@@ -1274,7 +1535,7 @@ function zeroEconomic(): EconomicActuals {
 function economicActuals(rows: ExpenditureEntryLite[]): EconomicActuals {
   const totals = zeroEconomic();
   for (const row of rows) {
-    totals[classifyCategory(row.expenditure_category_name)] += row.amount;
+    totals[classifyEntry(row)] += row.amount;
   }
   return totals;
 }
@@ -1368,7 +1629,7 @@ export function aggregateAdminClassification(
   const actualByMda = new Map<string, EconomicActuals>();
   for (const row of actualExpenditure(expenditure, filters, scope)) {
     const existing = actualByMda.get(row.mda_id) ?? zeroEconomic();
-    existing[classifyCategory(row.expenditure_category_name)] += row.amount;
+    existing[classifyEntry(row)] += row.amount;
     actualByMda.set(row.mda_id, existing);
   }
 

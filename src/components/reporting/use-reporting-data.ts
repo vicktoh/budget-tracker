@@ -17,6 +17,7 @@ import type {
 import type { TypedSupabaseClient } from "@/lib/supabase/client";
 import type { ReportFilterOptions } from "@/components/reporting/report-filters-bar";
 import { readThroughCache } from "@/lib/offline/data-cache";
+import { useReconnectTrigger } from "@/lib/offline/use-reconnect-trigger";
 
 type ReportingState = {
   dataset: ReportingDataset | null;
@@ -46,6 +47,7 @@ export function useReportingData(
   client: TypedSupabaseClient | null,
   scope: ReportScope,
 ): ReportingState {
+  const reconnectTrigger = useReconnectTrigger();
   const [state, setState] = React.useState<ReportingState>({
     dataset: null,
     options: client ? null : INITIAL_OPTIONS,
@@ -73,7 +75,9 @@ export function useReportingData(
           funding: [],
           expenditure: [],
           budgets: [],
+          revenues: [],
           aopActivities: [],
+          publications: [],
         },
         options: INITIAL_OPTIONS,
         loading: false,
@@ -137,7 +141,18 @@ export function useReportingData(
       .then(({ data, fromCache, cachedAt }) => {
         if (!active) return;
         setState({
-          dataset: data.dataset,
+          dataset: {
+            ...data.dataset,
+            publications: Array.isArray(data.dataset.publications)
+              ? data.dataset.publications
+              : [],
+            // An offline snapshot cached before revenues existed has no
+            // `revenues` key; the cache is unversioned, so normalise here
+            // rather than letting the report crash on `undefined.filter`.
+            revenues: Array.isArray(data.dataset.revenues)
+              ? data.dataset.revenues
+              : [],
+          },
           options: data.options,
           loading: false,
           error: null,
@@ -160,7 +175,7 @@ export function useReportingData(
     return () => {
       active = false;
     };
-  }, [client, scopeKey]);
+  }, [client, reconnectTrigger, scopeKey]);
 
   return state;
 }

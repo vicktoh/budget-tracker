@@ -1,17 +1,13 @@
-import type { EntryStatusSlug } from "@/lib/db/types";
-
 /**
  * Normalised filter state for every report on the MDA Dashboard and
  * Admin Insights. Reports are computed by loading raw rows from the
- * base tables (status-aware) and aggregating in `aggregate.ts`, so the
+ * base tables and aggregating in `aggregate.ts`, so the
  * same filter shape can drive every report and the URL serializer.
  */
 /** Calendar quarter derived from `transaction_date` (1–4). */
 export type ReportQuarter = 1 | 2 | 3 | 4;
 
 export type ReportFilters = {
-  /** "all" = every status (default). Specific status filters constrain reports. */
-  status: EntryStatusSlug | "all";
   fiscalYear: number | null;
   /** null = all quarters (default). Constrains funding/expenditure entries. */
   quarter: ReportQuarter | null;
@@ -28,7 +24,6 @@ export type ReportFilters = {
 };
 
 export const emptyReportFilters = (): ReportFilters => ({
-  status: "all",
   fiscalYear: null,
   quarter: null,
   dateFrom: null,
@@ -44,8 +39,8 @@ export const emptyReportFilters = (): ReportFilters => ({
 
 /**
  * Role scope for reporting queries. `mdaIds` constrains the dataset to
- * a fixed set of MDAs (used for MDA users and Reviewers). `undefined`
- * means no constraint — admins see statewide data.
+ * a fixed set of MDAs (used for MDA users). `undefined` means no constraint —
+ * admins and statewide Viewers see all reporting data.
  */
 export type ReportScope = {
   mdaIds?: string[];
@@ -65,7 +60,6 @@ export type FundingEntryLite = {
   fiscal_year: number;
   quarter: number;
   amount: number;
-  status: EntryStatusSlug;
   transaction_date: string;
 };
 
@@ -85,6 +79,18 @@ export type ExpenditureEntryLite = {
   programme_area_name: string;
   expenditure_category_id: string;
   expenditure_category_name: string;
+  /**
+   * NCOA class of the bound approved budget line, or null when the entry isn't
+   * bound to one. Authoritative for economic classification — see
+   * `classifyEntry` in `@/lib/reporting/economic-class`.
+   */
+  budget_class: string | null;
+  /**
+   * NCOA programme code of the bound budget line, or null when unbound. Its
+   * first four digits are the health sector objective — see
+   * `@/lib/reporting/health-sector-objectives`.
+   */
+  programme_code: string | null;
   aop_activity_id: string | null;
   is_phc: boolean;
   lga_id: string | null;
@@ -94,7 +100,6 @@ export type ExpenditureEntryLite = {
   fiscal_year: number;
   quarter: number;
   amount: number;
-  status: EntryStatusSlug;
   transaction_date: string;
   funding_allocations: ExpenditureFundingAllocationLite[];
 };
@@ -108,6 +113,29 @@ export type ApprovedBudgetLite = {
   total_recurrent_amount: number;
   capital_amount: number;
   total_budget_amount: number;
+};
+
+/** One quarter's collection against a revenue line. */
+export type BudgetLineRevenueActualLite = {
+  quarter: number;
+  amount: number;
+};
+
+/**
+ * A coded revenue line — the money side the ledger never modelled. `stream`
+ * separates recurrent revenue (IGR, fees, licences) from capital receipts
+ * (grants, loans, aid), matching the BPR's own split.
+ */
+export type BudgetLineRevenueLite = {
+  id: string;
+  fiscal_year: number;
+  mda_id: string;
+  mda_name: string;
+  stream: "recurrent" | "capital_receipt";
+  economic_code: string;
+  economic_description: string;
+  approved_amount: number;
+  actuals: BudgetLineRevenueActualLite[];
 };
 
 export type AopActivityLite = {
@@ -125,5 +153,13 @@ export type ReportingDataset = {
   funding: FundingEntryLite[];
   expenditure: ExpenditureEntryLite[];
   budgets: ApprovedBudgetLite[];
+  revenues: BudgetLineRevenueLite[];
   aopActivities: AopActivityLite[];
+  publications: Array<{
+    id: string;
+    fiscal_year: number;
+    quarter: ReportQuarter;
+    version: number;
+    published_at: string;
+  }>;
 };

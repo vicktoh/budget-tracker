@@ -3,10 +3,13 @@ import {
   aggregateAdminClassification,
   aggregateEconomicSummary,
   aggregateExceptions,
+  aggregateHealthSectorObjectives,
+  aggregateRevenueComposition,
+  aggregateRevenuePerformance,
   aggregateReconciliation,
   aggregateYoyComparison,
 } from "@/lib/reporting/aggregate";
-import { classifyCategory } from "@/lib/reporting/economic-class";
+import { classifyCategory, classifyEntry } from "@/lib/reporting/economic-class";
 import {
   computeFindings,
   computeHubSignals,
@@ -22,6 +25,7 @@ import {
   budgetFixtures,
   expenditureFixtures,
   fundingFixtures,
+  revenueFixtures,
 } from "@/test/reporting-fixtures";
 
 function dataset(): ReportingDataset {
@@ -29,7 +33,9 @@ function dataset(): ReportingDataset {
     funding: fundingFixtures(),
     expenditure: expenditureFixtures(),
     budgets: budgetFixtures(),
+    revenues: revenueFixtures(),
     aopActivities: aopFixtures(),
+    publications: [],
   };
 }
 
@@ -99,22 +105,21 @@ describe("computeHubSignals", () => {
   });
 
   it("surfaces audit exceptions", () => {
-    // Full-year FY2026: e2 (Q2, approved, no AOP link) is the unlinked actual.
     const signals = computeHubSignals("audit", dataset(), {
       ...emptyReportFilters(),
       fiscalYear: 2026,
     });
-    // No integrity issues in FY2026, one unlinked-to-AOP actual entry (e2).
+    // No integrity issues in FY2026; e2 and e3 are not linked to an AOP activity.
     expect(signals[0]).toEqual({ level: "on_track", label: "No integrity exceptions" });
-    expect(signals).toContainEqual({ level: "investigate", label: "1 unlinked to AOP" });
+    expect(signals).toContainEqual({ level: "investigate", label: "2 unlinked to AOP" });
   });
 });
 
 describe("aggregateExceptions", () => {
-  it("counts a rejected entry as an integrity exception across all years", () => {
+  it("reports no integrity exception when allocations match", () => {
     const report = aggregateExceptions(expenditureFixtures(), emptyReportFilters());
-    expect(report.counts.rejected).toBe(1); // e4 (2025, rejected)
-    expect(report.integrity_count).toBe(1);
+    expect(report.counts.allocation_mismatch).toBe(0);
+    expect(report.integrity_count).toBe(0);
   });
 
   it("carries voucher identifiers for the audit register", () => {
@@ -123,8 +128,8 @@ describe("aggregateExceptions", () => {
       fiscalYear: 2026,
     });
     const unlinked = report.rows.find((row) => row.kind === "unlinked_aop");
-    expect(unlinked?.public_id).toBe("EL-2026-0002"); // e2
-    expect(unlinked?.voucher_ref_no).toBe("VCH-e2");
+    expect(unlinked?.public_id).toBe("EL-2026-0003"); // highest-value unlinked row
+    expect(unlinked?.voucher_ref_no).toBe("VCH-e3");
   });
 });
 
@@ -137,17 +142,17 @@ describe("aggregateReconciliation", () => {
     const find = (mda: string, source: string) =>
       rows.find((r) => r.mda_name === mda && r.funding_source_name === source);
 
-    // MoH · Federal: received 1M (f1 approved), allocated 600k (e1) → +400k
+    // MoH · Federal: received 1M, allocated 600k → +400k
     const healthFed = find("Ministry of Health", "Federal Allocation");
     expect(healthFed?.received_amount).toBe(1_000_000);
     expect(healthFed?.allocated_amount).toBe(600_000);
     expect(healthFed?.variance_amount).toBe(400_000);
 
-    // MoH · International: no funding, 200k allocated (e2) → over-allocated
+    // MoH · International: received 500k, allocated 200k → +300k
     const healthIntl = find("Ministry of Health", "International Donor");
-    expect(healthIntl?.received_amount).toBe(0);
+    expect(healthIntl?.received_amount).toBe(500_000);
     expect(healthIntl?.allocated_amount).toBe(200_000);
-    expect(healthIntl?.variance_amount).toBe(-200_000);
+    expect(healthIntl?.variance_amount).toBe(300_000);
   });
 });
 
@@ -161,19 +166,67 @@ describe("economic classification", () => {
     expect(classifyCategory("Drugs & Supplies")).toBe("other");
   });
 
+  it("prefers the bound budget line's NCOA class over the category name", () => {
+    // The Q1 2026 PHCMB case: BPR capital spend recorded under programme-shaped
+    // categories. The category name alone reads "other" and under-reported
+    // capital by ₦1.89bn; the bound budget line says capital.
+    expect(
+      classifyEntry({
+        budget_class: "capital",
+        expenditure_category_name: "Outreach & Service Delivery",
+      }),
+    ).toBe("capital");
+    expect(
+      classifyEntry({
+        budget_class: "capital",
+        expenditure_category_name: "Transport & Logistics",
+      }),
+    ).toBe("capital");
+    expect(
+      classifyEntry({
+        budget_class: "overhead",
+        expenditure_category_name: "Equipment & Furniture",
+      }),
+    ).toBe("overhead");
+  });
+
+  it("falls back to the category name when no budget line is bound", () => {
+    expect(
+      classifyEntry({
+        budget_class: null,
+        expenditure_category_name: "Personnel Costs",
+      }),
+    ).toBe("personnel");
+    expect(
+      classifyEntry({
+        budget_class: null,
+        expenditure_category_name: "Drugs & Supplies",
+      }),
+    ).toBe("other");
+  });
+
+  it("ignores a budget_class that isn't a recognised NCOA class", () => {
+    expect(
+      classifyEntry({
+        budget_class: "nonsense",
+        expenditure_category_name: "Capital Expenditure",
+      }),
+    ).toBe("capital");
+  });
+
   it("summarises the sector by economic class and reconciles to a total", () => {
     const rows = aggregateEconomicSummary(budgetFixtures(), expenditureFixtures(), {
       ...emptyReportFilters(),
       fiscalYear: 2026,
     });
     const byClass = Object.fromEntries(rows.map((r) => [r.economic_class, r]));
-    // FY2026 actual (approved/processed): e1 personnel 600k, e2 drugs 200k (→ other).
+    // FY2026 recorded entries: e1 personnel 600k, e2/e3 drugs 550k (→ other).
     expect(byClass.personnel.actual_amount).toBe(600_000);
-    expect(byClass.other.actual_amount).toBe(200_000);
+    expect(byClass.other.actual_amount).toBe(550_000);
     // Budget side comes from the clean approved-budget split.
     expect(byClass.personnel.budget_amount).toBe(1_200_000); // 800k + 400k
     expect(byClass.capital.budget_amount).toBe(900_000); // 500k + 400k
-    expect(byClass.total.actual_amount).toBe(800_000);
+    expect(byClass.total.actual_amount).toBe(1_150_000);
     expect(byClass.total.budget_amount).toBe(2_500_000);
   });
 
@@ -204,5 +257,126 @@ describe("aggregateYoyComparison", () => {
     expect(report.current_budget_amount).toBe(2_500_000);
     expect(report.prior_budget_amount).toBe(0); // no 2025 budget in fixtures
     expect(report.budget_multiple).toBeNull();
+  });
+});
+
+describe("aggregateHealthSectorObjectives", () => {
+  it("maps spend onto the programme segment of the budget line's programme code", () => {
+    const rows = aggregateHealthSectorObjectives(expenditureFixtures(), {
+      ...emptyReportFilters(),
+      fiscalYear: 2026,
+    });
+    const by = Object.fromEntries(rows.map((r) => [r.code, r]));
+    expect(by["0401"].actual_amount).toBe(600_000); // e1 · 0401…
+    expect(by["0406"].actual_amount).toBe(200_000); // e2 · 0406…
+    expect(by["0403"].actual_amount).toBe(350_000); // e3 · 0403…
+  });
+
+  it("keeps objectives with no spend so the strategy gaps stay visible", () => {
+    const rows = aggregateHealthSectorObjectives(expenditureFixtures(), {
+      ...emptyReportFilters(),
+      fiscalYear: 2026,
+    });
+    const idle = rows.find((r) => r.code === "0409");
+    expect(idle).toBeDefined();
+    expect(idle?.actual_amount).toBe(0);
+    expect(idle?.entry_count).toBe(0);
+  });
+
+  it("buckets unbound spend as unclassified rather than dropping it", () => {
+    // e4 (FY2025) has no programme code — it must still be counted.
+    const rows = aggregateHealthSectorObjectives(expenditureFixtures(), {
+      ...emptyReportFilters(),
+      fiscalYear: 2025,
+    });
+    const unclassified = rows.find((r) => r.code === "unclassified");
+    expect(unclassified?.actual_amount).toBe(100_000);
+    const total = rows.reduce((sum, r) => sum + r.actual_amount, 0);
+    expect(total).toBe(100_000);
+  });
+
+  it("omits the unclassified bucket when everything is classified", () => {
+    const rows = aggregateHealthSectorObjectives(expenditureFixtures(), {
+      ...emptyReportFilters(),
+      fiscalYear: 2026,
+    });
+    expect(rows.some((r) => r.code === "unclassified")).toBe(false);
+  });
+
+  it("shares sum to 1 across objectives with spend", () => {
+    const rows = aggregateHealthSectorObjectives(expenditureFixtures(), {
+      ...emptyReportFilters(),
+      fiscalYear: 2026,
+    });
+    const shareTotal = rows.reduce((sum, r) => sum + (r.share_of_total ?? 0), 0);
+    expect(shareTotal).toBeCloseTo(1, 10);
+  });
+});
+
+describe("revenue performance", () => {
+  const fy2026 = { ...emptyReportFilters(), fiscalYear: 2026 };
+
+  it("sums collections year-to-date when no quarter is selected", () => {
+    const rows = aggregateRevenuePerformance(revenueFixtures(), fy2026);
+    const recurrent = rows.find((r) => r.stream === "recurrent");
+    // rev-1: 200k (Q1) + 300k (Q2) = 500k against a 1M budget.
+    expect(recurrent?.budget_amount).toBe(1_000_000);
+    expect(recurrent?.actual_amount).toBe(500_000);
+    expect(recurrent?.performance_rate).toBeCloseTo(0.5, 10);
+  });
+
+  it("narrows collections to the selected quarter", () => {
+    const rows = aggregateRevenuePerformance(revenueFixtures(), {
+      ...fy2026,
+      quarter: 1,
+    });
+    expect(rows.find((r) => r.stream === "recurrent")?.actual_amount).toBe(200_000);
+    // The capital receipt only has a Q2 actual.
+    expect(rows.find((r) => r.stream === "capital_receipt")?.actual_amount).toBe(0);
+  });
+
+  it("reports over-collection as a positive variance", () => {
+    const rows = aggregateRevenuePerformance(revenueFixtures(), fy2026);
+    const capital = rows.find((r) => r.stream === "capital_receipt");
+    // rev-2 collected 5M against a 4M budget.
+    expect(capital?.variance_amount).toBe(1_000_000);
+    expect(capital?.performance_rate).toBeCloseTo(1.25, 10);
+  });
+
+  it("totals both streams and excludes other fiscal years", () => {
+    const rows = aggregateRevenuePerformance(revenueFixtures(), fy2026);
+    const total = rows.find((r) => r.stream === "total");
+    expect(total?.budget_amount).toBe(5_000_000); // rev-3 (FY2025) excluded
+    expect(total?.actual_amount).toBe(5_500_000);
+  });
+
+  it("composes collections by economic code, dropping lines that collected nothing", () => {
+    const rows = aggregateRevenueComposition(revenueFixtures(), {
+      ...fy2026,
+      quarter: 1,
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].economic_code).toBe("12020441");
+    expect(rows[0].share_of_total).toBeCloseTo(1, 10);
+  });
+});
+
+describe("stale offline snapshots", () => {
+  it("treats a dataset with no revenues key as having no revenue", () => {
+    // A snapshot cached before budget_line_revenues existed.
+    const stale = { ...dataset(), revenues: undefined } as unknown as ReportingDataset;
+    const rows = aggregateRevenuePerformance(stale.revenues ?? [], {
+      ...emptyReportFilters(),
+      fiscalYear: 2026,
+    });
+    expect(rows.find((r) => r.stream === "total")?.actual_amount).toBe(0);
+  });
+
+  it("classifies entries with no programme_code as unclassified", () => {
+    const rows = aggregateHealthSectorObjectives(
+      [{ ...expenditureFixtures()[0], programme_code: undefined as unknown as null }],
+      { ...emptyReportFilters(), fiscalYear: 2026 },
+    );
+    expect(rows.find((r) => r.code === "unclassified")?.actual_amount).toBe(600_000);
   });
 });

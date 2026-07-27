@@ -98,9 +98,9 @@ function aopLinkedShare(
 ): number | null {
   const actual = filterExpenditure(
     dataset.expenditure,
-    { ...filters, status: "all" },
+    filters,
     scope,
-  ).filter((row) => row.status === "approved" || row.status === "processed");
+  );
   let total = 0;
   let linked = 0;
   for (const row of actual) {

@@ -1,3 +1,9 @@
+import {
+  BadgeCheckIcon,
+  CircleAlertIcon,
+  GaugeIcon,
+  TriangleAlertIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { ReportSignal, SignalLevel } from "@/lib/reporting/signals";
 
@@ -9,8 +15,21 @@ const LEVEL_VARIANT: Record<SignalLevel, "approved" | "processed" | "pending" | 
   critical: "rejected",
 };
 
+const LEVEL_ICON = {
+  strong: BadgeCheckIcon,
+  on_track: GaugeIcon,
+  investigate: TriangleAlertIcon,
+  critical: CircleAlertIcon,
+} satisfies Record<SignalLevel, typeof BadgeCheckIcon>;
+
 export function SignalChip({ signal }: { signal: ReportSignal }) {
-  return <Badge variant={LEVEL_VARIANT[signal.level]}>{signal.label}</Badge>;
+  const Icon = LEVEL_ICON[signal.level];
+  return (
+    <Badge variant={LEVEL_VARIANT[signal.level]}>
+      <Icon aria-hidden className="size-3" />
+      {signal.label}
+    </Badge>
+  );
 }
 
 export function SignalChips({ signals }: { signals: ReportSignal[] }) {

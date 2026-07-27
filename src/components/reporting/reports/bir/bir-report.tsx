@@ -2,6 +2,12 @@
 
 import * as React from "react";
 import Image from "next/image";
+import { LockIcon, SendIcon } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/components/auth/auth-provider";
+import { AlertDialog } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ChartCard } from "@/components/reporting/chart-card";
 import { ReportStatStrip } from "@/components/reporting/report-stat-strip";
 import { BulletPerformanceList } from "@/components/reporting/charts/bullet-performance-list";
@@ -22,24 +28,68 @@ import {
   aggregateEconomicSummary,
   aggregateFundingBySource,
   aggregateHeadlineKpis,
+  aggregateHealthSectorObjectives,
   aggregateProgrammeAreaSummary,
   aggregateQuarterlyTrend,
+  aggregateRevenueComposition,
+  aggregateRevenuePerformance,
   type AdminClassificationRow,
   type EconomicSummaryRow,
   type FundingBySourceRow,
+  type HealthSectorObjectiveRow,
+  type RevenuePerformanceRow,
   type ProgrammeAreaSummaryRow,
 } from "@/lib/reporting/aggregate";
 import { resolvePhcmbMdaId } from "@/lib/reporting/mda-lookup";
 import { proRataBand, proRataTarget } from "@/lib/reporting/signals";
 import { formatCompactNaira, formatNaira, formatPercent } from "@/lib/format";
 import type { ReportFilters } from "@/lib/reporting/types";
+import type { FiscalQuarter } from "@/lib/db/types";
+import { getLatestBirPublication, publishBirQuarter, type BirPublicationWithPublisher } from "@/lib/db/bir-publications";
+import { isAdmin } from "@/lib/access";
+import { supabase } from "@/lib/supabase";
 
 export function BirReportRoute() {
   return (
-    <ReportPreviewScaffold templateId="bir" compactPeriod={false}>
+    <ReportPreviewScaffold
+      templateId="bir"
+      compactPeriod={false}
+      renderToolbarExtras={({ fiscalYear, quarter, loading }) => (
+        <BirPublishControl fiscalYear={fiscalYear} quarter={quarter} loading={loading} />
+      )}
+    >
       {(props) => <BirReportBody {...props} />}
     </ReportPreviewScaffold>
   );
+}
+
+function BirPublishControl({ fiscalYear, quarter, loading }: { fiscalYear: number | null; quarter: number | null; loading: boolean }) {
+  const { profile } = useAuth();
+  const [publication, setPublication] = React.useState<BirPublicationWithPublisher | null>(null);
+  const [confirming, setConfirming] = React.useState(false);
+  const [publishing, setPublishing] = React.useState(false);
+  React.useEffect(() => {
+    if (!supabase || !fiscalYear || !quarter) { setPublication(null); return; }
+    let active = true;
+    getLatestBirPublication(supabase, { fiscalYear, quarter: quarter as FiscalQuarter })
+      .then((value) => { if (active) setPublication(value); })
+      .catch(() => { if (active) setPublication(null); });
+    return () => { active = false; };
+  }, [fiscalYear, quarter]);
+  async function publish() {
+    if (!supabase || !fiscalYear || !quarter) return;
+    setPublishing(true);
+    try {
+      await publishBirQuarter(supabase, fiscalYear, quarter as FiscalQuarter);
+      const latest = await getLatestBirPublication(supabase, { fiscalYear, quarter: quarter as FiscalQuarter });
+      setPublication(latest); setConfirming(false); toast.success(`Q${quarter} FY ${fiscalYear} BIR published.`);
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Could not publish the BIR."); }
+    finally { setPublishing(false); }
+  }
+  if (publication) return <Badge variant="outline" className="h-9 px-3"><LockIcon className="size-3.5" /> Published v{publication.version} · {publication.publisher?.full_name ?? publication.published_by.slice(0, 8)} · {new Date(publication.published_at).toLocaleString()}</Badge>;
+  if (!isAdmin(profile)) return null;
+  const exactQuarter = fiscalYear !== null && quarter !== null;
+  return <><Button type="button" variant="outline" disabled={loading || !exactQuarter} onClick={() => setConfirming(true)} title={exactQuarter ? undefined : "Select an exact quarter before publishing."}><SendIcon className="size-4" />{exactQuarter ? `Publish Q${quarter} BIR` : "Select quarter to publish"}</Button><AlertDialog open={confirming} onOpenChange={setConfirming} title={`Publish Q${quarter} FY ${fiscalYear} Budget Implementation Report?`} description="This action is irreversible in the normal interface. It immediately locks new submissions and routine edits for this exact quarter. Later corrections require an Admin amendment and create a new BIR version." confirmLabel="Publish and lock quarter" confirmVariant="destructive" loading={publishing} onConfirm={publish} /></>;
 }
 
 /** Zero renders as an en dash, matching government budget-document convention. */
@@ -106,6 +156,21 @@ function BirReportBody({
     {},
   );
   const composition = aggregateBudgetComposition(dataset.budgets, effectiveFilters, {});
+  const objectives = aggregateHealthSectorObjectives(
+    dataset.expenditure,
+    effectiveFilters,
+    {},
+  );
+  const revenuePerformance = aggregateRevenuePerformance(
+    dataset.revenues,
+    effectiveFilters,
+    {},
+  );
+  const revenueComposition = aggregateRevenueComposition(
+    dataset.revenues,
+    effectiveFilters,
+    {},
+  );
 
   const phcmbId = resolvePhcmbMdaId(dataset);
   const phcFilters: ReportFilters | null = phcmbId
@@ -139,6 +204,23 @@ function BirReportBody({
       actualLabel: formatCompactNaira(row.actual_amount),
       ratio: row.performance_rate,
     }));
+  const objectiveUnclassified =
+    objectives.find((row) => row.code === "unclassified") ?? null;
+  const objectiveTotal = objectives.reduce((sum, row) => sum + row.actual_amount, 0);
+
+  const revenueTotalRow = revenuePerformance.find((row) => row.stream === "total");
+  const revenueBudgetTotal = revenueTotalRow?.budget_amount ?? 0;
+  const revenueActualTotal = revenueTotalRow?.actual_amount ?? 0;
+  const revenueBullets = revenuePerformance
+    .filter((row) => row.stream !== "total" && row.budget_amount > 0)
+    .map((row) => ({
+      id: row.stream,
+      label: row.label,
+      planLabel: formatCompactNaira(row.budget_amount),
+      actualLabel: formatCompactNaira(row.actual_amount),
+      ratio: row.performance_rate,
+    }));
+
   const adminBullets = adminRows
     .filter((row) => row.budget_amount > 0)
     .sort(
@@ -170,7 +252,7 @@ function BirReportBody({
           {
             label: "Actual expenditure",
             value: formatCompactNaira(kpis.total_expenditure_amount),
-            helper: `Approved and processed expenditure for ${periodLabel}.`,
+            helper: `Recorded expenditure for ${periodLabel}.`,
           },
           {
             label: "Budget execution",
@@ -194,7 +276,7 @@ function BirReportBody({
       <Section
         code="1"
         title="Budget Implementation Summary"
-        note={`Health-sector budget performance by economic classification. Actual figures cover approved and processed expenditure for ${periodLabel}.`}
+        note={`Health-sector budget performance by economic classification. Actual figures cover recorded expenditure for ${periodLabel}.`}
       >
         <ReportTable
           caption="Table 1: Budget Implementation Summary by Economic Classification"
@@ -259,6 +341,41 @@ function BirReportBody({
         </div>
       </Section>
 
+      {/* Section 1.G — Health sector objectives (BPR dashboard, programme segment level) */}
+      <Section
+        code="1.G"
+        title="Expenditure by Health Sector Objective"
+        note="Spending mapped to the state's health sector objectives — the programme segment of the NCOA code. This is the policy lens: what the money was meant to achieve, rather than which unit spent it."
+      >
+        <div className="flex flex-col gap-4">
+          <ChartCard
+            title="Expenditure by health sector objective"
+            description={
+              objectiveUnclassified
+                ? `Objectives with no recorded spend are shown at zero. ${formatCompactNaira(objectiveUnclassified.actual_amount)} is unclassified — expenditure not bound to a budget line, so it carries no programme segment.`
+                : "Objectives with no recorded spend are shown at zero."
+            }
+            loading={loading}
+            isEmpty={!loading && objectiveTotal === 0}
+          >
+            <HorizontalBarReport
+              data={objectives.map((row) => ({
+                id: row.code,
+                label: row.label,
+                value: row.actual_amount,
+              }))}
+              height={Math.max(240, objectives.length * 34 + 40)}
+            />
+          </ChartCard>
+          <ReportTable
+            caption="Table 1.G: Expenditure by Health Sector Objective (Programme Segment Level)"
+            columns={objectiveColumns}
+            rows={objectives}
+            getRowKey={(row) => row.code}
+          />
+        </div>
+      </Section>
+
       {/* Section 2 — Expenditure by Administrative Classification */}
       <Section
         code="2"
@@ -271,6 +388,53 @@ function BirReportBody({
           rows={adminRows}
           getRowKey={(row) => row.mda_id}
         />
+      </Section>
+
+      {/* Section 2.A — Revenue collected against the approved revenue budget */}
+      <Section
+        code="2.A"
+        title="Revenue Performance against Budget"
+        note="Recurrent revenue (IGR, fees, licences) and capital receipts (grants, loans, aid) collected against the approved revenue budget, per the BPR's own split."
+      >
+        {revenueBudgetTotal === 0 ? (
+          <EmptyNote>No revenue budget is recorded for this period.</EmptyNote>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <div className="grid gap-5 lg:grid-cols-2">
+              <ChartCard
+                title="Collection against budget"
+                description="Revenue collected against the approved figure. The tick marks the pro-rata benchmark for this period."
+                loading={loading}
+                isEmpty={!loading && revenueBullets.length === 0}
+              >
+                <BulletPerformanceList items={revenueBullets} target={target} />
+              </ChartCard>
+              <ChartCard
+                title="Revenue composition"
+                description="Share of revenue actually collected, by economic code."
+                loading={loading}
+                isEmpty={!loading && revenueComposition.length === 0}
+              >
+                <DonutShareChart
+                  data={revenueComposition.slice(0, 8).map((row) => ({
+                    id: row.economic_code,
+                    label: row.economic_description,
+                    value: row.actual_amount,
+                  }))}
+                  centerValue={formatCompactNaira(revenueActualTotal)}
+                  centerLabel="Collected"
+                />
+              </ChartCard>
+            </div>
+            <ReportTable
+              caption="Table 2.A: Revenue Performance by Stream"
+              columns={revenueColumns}
+              rows={revenuePerformance}
+              getRowKey={(row) => row.stream}
+              emphasizeLastRow
+            />
+          </div>
+        )}
       </Section>
 
       {/* Section 2 — Revenue by Source */}
@@ -351,7 +515,7 @@ function BirReportBody({
       </Section>
 
       <p className="border-t pt-4 text-xs text-muted-foreground">
-        Figures cover approved and processed entries only. Economic classification of
+        Figures cover all recorded entries. Economic classification of
         actual expenditure is derived from expenditure categories. Prepared by the Kano
         State Ministry of Health from the live budget-tracker ledger · {periodLabel}.
       </p>
@@ -362,6 +526,55 @@ function BirReportBody({
 /* -------------------------------------------------------------------------- */
 /* Column definitions                                                         */
 /* -------------------------------------------------------------------------- */
+
+const objectiveColumns: ReportTableColumn<HealthSectorObjectiveRow>[] = [
+  {
+    key: "code",
+    header: "Segment",
+    render: (row) => (row.code === "unclassified" ? "—" : row.code),
+  },
+  { key: "objective", header: "Health sector objective", render: (row) => row.description },
+  {
+    key: "actual",
+    header: "Actual",
+    align: "right",
+    render: (row) => naira(row.actual_amount),
+  },
+  {
+    key: "share",
+    header: "% of total",
+    align: "right",
+    render: (row) => formatPercent(row.share_of_total),
+  },
+];
+
+const revenueColumns: ReportTableColumn<RevenuePerformanceRow>[] = [
+  { key: "label", header: "Revenue stream", render: (row) => row.label },
+  {
+    key: "budget",
+    header: "Approved budget",
+    align: "right",
+    render: (row) => naira(row.budget_amount),
+  },
+  {
+    key: "actual",
+    header: "Collected",
+    align: "right",
+    render: (row) => naira(row.actual_amount),
+  },
+  {
+    key: "performance",
+    header: "% performance",
+    align: "right",
+    render: (row) => formatPercent(row.performance_rate),
+  },
+  {
+    key: "variance",
+    header: "Variance",
+    align: "right",
+    render: (row) => naira(row.variance_amount),
+  },
+];
 
 const economicColumns: ReportTableColumn<EconomicSummaryRow>[] = [
   { key: "label", header: "Economic class", render: (row) => row.label },

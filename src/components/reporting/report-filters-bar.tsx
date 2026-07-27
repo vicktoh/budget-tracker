@@ -73,23 +73,6 @@ export function ReportFiltersBar({
       )}
     >
       <div className="flex flex-wrap items-end gap-3">
-        <FilterField label="Status" htmlFor="reporting-status">
-          <Select
-            id="reporting-status"
-            value={filters.status}
-            onChange={(event) =>
-              update("status", event.target.value as ReportFilters["status"])
-            }
-            disabled={loading}
-          >
-            <option value="all">All submitted</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="processed">Processed</option>
-            <option value="rejected">Rejected</option>
-          </Select>
-        </FilterField>
-
         <FilterField label="Fiscal year" htmlFor="reporting-fy">
           <Combobox
             id="reporting-fy"

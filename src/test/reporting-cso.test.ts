@@ -15,6 +15,7 @@ import {
   budgetFixtures,
   expenditureFixtures,
   fundingFixtures,
+  revenueFixtures,
 } from "@/test/reporting-fixtures";
 
 function dataset(): ReportingDataset {
@@ -22,7 +23,9 @@ function dataset(): ReportingDataset {
     funding: fundingFixtures(),
     expenditure: expenditureFixtures(),
     budgets: budgetFixtures(),
+    revenues: revenueFixtures(),
     aopActivities: aopFixtures(),
+    publications: [],
   };
 }
 
@@ -58,12 +61,11 @@ describe("buildCsoAutoDrafts", () => {
 });
 
 describe("buildCsoYoy", () => {
-  it("returns two comparison rows and flags absent prior-year data", () => {
+  it("returns two comparison rows and detects prior-year ledger data", () => {
     const yoy = buildCsoYoy(dataset(), { ...emptyReportFilters(), fiscalYear: 2026 });
     expect(yoy.rows.map((row) => row.key)).toEqual(["budget", "actual"]);
     expect(yoy.rows[0].current).toBe(2_500_000);
-    // Fixtures have no actual FY2025 spend, so there's no baseline.
-    expect(yoy.hasPrior).toBe(false);
+    expect(yoy.hasPrior).toBe(true);
     expect(yoy.rows[0].changeLabel).toBeNull();
   });
 });

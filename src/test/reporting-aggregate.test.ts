@@ -10,6 +10,7 @@ import {
   aggregateHeadlineKpis,
   aggregateLgaPhcShare,
   aggregateMdaExecutionLeaderboard,
+  aggregateMdaReportingCoverage,
   aggregatePhcCoverage,
   aggregatePhcFacilityLeaderboard,
   aggregatePhcFacilitySummary,
@@ -17,7 +18,7 @@ import {
   aggregatePhcShare,
   aggregateProgrammeAreaSummary,
   aggregateQuarterlyTrend,
-  aggregateStatusCounts,
+  aggregateEntrySummary,
   aggregateUnlinkedExpenditure,
   filterExpenditure,
   filterFunding,
@@ -52,15 +53,13 @@ describe("filterFunding", () => {
     expect(filtered).toHaveLength(3);
   });
 
-  it("filters by status, fiscal year, MDA, and programme area", () => {
+  it("filters by fiscal year and programme area", () => {
     const rows = filterFunding(fundingFixtures(), {
       ...emptyReportFilters(),
-      status: "approved",
       fiscalYear: 2026,
       programmeAreaId: PA_PRIMARY,
     });
-    expect(rows).toHaveLength(1);
-    expect(rows[0].id).toBe("f1");
+    expect(rows.map((row) => row.id).sort()).toEqual(["f1", "f2", "f3"]);
   });
 
   it("filters by date range inclusively", () => {
@@ -109,61 +108,146 @@ describe("filterExpenditure", () => {
   });
 });
 
-describe("aggregateStatusCounts", () => {
-  it("counts entries by status across both ledgers", () => {
-    const result = aggregateStatusCounts(
+describe("aggregateEntrySummary", () => {
+  it("counts every active entry across both ledgers", () => {
+    const result = aggregateEntrySummary(
       fundingFixtures(),
       expenditureFixtures(),
       emptyReportFilters(),
     );
-    expect(result.funding).toEqual({
-      pending: 1,
-      approved: 1,
-      processed: 1,
-      rejected: 1,
-    });
-    expect(result.expenditure).toEqual({
-      pending: 1,
-      approved: 2,
-      processed: 0,
-      rejected: 1,
-    });
+    expect(result.fundingCount).toBe(4);
+    expect(result.expenditureCount).toBe(4);
   });
 
-  it("sums approved+processed amounts only", () => {
-    const result = aggregateStatusCounts(
+  it("sums every active ledger row", () => {
+    const result = aggregateEntrySummary(
       fundingFixtures(),
       expenditureFixtures(),
       emptyReportFilters(),
     );
-    // funding f1 (1M approved) + f3 (750k processed) = 1.75M
-    expect(result.totalFunding).toBe(1_750_000);
-    // expenditure e1 (600k approved) + e2 (200k approved) = 800k
-    expect(result.totalExpenditure).toBe(800_000);
-  });
-
-  it("ignores the status filter so cards always show every state", () => {
-    const result = aggregateStatusCounts(
-      fundingFixtures(),
-      expenditureFixtures(),
-      { ...emptyReportFilters(), status: "approved" },
-    );
-    expect(result.funding.rejected).toBe(1);
-    expect(result.expenditure.rejected).toBe(1);
+    expect(result.totalFunding).toBe(2_500_000);
+    expect(result.totalExpenditure).toBe(1_250_000);
   });
 
   it("respects role scope", () => {
-    const result = aggregateStatusCounts(
+    const result = aggregateEntrySummary(
       fundingFixtures(),
       expenditureFixtures(),
       emptyReportFilters(),
       { mdaIds: [MDA_PHCMB] },
     );
-    expect(result.funding.processed).toBe(1);
-    expect(result.expenditure.pending).toBe(1);
-    // Health-only rows should be excluded.
-    expect(result.funding.approved).toBe(0);
-    expect(result.expenditure.approved).toBe(0);
+    expect(result).toEqual({
+      fundingCount: 1,
+      expenditureCount: 1,
+      totalFunding: 750_000,
+      totalExpenditure: 350_000,
+    });
+  });
+});
+
+describe("aggregateMdaReportingCoverage", () => {
+  const mdas = [
+    { id: MDA_HEALTH, name: "Ministry of Health" },
+    { id: MDA_PHCMB, name: "Primary Health Care Board" },
+    { id: "mda-no-report", name: "MDA without entries" },
+  ];
+
+  it("surfaces complete, partial, and missing MDA reports for the selected period", () => {
+    const rows = aggregateMdaReportingCoverage(
+      mdas,
+      fundingFixtures(),
+      expenditureFixtures(),
+      { ...emptyReportFilters(), fiscalYear: 2026, quarter: 1 },
+    );
+
+    expect(rows.find((row) => row.mda_id === MDA_HEALTH)?.status).toBe("complete");
+    expect(rows.find((row) => row.mda_id === MDA_HEALTH)).toMatchObject({
+      funding_amount: 1_500_000,
+      expenditure_amount: 600_000,
+      personnel_amount: 600_000,
+      personnel_entry_count: 1,
+      overhead_amount: 0,
+      overhead_entry_count: 0,
+      capital_amount: 0,
+      capital_entry_count: 0,
+    });
+    expect(rows.find((row) => row.mda_id === MDA_PHCMB)).toMatchObject({
+      status: "missing",
+      personnel_entry_count: 0,
+      overhead_entry_count: 0,
+      capital_entry_count: 0,
+      gaps: ["Funding entries", "Expenditure entries"],
+      latest_entry_date: null,
+    });
+    expect(rows[0].mda_id).toBe("mda-no-report");
+  });
+
+  it("marks a single-ledger submission as partial and reports the gap", () => {
+    const rows = aggregateMdaReportingCoverage(
+      mdas,
+      fundingFixtures(),
+      [],
+      { ...emptyReportFilters(), fiscalYear: 2026 },
+    );
+    const health = rows.find((row) => row.mda_id === MDA_HEALTH);
+
+    expect(health).toMatchObject({
+      status: "partial",
+      funding_entry_count: 2,
+      expenditure_entry_count: 0,
+      gaps: ["Expenditure entries"],
+      latest_entry_date: "2026-02-10",
+    });
+  });
+
+  it("counts expenditure entries by the reporting economic classes", () => {
+    const [personnel] = expenditureFixtures();
+    const rows = aggregateMdaReportingCoverage(
+      [{ id: MDA_HEALTH, name: "Ministry of Health" }],
+      [],
+      [
+        personnel,
+        {
+          ...personnel,
+          id: "e-overhead",
+          expenditure_category_name: "Overhead / Running Costs",
+        },
+        {
+          ...personnel,
+          id: "e-capital",
+          expenditure_category_name: "Medical Equipment",
+        },
+        {
+          ...personnel,
+          id: "e-other",
+          expenditure_category_name: "Drugs & Supplies",
+        },
+      ],
+      { ...emptyReportFilters(), fiscalYear: 2026 },
+    );
+
+    expect(rows[0]).toMatchObject({
+      expenditure_amount: 2_400_000,
+      expenditure_entry_count: 4,
+      personnel_amount: 600_000,
+      personnel_entry_count: 1,
+      overhead_amount: 600_000,
+      overhead_entry_count: 1,
+      capital_amount: 600_000,
+      capital_entry_count: 1,
+    });
+  });
+
+  it("limits the coverage population when an MDA filter is selected", () => {
+    const rows = aggregateMdaReportingCoverage(
+      mdas,
+      fundingFixtures(),
+      expenditureFixtures(),
+      { ...emptyReportFilters(), mdaId: MDA_HEALTH },
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].mda_id).toBe(MDA_HEALTH);
   });
 });
 
@@ -312,7 +396,7 @@ describe("aggregateAopPlannedVsActual", () => {
     expect(rows.find((r) => r.aop_activity_id === "aop-archived")).toBeUndefined();
   });
 
-  it("counts only approved and processed expenditure as linked spend", () => {
+  it("counts every active linked expenditure", () => {
     const rows = aggregateAopPlannedVsActual(
       aopFixtures(),
       [
@@ -328,7 +412,7 @@ describe("aggregateAopPlannedVsActual", () => {
     );
 
     expect(rows.find((row) => row.aop_activity_id === AOP_1)?.linked_expenditure_amount)
-      .toBe(600_000);
+      .toBe(725_000);
   });
 });
 
@@ -343,24 +427,11 @@ describe("aggregateHeadlineKpis", () => {
       fy2026,
     );
     expect(kpis.total_budget_amount).toBe(2_500_000);
-    // f1 1M approved + f3 750k processed; f2 pending excluded.
-    expect(kpis.total_funding_amount).toBe(1_750_000);
-    // e1 600k + e2 200k approved; e3 pending excluded.
-    expect(kpis.total_expenditure_amount).toBe(800_000);
-    expect(kpis.budget_execution_rate).toBeCloseTo(800_000 / 2_500_000, 5);
-    expect(kpis.funding_utilisation_rate).toBeCloseTo(800_000 / 1_750_000, 5);
-    expect(kpis.funding_gap_amount).toBe(1_750_000 - 800_000);
-  });
-
-  it("ignores the status filter and counts only approved/processed entries", () => {
-    const kpis = aggregateHeadlineKpis(
-      budgetFixtures(),
-      fundingFixtures(),
-      expenditureFixtures(),
-      { ...fy2026, status: "pending" },
-    );
-    expect(kpis.total_funding_amount).toBe(1_750_000);
-    expect(kpis.total_expenditure_amount).toBe(800_000);
+    expect(kpis.total_funding_amount).toBe(2_250_000);
+    expect(kpis.total_expenditure_amount).toBe(1_150_000);
+    expect(kpis.budget_execution_rate).toBeCloseTo(1_150_000 / 2_500_000, 5);
+    expect(kpis.funding_utilisation_rate).toBeCloseTo(1_150_000 / 2_250_000, 5);
+    expect(kpis.funding_gap_amount).toBe(1_100_000);
   });
 
   it("returns null rates when there is no budget or funding", () => {
@@ -377,7 +448,7 @@ describe("aggregateHeadlineKpis", () => {
       { ...fy2026, quarter: 2 },
     );
     expect(kpis.total_funding_amount).toBe(750_000);
-    expect(kpis.total_expenditure_amount).toBe(200_000);
+    expect(kpis.total_expenditure_amount).toBe(550_000);
   });
 });
 
@@ -387,11 +458,10 @@ describe("aggregatePhcShare", () => {
       ...emptyReportFilters(),
       fiscalYear: 2026,
     });
-    // e2 200k approved PHC; e3 pending excluded; e1 600k non-PHC.
-    expect(result.phc_amount).toBe(200_000);
+    expect(result.phc_amount).toBe(550_000);
     expect(result.non_phc_amount).toBe(600_000);
-    expect(result.total_amount).toBe(800_000);
-    expect(result.phc_share).toBeCloseTo(0.25, 5);
+    expect(result.total_amount).toBe(1_150_000);
+    expect(result.phc_share).toBeCloseTo(550_000 / 1_150_000, 5);
   });
 
   it("ignores the PHC filter so the share base stays complete", () => {
@@ -418,13 +488,13 @@ describe("aggregateQuarterlyTrend", () => {
     expect(rows).toHaveLength(4);
     expect(rows[0]).toEqual({
       quarter: 1,
-      total_funding_amount: 1_000_000,
+      total_funding_amount: 1_500_000,
       total_expenditure_amount: 600_000,
     });
     expect(rows[1]).toEqual({
       quarter: 2,
       total_funding_amount: 750_000,
-      total_expenditure_amount: 200_000,
+      total_expenditure_amount: 550_000,
     });
     expect(rows[2].total_funding_amount).toBe(0);
     expect(rows[3].total_expenditure_amount).toBe(0);
@@ -450,9 +520,9 @@ describe("aggregateCategoryShare", () => {
     const personnel = rows.find((r) => r.expenditure_category_id === EC_PERSONNEL);
     const drugs = rows.find((r) => r.expenditure_category_id === EC_DRUGS);
     expect(personnel?.total_amount).toBe(600_000);
-    expect(personnel?.share).toBeCloseTo(0.75, 5);
-    expect(drugs?.total_amount).toBe(200_000);
-    expect(drugs?.share).toBeCloseTo(0.25, 5);
+    expect(personnel?.share).toBeCloseTo(600_000 / 1_150_000, 5);
+    expect(drugs?.total_amount).toBe(550_000);
+    expect(drugs?.share).toBeCloseTo(550_000 / 1_150_000, 5);
   });
 
   it("orders categories by total descending", () => {
@@ -497,9 +567,8 @@ describe("aggregateMdaExecutionLeaderboard", () => {
     expect(rows).toHaveLength(2);
     expect(rows[0].mda_id).toBe(MDA_HEALTH);
     expect(rows[0].execution_rate).toBeCloseTo(800_000 / 1_500_000, 5);
-    // PHCMB has only a pending entry, so its actual spend is 0.
     expect(rows[1].mda_id).toBe(MDA_PHCMB);
-    expect(rows[1].execution_rate).toBe(0);
+    expect(rows[1].execution_rate).toBeCloseTo(350_000 / 1_000_000, 5);
   });
 
   it("excludes MDAs without an approved budget", () => {
@@ -530,7 +599,6 @@ function expenditureWithSecondLga() {
       quarter: 1 as const,
       transaction_date: "2026-02-01",
       amount: 100_000,
-      status: "processed" as const,
     },
   ];
 }
@@ -538,14 +606,13 @@ function expenditureWithSecondLga() {
 describe("aggregateLgaPhcShare", () => {
   it("ranks LGAs by actual PHC spending with shares and facility counts", () => {
     const rows = aggregateLgaPhcShare(expenditureWithSecondLga(), emptyReportFilters());
-    // e2 (approved, 200k, Kano) + e5 (processed, 100k, Dawakin); e3 is pending.
     expect(rows).toHaveLength(2);
     expect(rows[0].lga_id).toBe(LGA_KANO);
-    expect(rows[0].total_expenditure_amount).toBe(200_000);
-    expect(rows[0].share).toBeCloseTo(200_000 / 300_000, 5);
+    expect(rows[0].total_expenditure_amount).toBe(550_000);
+    expect(rows[0].share).toBeCloseTo(550_000 / 650_000, 5);
     expect(rows[0].facility_count).toBe(1);
     expect(rows[1].lga_name).toBe("Dawakin Tofa");
-    expect(rows[1].share).toBeCloseTo(100_000 / 300_000, 5);
+    expect(rows[1].share).toBeCloseTo(100_000 / 650_000, 5);
   });
 
   it("respects the LGA filter", () => {
@@ -575,10 +642,10 @@ describe("aggregatePhcFacilityLeaderboard", () => {
     );
     expect(rows).toHaveLength(2);
     expect(rows[0].facility_id).toBe(FACILITY_A);
-    expect(rows[0].total_expenditure_amount).toBe(200_000);
+    expect(rows[0].total_expenditure_amount).toBe(550_000);
     expect(rows[0].lga_name).toBe("Kano Municipal");
     expect(rows[1].facility_name).toBe("PHC Dawakin Tofa");
-    expect(rows[1].share).toBeCloseTo(100_000 / 300_000, 5);
+    expect(rows[1].share).toBeCloseTo(100_000 / 650_000, 5);
   });
 });
 
@@ -588,10 +655,10 @@ describe("aggregatePhcCoverage", () => {
       expenditureWithSecondLga(),
       emptyReportFilters(),
     );
-    expect(coverage.total_phc_amount).toBe(300_000);
+    expect(coverage.total_phc_amount).toBe(650_000);
     expect(coverage.lga_count).toBe(2);
     expect(coverage.facility_count).toBe(2);
-    expect(coverage.average_per_facility).toBe(150_000);
+    expect(coverage.average_per_facility).toBe(325_000);
   });
 
   it("returns zero coverage and a null average when nothing was spent", () => {
