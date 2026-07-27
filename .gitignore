@@ -14,6 +14,11 @@ public/swe-worker-*.js
 supabase/.temp/
 coverage/
 .DS_Store
+
+# Local scratch / agent run output
+tmp/
+.codex-pets/
+pet-runs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
