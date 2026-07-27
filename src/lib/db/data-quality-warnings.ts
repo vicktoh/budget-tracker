@@ -33,6 +33,9 @@ export async function listEntryDataQualityWarnings(
     .select("*")
     .eq("entry_type", entryType)
     .eq("entry_id", entryId)
+    // Temporarily disabled: keep this warning out of entry detail and review
+    // surfaces even before every environment has run the cleanup migration.
+    .neq("warning_code", "funding_source_over_allocated")
     .is("resolved_at", null)
     .order("created_at", { ascending: true });
   if (error) throw error;
