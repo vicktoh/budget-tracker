@@ -1,19 +1,13 @@
--- Kano State FY2025 health-sector actuals & budgets.
+-- Kano State FY2025 health-sector approved budgets.
 --
 -- Source: "Kano Health Numbers" (International Budget Partnership, Q1 2026),
--- "The Full Picture — All Verified Figures" table, verified against the 2025
--- final BIR. Seeded so year-over-year comparisons in the reports hub have a
--- real FY2025 baseline.
+-- verified against the 2025 final BIR.
 --
--- Anchor-faithful modelling: sector economic-class actuals and PHCMB detail
--- (incl. the Q4 capital spike = 87% of annual) reproduce the published figures
--- exactly; per-MDA approved budgets are scaled from each MDA's 2026 share so the
+-- Per-MDA approved budgets are scaled from each MDA's 2026 share so the
 -- health-sector total hits the published ~N109.8bn (PHCMB pinned to its +35%
--- anchor). Actuals are concentrated on the three MDAs the report details
--- (Ministry of Health HQ, HMB, PHCMB); other MDAs receive budgets only —
--- matching how FY2026 is seeded.
+-- anchor).
 --
--- Requires seeds 001, 002, 004. Idempotent via KH25-* keys + on conflict.
+-- Requires seeds 001 and 002. Idempotent via on conflict.
 
 begin;
 
@@ -24,7 +18,8 @@ begin
   end if;
 end $$;
 
--- Migration-safe re-run
+-- Remove the retired FY2025 dummy ledger entries on re-run while preserving
+-- genuine FY2025 entries that may have been entered by users.
 delete from public.expenditure_entries where voucher_ref_no like 'KH25-%';
 delete from public.funding_entries where reference_no like 'KH25-%';
 
@@ -63,111 +58,5 @@ set personnel_amount = excluded.personnel_amount,
     total_budget_amount = excluded.total_budget_amount,
     source_label = excluded.source_label,
     updated_at = now();
-
-/* -------------------- Funding entries (FY2025 budget releases) -------------------- */
-with plan(mda_code, pa_slug, tx_date, amount, ref_no, remark) as (
-  values
-    ('052100100100', 'admin-general-services', '2025-02-25', 1133291092.25, 'KH25-FND-MOH-001', 'FY2025 budget release for MoH personnel Q1 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'admin-general-services', '2025-05-27', 1133291092.25, 'KH25-FND-MOH-002', 'FY2025 budget release for MoH personnel Q2 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'admin-general-services', '2025-08-26', 1133291092.25, 'KH25-FND-MOH-003', 'FY2025 budget release for MoH personnel Q3 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'admin-general-services', '2025-11-25', 1133291092.25, 'KH25-FND-MOH-004', 'FY2025 budget release for MoH personnel Q4 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'admin-general-services', '2025-02-25', 265302202.25, 'KH25-FND-MOH-005', 'FY2025 budget release for MoH overhead Q1 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'admin-general-services', '2025-05-27', 265302202.25, 'KH25-FND-MOH-006', 'FY2025 budget release for MoH overhead Q2 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'admin-general-services', '2025-08-26', 265302202.25, 'KH25-FND-MOH-007', 'FY2025 budget release for MoH overhead Q3 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'admin-general-services', '2025-11-25', 265302202.25, 'KH25-FND-MOH-008', 'FY2025 budget release for MoH overhead Q4 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'health-management-programmes', '2025-02-25', 1960880393.31, 'KH25-FND-MOH-009', 'FY2025 budget release for MoH capital Q1 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'health-management-programmes', '2025-05-27', 3921760786.62, 'KH25-FND-MOH-010', 'FY2025 budget release for MoH capital Q2 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'health-management-programmes', '2025-08-26', 5882641179.93, 'KH25-FND-MOH-011', 'FY2025 budget release for MoH capital Q3 — Kano Health Numbers (IBP)'),
-    ('052100100100', 'health-management-programmes', '2025-11-25', 16667483343.14, 'KH25-FND-MOH-012', 'FY2025 budget release for MoH capital Q4 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-02-25', 5250000000.00, 'KH25-FND-HMB-013', 'FY2025 budget release for HMB personnel Q1 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-05-27', 5250000000.00, 'KH25-FND-HMB-014', 'FY2025 budget release for HMB personnel Q2 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-08-26', 5250000000.00, 'KH25-FND-HMB-015', 'FY2025 budget release for HMB personnel Q3 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-11-25', 5250000000.00, 'KH25-FND-HMB-016', 'FY2025 budget release for HMB personnel Q4 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-02-25', 26096250.00, 'KH25-FND-HMB-017', 'FY2025 budget release for HMB overhead Q1 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-05-27', 26096250.00, 'KH25-FND-HMB-018', 'FY2025 budget release for HMB overhead Q2 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-08-26', 26096250.00, 'KH25-FND-HMB-019', 'FY2025 budget release for HMB overhead Q3 — Kano Health Numbers (IBP)'),
-    ('052100300100', 'hospital-services', '2025-11-25', 26096250.00, 'KH25-FND-HMB-020', 'FY2025 budget release for HMB overhead Q4 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-02-25', 1500000.00, 'KH25-FND-PHC-021', 'FY2025 budget release for PHCMB overhead Q1 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-05-27', 1500000.00, 'KH25-FND-PHC-022', 'FY2025 budget release for PHCMB overhead Q2 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-08-26', 1500000.00, 'KH25-FND-PHC-023', 'FY2025 budget release for PHCMB overhead Q3 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-11-25', 1500000.00, 'KH25-FND-PHC-024', 'FY2025 budget release for PHCMB overhead Q4 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'admin-general-services', '2025-05-27', 541838.00, 'KH25-FND-PHC-025', 'FY2025 budget release for PHCMB personnel — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-02-25', 340851722.00, 'KH25-FND-PHC-026', 'FY2025 budget release for PHCMB capital Q1 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-05-27', 340851722.00, 'KH25-FND-PHC-027', 'FY2025 budget release for PHCMB capital Q2 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-08-26', 340851722.00, 'KH25-FND-PHC-028', 'FY2025 budget release for PHCMB capital Q3 — Kano Health Numbers (IBP)'),
-    ('052100500100', 'community-health-services', '2025-11-25', 6899619163.00, 'KH25-FND-PHC-029', 'FY2025 budget release for PHCMB capital Q4 (Q4 spike, 87% of annual) — Kano Health Numbers (IBP)')
-)
-insert into public.funding_entries (
-  transaction_date, mda_id, funding_source_id, programme_area_id, amount,
-  reference_no, status, entered_by, approved_by, approved_at, remarks
-)
-select plan.tx_date::date, m.id,
-  (select id from public.funding_sources where slug = 'kano-state-govt-budget-release'),
-  pa.id, plan.amount, plan.ref_no, 'processed',
-  '00000000-0000-0000-0000-000000000002'::uuid,
-  '00000000-0000-0000-0000-000000000003'::uuid,
-  (plan.tx_date::date + 7)::timestamptz, plan.remark
-from plan
-join public.mdas m on m.code = plan.mda_code
-join public.programme_areas pa on pa.slug = plan.pa_slug
-on conflict (fiscal_year, mda_id, reference_no) do nothing;
-
-/* -------------------- Expenditure entries (FY2025 actuals) -------------------- */
-with plan(mda_code, ec_slug, pa_slug, pm_slug, tx_date, amount, voucher, remark) as (
-  values
-    ('052100100100', 'personnel-costs', 'admin-general-services', 'gifmis', '2025-02-25', 1133291092.25, 'KH25-EXP-MOH-001', 'FY2025 MoH personnel Q1 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'personnel-costs', 'admin-general-services', 'gifmis', '2025-05-27', 1133291092.25, 'KH25-EXP-MOH-002', 'FY2025 MoH personnel Q2 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'personnel-costs', 'admin-general-services', 'gifmis', '2025-08-26', 1133291092.25, 'KH25-EXP-MOH-003', 'FY2025 MoH personnel Q3 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'personnel-costs', 'admin-general-services', 'gifmis', '2025-11-25', 1133291092.25, 'KH25-EXP-MOH-004', 'FY2025 MoH personnel Q4 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'overhead-running-costs', 'admin-general-services', 'gifmis', '2025-02-25', 265302202.25, 'KH25-EXP-MOH-005', 'FY2025 MoH overhead Q1 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'overhead-running-costs', 'admin-general-services', 'gifmis', '2025-05-27', 265302202.25, 'KH25-EXP-MOH-006', 'FY2025 MoH overhead Q2 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'overhead-running-costs', 'admin-general-services', 'gifmis', '2025-08-26', 265302202.25, 'KH25-EXP-MOH-007', 'FY2025 MoH overhead Q3 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'overhead-running-costs', 'admin-general-services', 'gifmis', '2025-11-25', 265302202.25, 'KH25-EXP-MOH-008', 'FY2025 MoH overhead Q4 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'capital-expenditure', 'health-management-programmes', 'gifmis', '2025-02-25', 1960880393.31, 'KH25-EXP-MOH-009', 'FY2025 MoH capital Q1 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'capital-expenditure', 'health-management-programmes', 'gifmis', '2025-05-27', 3921760786.62, 'KH25-EXP-MOH-010', 'FY2025 MoH capital Q2 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'capital-expenditure', 'health-management-programmes', 'gifmis', '2025-08-26', 5882641179.93, 'KH25-EXP-MOH-011', 'FY2025 MoH capital Q3 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100100100', 'capital-expenditure', 'health-management-programmes', 'gifmis', '2025-11-25', 16667483343.14, 'KH25-EXP-MOH-012', 'FY2025 MoH capital Q4 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'personnel-costs', 'hospital-services', 'gifmis', '2025-02-25', 5250000000.00, 'KH25-EXP-HMB-013', 'FY2025 HMB personnel Q1 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'personnel-costs', 'hospital-services', 'gifmis', '2025-05-27', 5250000000.00, 'KH25-EXP-HMB-014', 'FY2025 HMB personnel Q2 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'personnel-costs', 'hospital-services', 'gifmis', '2025-08-26', 5250000000.00, 'KH25-EXP-HMB-015', 'FY2025 HMB personnel Q3 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'personnel-costs', 'hospital-services', 'gifmis', '2025-11-25', 5250000000.00, 'KH25-EXP-HMB-016', 'FY2025 HMB personnel Q4 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'overhead-running-costs', 'hospital-services', 'gifmis', '2025-02-25', 26096250.00, 'KH25-EXP-HMB-017', 'FY2025 HMB overhead Q1 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'overhead-running-costs', 'hospital-services', 'gifmis', '2025-05-27', 26096250.00, 'KH25-EXP-HMB-018', 'FY2025 HMB overhead Q2 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'overhead-running-costs', 'hospital-services', 'gifmis', '2025-08-26', 26096250.00, 'KH25-EXP-HMB-019', 'FY2025 HMB overhead Q3 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100300100', 'overhead-running-costs', 'hospital-services', 'gifmis', '2025-11-25', 26096250.00, 'KH25-EXP-HMB-020', 'FY2025 HMB overhead Q4 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'overhead-running-costs', 'community-health-services', 'gifmis', '2025-02-25', 1500000.00, 'KH25-EXP-PHC-021', 'FY2025 PHCMB overhead Q1 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'overhead-running-costs', 'community-health-services', 'gifmis', '2025-05-27', 1500000.00, 'KH25-EXP-PHC-022', 'FY2025 PHCMB overhead Q2 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'overhead-running-costs', 'community-health-services', 'gifmis', '2025-08-26', 1500000.00, 'KH25-EXP-PHC-023', 'FY2025 PHCMB overhead Q3 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'overhead-running-costs', 'community-health-services', 'gifmis', '2025-11-25', 1500000.00, 'KH25-EXP-PHC-024', 'FY2025 PHCMB overhead Q4 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'personnel-costs', 'admin-general-services', 'gifmis', '2025-05-27', 541838.00, 'KH25-EXP-PHC-025', 'FY2025 PHCMB personnel — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'capital-expenditure', 'community-health-services', 'gifmis', '2025-02-25', 340851722.00, 'KH25-EXP-PHC-026', 'FY2025 PHCMB capital Q1 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'capital-expenditure', 'community-health-services', 'gifmis', '2025-05-27', 340851722.00, 'KH25-EXP-PHC-027', 'FY2025 PHCMB capital Q2 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'capital-expenditure', 'community-health-services', 'gifmis', '2025-08-26', 340851722.00, 'KH25-EXP-PHC-028', 'FY2025 PHCMB capital Q3 — Kano Health Numbers (IBP), All Verified Figures'),
-    ('052100500100', 'capital-expenditure', 'community-health-services', 'gifmis', '2025-11-25', 6899619163.00, 'KH25-EXP-PHC-029', 'FY2025 PHCMB capital Q4 (Q4 spike, 87% of annual) — Kano Health Numbers (IBP), All Verified Figures')
-)
-insert into public.expenditure_entries (
-  transaction_date, mda_id, expenditure_category_id, programme_area_id,
-  is_phc, amount, voucher_ref_no, payment_method_id,
-  status, entered_by, approved_by, approved_at, remarks
-)
-select plan.tx_date::date, m.id, ec.id, pa.id, false, plan.amount, plan.voucher, pm.id, 'processed',
-  '00000000-0000-0000-0000-000000000002'::uuid,
-  '00000000-0000-0000-0000-000000000003'::uuid,
-  (plan.tx_date::date + 7)::timestamptz, plan.remark
-from plan
-join public.mdas m on m.code = plan.mda_code
-join public.expenditure_categories ec on ec.slug = plan.ec_slug
-join public.programme_areas pa on pa.slug = plan.pa_slug
-join public.payment_methods pm on pm.slug = plan.pm_slug
-on conflict (fiscal_year, mda_id, voucher_ref_no) do nothing;
-
-/* -------------------- Funding allocations (100% budget release) -------------------- */
-insert into public.expenditure_funding_allocations (expenditure_entry_id, funding_source_id, amount)
-select ee.id,
-  (select id from public.funding_sources where slug = 'kano-state-govt-budget-release'),
-  ee.amount
-from public.expenditure_entries ee
-where ee.voucher_ref_no like 'KH25-EXP-%'
-on conflict (expenditure_entry_id, funding_source_id) do nothing;
 
 commit;

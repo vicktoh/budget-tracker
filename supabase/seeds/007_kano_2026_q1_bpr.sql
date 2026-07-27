@@ -88,10 +88,7 @@ insert into public.funding_entries (
   programme_area_id,
   amount,
   reference_no,
-  status,
   entered_by,
-  approved_by,
-  approved_at,
   remarks
 )
 select
@@ -101,10 +98,7 @@ select
   pa.id,
   plan.amount,
   plan.ref_no,
-  'processed',
   '00000000-0000-0000-0000-000000000002'::uuid,
-  '00000000-0000-0000-0000-000000000003'::uuid,
-  (plan.tx_date::date + 7)::timestamptz,
   plan.remark
 from plan
 join public.mdas m on m.code = plan.mda_code
@@ -173,10 +167,7 @@ insert into public.expenditure_entries (
   amount,
   voucher_ref_no,
   payment_method_id,
-  status,
   entered_by,
-  approved_by,
-  approved_at,
   remarks
 )
 select
@@ -194,10 +185,7 @@ select
   plan.amount,
   plan.voucher,
   pm.id,
-  'processed',
   '00000000-0000-0000-0000-000000000002'::uuid,
-  '00000000-0000-0000-0000-000000000003'::uuid,
-  (plan.tx_date::date + 7)::timestamptz,
   plan.remark
 from plan
 join public.mdas m on m.code = plan.mda_code
@@ -252,17 +240,15 @@ dist as (
 insert into public.expenditure_entries (
   transaction_date, mda_id, expenditure_category_id, programme_area_id,
   is_phc, lga_id, facility_id, amount, voucher_ref_no, payment_method_id,
-  status, entered_by, approved_by, approved_at, remarks
+  entered_by, remarks
 )
 select
   d.tx_date::date,
   (select id from public.mdas where code = '052100500100'),
   ec.id, pa.id, true, d.lga_id, d.facility_id, d.lga_amount,
   'BPR26Q1-EXP-PHC-' || d.proj || '-' || lpad(d.rn::text, 2, '0'),
-  pm.id, 'processed',
+  pm.id,
   '00000000-0000-0000-0000-000000000002'::uuid,
-  '00000000-0000-0000-0000-000000000003'::uuid,
-  (d.tx_date::date + 7)::timestamptz,
   d.remark
 from dist d
 join public.expenditure_categories ec on ec.slug = d.ec_slug

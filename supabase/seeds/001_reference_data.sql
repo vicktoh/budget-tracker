@@ -1,17 +1,5 @@
 -- Generated from Kano Health Finance Tracker.xlsx. Do not edit by hand.
 begin;
-insert into public.entry_statuses (slug, name, description)
-values
-  ('pending', 'Pending', 'Submitted by an MDA user and awaiting review'),
-  ('approved', 'Approved', 'Reviewed and accepted for reporting'),
-  ('processed', 'Processed', 'Accepted and reconciled or posted in the finance process'),
-  ('rejected', 'Rejected', 'Reviewed and rejected; excluded from official reporting')
-on conflict (slug) do update
-set name = excluded.name,
-    description = excluded.description,
-    active = true,
-    updated_at = now();
-
 insert into public.mda_types (slug, name)
 values
   ('agency', 'Agency'),

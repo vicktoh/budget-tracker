@@ -84,7 +84,7 @@ begin
       demo_password,
       now(),
       '{"provider":"email","providers":["email"]}',
-      '{"full_name":"Finance Reviewer"}',
+      '{"full_name":"Finance Viewer"}',
       now(),
       now(),
       '',
@@ -168,7 +168,7 @@ begin
   values
     (admin_id, 'Admin User', 'admin'),
     (mda_user_id, 'MDA Submitter', 'mda_user'),
-    (reviewer_id, 'Finance Reviewer', 'reviewer'),
+    (reviewer_id, 'Finance Viewer', 'reviewer'),
     (facility_user_id, 'Facility Officer', 'facility_user')
   on conflict (id) do update
   set full_name = excluded.full_name,
@@ -176,8 +176,8 @@ begin
       updated_at = now();
 
   if mda_hq_id is not null then
-    -- The reviewer role now grants review access to every MDA automatically,
-    -- so no per-MDA reviewer membership is seeded.
+    -- The internal reviewer role grants statewide Viewer access; no per-MDA
+    -- reviewer membership is seeded.
     insert into public.user_mda_memberships (user_id, mda_id, membership_role)
     values
       (mda_user_id, mda_hq_id, 'funding_submitter'),

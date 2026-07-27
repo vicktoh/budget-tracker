@@ -85,10 +85,7 @@ insert into public.funding_entries (
   programme_area_id,
   amount,
   reference_no,
-  status,
   entered_by,
-  approved_by,
-  approved_at,
   remarks
 )
 select
@@ -98,17 +95,13 @@ select
   pa.id,
   plan.amount,
   plan.ref_no,
-  plan.status,
   '00000000-0000-0000-0000-000000000002'::uuid,
-  case when plan.status in ('approved', 'processed', 'rejected')
-       then '00000000-0000-0000-0000-000000000003'::uuid end,
-  case when plan.status in ('approved', 'processed', 'rejected')
-       then (plan.tx_date::date + 7)::timestamptz end,
   'Demo seed data'
 from plan
 join public.mdas m on m.code = plan.mda_code
 join public.funding_sources fs on fs.slug = plan.source_slug
 join public.programme_areas pa on pa.slug = plan.pa_slug
+where plan.status <> 'rejected'
 on conflict (fiscal_year, mda_id, reference_no) do nothing;
 
 /* ----------------------------------------------------------------------- */
@@ -181,10 +174,7 @@ insert into public.expenditure_entries (
   amount,
   voucher_ref_no,
   payment_method_id,
-  status,
   entered_by,
-  approved_by,
-  approved_at,
   remarks
 )
 select
@@ -202,18 +192,14 @@ select
   plan.amount,
   plan.voucher,
   pm.id,
-  plan.status,
   '00000000-0000-0000-0000-000000000002'::uuid,
-  case when plan.status in ('approved', 'processed', 'rejected')
-       then '00000000-0000-0000-0000-000000000003'::uuid end,
-  case when plan.status in ('approved', 'processed', 'rejected')
-       then (plan.tx_date::date + 7)::timestamptz end,
   'Demo seed data'
 from plan
 join public.mdas m on m.code = plan.mda_code
 join public.expenditure_categories ec on ec.slug = plan.ec_slug
 join public.programme_areas pa on pa.slug = plan.pa_slug
 join public.payment_methods pm on pm.slug = plan.pm_slug
+where plan.status <> 'rejected'
 on conflict (fiscal_year, mda_id, voucher_ref_no) do nothing;
 
 /* ----------------------------------------------------------------------- */
@@ -250,10 +236,7 @@ insert into public.expenditure_entries (
   amount,
   voucher_ref_no,
   payment_method_id,
-  status,
   entered_by,
-  approved_by,
-  approved_at,
   remarks
 )
 select
@@ -267,12 +250,7 @@ select
   plan.amount,
   plan.voucher,
   pm.id,
-  plan.status,
   '00000000-0000-0000-0000-000000000002'::uuid,
-  case when plan.status in ('approved', 'processed', 'rejected')
-       then '00000000-0000-0000-0000-000000000003'::uuid end,
-  case when plan.status in ('approved', 'processed', 'rejected')
-       then (plan.tx_date::date + 7)::timestamptz end,
   'Demo seed data'
 from plan
 join public.mdas m on m.code = '052100500100'
@@ -281,6 +259,7 @@ join public.programme_areas pa on pa.slug = plan.pa_slug
 join public.payment_methods pm on pm.slug = 'bank-transfer'
 join public.lgas l on l.name = plan.lga_name
 join public.facilities f on f.lga_id = l.id and f.name = plan.facility_name
+where plan.status <> 'rejected'
 on conflict (fiscal_year, mda_id, voucher_ref_no) do nothing;
 
 commit;
