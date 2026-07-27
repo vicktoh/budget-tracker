@@ -8,7 +8,6 @@ This catalog enumerates the data seeded into Supabase before routine user entry.
 
 | Seed area | Target table | Count | Feeds dropdowns? |
 | --- | --- | --- | --- |
-| Entry statuses | `entry_statuses` | 4 | Yes, reviewer/admin status filters and workflow controls |
 | MDA types | `mda_types` | 8 | Yes, admin/reference filters |
 | MDAs | `mdas` | 21 | Yes, entry forms, dashboards, imports, filters |
 | Funding sources | `funding_sources` | 8 | Yes, funding form and filters |
@@ -29,20 +28,12 @@ This catalog enumerates the data seeded into Supabase before routine user entry.
 | Expenditure Category | `expenditure_categories` | 11 workbook values |
 | Programme Area | `programme_areas` | 24 workbook values |
 | Payment Method | `payment_methods` | 6 workbook values |
-| Entry Status | `entry_statuses` | 4 workflow statuses |
 | LGA | `lgas` | 44 Kano LGAs |
 | Facility Name | `facilities` | 471 PHC facilities filtered by selected LGA |
 | Expenditure Item | `expenditure_items` | No initial seed from workbook; admin-managed after launch |
 | AOP Activity | `aop_activities` | Excluded from this catalog by request |
 
-## Entry Statuses
-
-| Slug | Name | Description |
-| --- | --- | --- |
-| pending | Pending | Submitted by an MDA user and awaiting review |
-| approved | Approved | Reviewed and accepted for reporting |
-| processed | Processed | Accepted and reconciled or posted in the finance process |
-| rejected | Rejected | Reviewed and rejected; excluded from official reporting |
+Ledger status seeds were removed by ADR 0005. Seeded active Funding and Expenditure Entries are reportable immediately; legacy rejected demo rows are intentionally omitted. BIR publication tables start empty so local resets do not lock seeded quarters.
 
 ## MDA Types
 

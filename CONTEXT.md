@@ -76,20 +76,24 @@ _Avoid_: Hospital unless the facility is actually a hospital
 An admin-created fallback **Facility** for an **LGA** when a PHC expenditure is known to belong to that LGA but the exact facility is not known.
 _Avoid_: Blank facility
 
-**Entry Status**:
-The review workflow state of a **Funding Entry** or **Expenditure Entry**: pending, approved, processed, or rejected.
-_Avoid_: Payment status unless it refers only to disbursement processing
+**Budget Implementation Report Publication**:
+The recorded publication of the official Budget Implementation Report for one **Fiscal Year** and calendar quarter. Publication locks **Funding Entries** and **Expenditure Entries** in that quarter against further routine user edits.
+_Avoid_: Entry approval, review status
+
+**Budget Implementation Report Amendment**:
+An audited, Admin-managed correction to a quarter after its **Budget Implementation Report Publication**. An amendment preserves the original publication record instead of reopening the quarter for routine entry or editing.
+_Avoid_: Unpublish, silent edit
 
 **Admin Insight**:
 An admin-facing summary, chart, table, or filterable view across submitted **Funding Entries**, **Expenditure Entries**, budgets, AOP activities, MDAs, LGAs, and facilities.
 _Avoid_: Dashboard when referring to a single metric or report
 
 **MDA Dashboard**:
-A scoped dashboard that shows an MDA user entries, statuses, totals, and budget utilization for their assigned MDAs only.
+A scoped dashboard that shows an MDA user's entries, totals, comments requiring attention, and budget utilization for their assigned MDAs only.
 _Avoid_: Admin insight
 
 **Reference Data**:
-The controlled lists used by forms and reports, including MDAs, programme areas, funding sources, expenditure categories, LGAs, facilities, payment methods, statuses, budgets, and AOP activities.
+The controlled lists used by forms and reports, including MDAs, programme areas, funding sources, expenditure categories, LGAs, facilities, payment methods, budgets, and AOP activities.
 _Avoid_: Lookup when referring to the platform data model
 
 **Global Reference Value**:
@@ -101,15 +105,15 @@ A reference-data value hidden from new entry forms but preserved for historical 
 _Avoid_: Deleted value
 
 **Correction Request**:
-A request to change a **Funding Entry** or **Expenditure Entry** after it has left the pending state.
+A request to change a **Funding Entry** or **Expenditure Entry** after its quarter's **Budget Implementation Report Publication**.
 _Avoid_: Required v1 workflow
 
 **Audit Event**:
-A timestamped record of who changed an entry, status, or reference-data value and what changed.
+A timestamped record of who changed an entry, publication record, amendment, or reference-data value and what changed.
 _Avoid_: Log when it is only technical application logging
 
 **Entry Comment**:
-A user-visible comment on a **Funding Entry** or **Expenditure Entry** used for review, clarification, rejection reasons, or follow-up.
+A user-visible comment on a **Funding Entry** or **Expenditure Entry** used for clarification, feedback, or follow-up. An **Entry Comment** never approves, rejects, excludes, or changes the reportability of an entry.
 _Avoid_: Audit event
 
 **Entry Attachment**:
@@ -125,7 +129,7 @@ An admin-managed fiscal year or date range that can be opened or closed for rout
 _Avoid_: Reporting period when discussing whether users can submit entries
 
 **Data Quality Warning**:
-A non-blocking warning that flags an entry for reviewer attention before approval.
+A non-blocking warning that flags an entry for **Viewer** attention without changing whether the entry is reportable.
 _Avoid_: Validation error when the entry can still be submitted
 
 **Controlled Entry Field**:
@@ -149,7 +153,7 @@ An admin-generated CSV, XLSX, or PDF output of ledger data, filtered insight tab
 _Avoid_: Backup
 
 **Notification**:
-A platform message or email sent when entries are submitted, reviewed, approved, rejected, processed, or require attention.
+A platform message or email sent when entries are submitted, commented on, corrected, published in a Budget Implementation Report, or require attention.
 _Avoid_: Alert when it is not urgent
 
 **Fiscal Year**:
@@ -165,12 +169,12 @@ A Nigerian naira amount stored with two decimal places for funding, expenditure,
 _Avoid_: Float
 
 **MDA Membership**:
-A user's authorization to submit or review entries for a specific **MDA**.
+A user's authorization to submit entries for a specific **MDA**.
 _Avoid_: User MDA when a user can belong to more than one MDA
 
-**Reviewer**:
-A user who can review, approve, reject, or process entries for assigned MDAs without full admin powers.
-_Avoid_: Admin when the user only reviews entries
+**Viewer**:
+A user with database-enforced review authority who can view and comment on **Funding Entries** and **Expenditure Entries** across MDAs without approving, rejecting, processing, or editing them.
+_Avoid_: Reviewer in user-facing language, Admin when the user only views and comments
 
 ## Relationships
 
@@ -191,24 +195,28 @@ _Avoid_: Admin when the user only reviews entries
 - **Admin Insights** aggregate **Funding Entries**, **Expenditure Entries**, **Approved Budgets**, **AOP Activities**, **LGAs**, and **Facilities**.
 - Admins can create and update **Reference Data**.
 - An **Inactive Reference Value** may still be linked to historical entries.
-- Programme areas, funding sources, expenditure categories, payment methods, and statuses are **Global Reference Values** in v1.
+- Programme areas, funding sources, expenditure categories, and payment methods are **Global Reference Values** in v1.
 - MDA users can submit **Reference Value Requests** when a controlled dropdown is missing a needed value.
 - Existing workbook **Other Options** remain available where already present.
-- MDA users can edit their own assigned-MDA entries only while the **Entry Status** is pending.
-- **Reviewers** can review entries for assigned MDAs without managing users, imports, or reference data.
-- Reviewed entries require admin or reviewer action, a reason, and an **Audit Event** before they can change.
-- **Audit Events** record material changes to entries, statuses, and reference data.
-- **Entry Comments** support review discussion and rejection reasons.
+- A valid **Funding Entry** or **Expenditure Entry** is reportable immediately when submitted; no Viewer approval is required.
+- MDA users can edit their own assigned-MDA entries until the relevant quarter has a **Budget Implementation Report Publication**.
+- **Viewers** can view and comment on entries across MDAs without managing users, imports, or reference data.
+- Only Admins can create a **Budget Implementation Report Publication**.
+- **Budget Implementation Report Publication** locks new routine submissions and edits for entries in its fiscal year and quarter only.
+- A **Budget Implementation Report Publication** cannot be reversed through the normal application interface.
+- Post-publication corrections require a **Budget Implementation Report Amendment** and do not reopen the quarter for routine user writes.
+- **Audit Events** record material changes to entries, publication records, and reference data.
+- **Entry Comments** support clarification, feedback, and follow-up without changing entry reportability.
 - A **Funding Entry** or **Expenditure Entry** can have zero or more **Entry Attachments**.
 - **Admin Imports** can create or update reference, budget, AOP, and historical ledger data.
 - **Submission Windows** can govern whether routine MDA users may submit entries for a fiscal year or date range.
-- **Data Quality Warnings** can be attached to entries before or during review.
+- **Data Quality Warnings** can be attached to entries before or after publication without changing entry reportability.
 - **Controlled Entry Fields** should be used wherever the valid options are known.
 - A **Funding Entry** or **Expenditure Entry** has one **Fiscal Year** derived from its transaction date.
-- A **Funding Entry** or **Expenditure Entry** has one **Public Entry ID** for review, exports, and audit conversations.
+- A **Funding Entry** or **Expenditure Entry** has one **Public Entry ID** for comments, exports, and audit conversations.
 - Funding, expenditure, budget, and AOP values are **Money Amounts**.
 - Admins can create **Exports** from ledgers, filtered insight tables, and dashboard summaries.
-- **Notifications** are sent in-app and by email for entry workflow events.
+- **Notifications** are sent in-app and by email for submissions, comments, publications, amendments, and other events requiring attention.
 - MDA users can view **MDA Dashboards** for their assigned MDAs.
 
 ## Example dialogue
@@ -222,8 +230,8 @@ _Avoid_: Admin when the user only reviews entries
 - The data-entry form includes "Expenditure Sub-Category / Item", but the expenditure log has no matching column and the workbook has no lookup list for it. Resolved: capture it as optional admin-managed **Expenditure Item** dropdown in the platform.
 - The workbook separates **Funding Entries** and **Expenditure Entries** into two ledgers. Resolved: keep separate write models for **Funding Entries** and **Expenditure Entries**, then build unified reporting views where needed.
 - User access to MDAs may be one-to-many. Resolved: use **MDA Memberships** instead of storing a single MDA directly on a user profile.
-- **Entry Status** is a review workflow status, not a payment-method or disbursement-status field. Provisional meanings: pending means submitted and awaiting review; approved means accepted for reporting; processed means accepted and reconciled or posted in the finance process; rejected means excluded from official reporting.
-- **Admin Insights** should show all submitted entries by default, with status filters and admin actions to approve or reject submissions.
+- Funding and expenditure workflow statuses such as pending, approved, processed, and rejected are not part of the entry domain. Submission makes a valid entry reportable immediately.
+- **Admin Insights** should show all submitted entries by default. Viewer comments and **Data Quality Warnings** provide advisory context without excluding entries.
 - **AOP Linkage** is optional on **Expenditure Entries** and should be filtered by selected MDA and fiscal year.
 - **Reference Data** is admin-editable in the platform. Historical entries should keep their existing foreign-key links, so changing reference data must not silently rewrite old reports.
 - Referenced **Reference Data** should not be deleted in v1. Resolved: deactivate old values and create new values when meaning changes.
@@ -231,8 +239,8 @@ _Avoid_: Admin when the user only reviews entries
 - **Reference Value Requests** give MDA users an in-platform path to ask for missing dropdown values without creating them directly.
 - Keep existing **Other Options** from the workbook, but do not add new `Other` values everywhere by default. When `Other` is selected, remarks are required.
 - **Remarks** are optional for normal entries, but required when `Other` is selected.
-- MDA users can edit submitted entries while they are pending. Resolved: once approved, processed, or rejected, entries are locked for normal MDA editing.
-- **Audit Events** are required from v1 for entry changes, status changes, and reference-data changes.
+- MDA users can edit their own submitted entries until the entry quarter's Budget Implementation Report is published. Publication locks normal editing for that quarter.
+- **Audit Events** are required from v1 for entry changes, Budget Implementation Report publication changes, and reference-data changes.
 - **Entry Attachments** are optional in v1 and should be private, access-controlled supporting files for entries.
 - **Admin Imports** are supported for seed/reference/planning data and historical migration. Routine MDA reporting should happen through authenticated web forms.
 - **Fiscal Year** should be derived from transaction date rather than manually selected. Current assumption: Kano health finance reporting uses calendar-year fiscal years.
@@ -247,16 +255,18 @@ _Avoid_: Admin when the user only reviews entries
 - **Reference Number** and **Voucher Reference Number** must be unique per fiscal year and MDA within their entry type.
 - **Admin Imports** must reject duplicate ledger rows that collide with reference/voucher uniqueness rules before writing data.
 - **Money Amounts** should be stored as fixed-precision `numeric(18,2)` values and displayed as Nigerian naira.
-- **Funding Entry** and **Expenditure Entry** amounts must be positive in v1; corrections should use audited edits or reviewed correction workflows rather than negative entries.
+- **Funding Entry** and **Expenditure Entry** amounts must be positive in v1; pre-publication corrections use audited edits and post-publication corrections use **Budget Implementation Report Amendments** rather than negative entries.
 - Core dropdown taxonomies should be global across MDAs in v1 to preserve cross-MDA insight quality.
 - **Expenditure Item** is dropdown-backed but optional in v1, even when items exist for the selected **Expenditure Category**.
 - **Approved Budget** remains MDA-level in v1, split by personnel, other recurrent, and capital; deeper planning detail comes from **AOP Activities**.
 - V1 should support CSV, XLSX, and PDF **Exports** for admin reporting.
-- V1 should send workflow emails through Resend, backed by in-app notification records and auditable email delivery records.
-- **MDA Dashboards** are scoped to the user's assigned MDAs. Cross-MDA comparisons and statewide insights remain admin/reviewer capabilities.
-- **Reviewer** is a distinct role from admin in v1, even if early deployments assign both roles to the same people.
-- Admins and **Reviewers** can directly edit reviewed entries in v1, but must provide a reason and create an **Audit Event**. A formal **Correction Request** workflow is deferred.
-- Rejected entries require an **Entry Comment** explaining the rejection to the submitter.
+- V1 should send submission, comment, publication, and amendment emails through Resend, backed by in-app notification records and auditable email delivery records.
+- **MDA Dashboards** are scoped to the user's assigned MDAs. Cross-MDA comparisons and statewide insights remain Admin and **Viewer** capabilities.
+- **Viewer** is a distinct role from Admin in v1, even if the database retains `reviewer` as the internal role slug during migration.
+- **Viewers** cannot directly edit entries. They can inspect entries, attachments, warnings, and audit history and add **Entry Comments**.
+- Admins alone may mark a quarterly Budget Implementation Report as published. A publication locks that quarter only, blocks late routine submissions as well as edits, and is irreversible through the normal application interface.
+- Post-publication changes use an audited **Budget Implementation Report Amendment** rather than unpublishing or silently changing the original quarter.
+- Existing rejected ledger rows must be archived outside the active Funding and Expenditure ledgers before workflow statuses are removed so they do not become reportable accidentally; their comments and **Audit Events** must remain available for historical accountability.
 - **Submission Windows** exist in v1 but start permissive by default so rollout and historical catch-up entries are not blocked.
 - V1 should prevent bad data at entry time as much as possible through **Controlled Entry Fields**, required fields, foreign keys, and conditional validation.
 - Configurable review thresholds and rule builders are out of scope for v1.

@@ -1,17 +1,19 @@
 # Proposed Supabase/Postgres Model
 
+> **Current schema decision:** ADR 0005 removes `entry_statuses` and the `status`, `approved_by`, and `approved_at` fields from Funding and Expenditure Entries. Every active row is reportable. Quarter-specific BIR publication metadata is append-only and database triggers block routine ledger/allocation writes after publication. The internal profile role remains `reviewer` but is displayed as “Viewer”; `reviewer` is no longer a membership-role value.
+
 This model keeps the spreadsheet's controlled dropdown behavior but replaces VLOOKUP-style coupling with normalized reference tables, foreign keys, and reporting views.
 
 ## Design Principles
 
 - Keep **Funding Entries** and **Expenditure Entries** as separate write tables because the forms, required fields, identifiers, and validation rules differ. This is a confirmed product decision.
-- Share reference dimensions across both ledgers: MDA, fiscal year, programme area, status, and authenticated user.
+- Share reference dimensions across both ledgers: MDA, fiscal year, programme area, and authenticated user.
 - Derive fiscal year and quarter from transaction date instead of asking users to type them.
 - Support multiple fiscal years from v1; do not hardcode the platform to 2026.
 - Preserve user-friendly public IDs for references, but use UUID primary keys internally. Generate fiscal-year-scoped IDs like `FL-2026-0001` and `EL-2026-0001`.
 - Treat budget and AOP as imported planning/reference data, not user-entered transaction data.
-- Allow admins to create and update all reference data, including MDAs, programme areas, funding sources, expenditure categories, LGAs, facilities, payment methods, statuses, approved budgets, and AOP activities.
-- Keep programme areas, funding sources, expenditure categories, payment methods, and statuses global across all MDAs in v1.
+- Allow admins to create and update all reference data, including MDAs, programme areas, funding sources, expenditure categories, LGAs, facilities, payment methods, approved budgets, and AOP activities.
+- Keep programme areas, funding sources, expenditure categories, and payment methods global across all MDAs in v1.
 - Preserve historical reporting by deactivating referenced values instead of deleting them. When the meaning of a reference value changes, admins should create a new value and deactivate the old one.
 - Active reference values created by admins should be immediately available in forms; no separate reference-data approval workflow in v1.
 - Store monetary values as `numeric(18,2)` and format them as Nigerian naira in the UI.
@@ -34,17 +36,29 @@ MDA access should not be stored as a single column on `profiles`; use `user_mda_
 
 ### `user_mda_memberships`
 
-Links users to the MDAs they can submit or review entries for.
+Links users to the MDAs for which they can submit entries. Statewide Viewer visibility is derived from the profile role and RLS helpers.
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | `uuid` | Primary key |
 | `user_id` | `uuid` | FK to `profiles(id)` |
 | `mda_id` | `uuid` | FK to `mdas(id)` |
-| `membership_role` | `text` | Suggested values: `submitter`, `reviewer` |
+| `membership_role` | `text` | Value: `submitter` |
 | `created_at` | `timestamptz` | Default now |
 
 Unique constraint: `(user_id, mda_id, membership_role)`.
+
+### `budget_implementation_report_publications`
+
+Append-only evidence that an Admin published a fiscal-year quarter. `(fiscal_year, quarter, version)` is unique. Version 1 has no predecessor; amendment versions reference the publication they supersede and require a reason. Authenticated users may read metadata, while only Admin RPCs insert it.
+
+### `budget_implementation_report_amendments`
+
+Records the affected ledger entry, source and resulting publication versions, required reason, before/after JSON, Admin actor, and timestamp. Expenditure amendments replace funding allocations in the same transaction.
+
+### `archived_ledger_entries`
+
+Admin-readable snapshot store for legacy rejected rows removed during the status migration. It preserves the original row plus comment, audit, and attachment metadata snapshots and is excluded from all ledger reporting.
 
 ### `mdas`
 

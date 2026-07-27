@@ -1,5 +1,16 @@
 # Implementation Plan
 
+## 2026-07-15 Architecture Revision
+
+- [x] Remove Funding/Expenditure Entry workflow statuses and reviewer mutation commands.
+- [x] Preserve `reviewer` database authority while presenting it as Viewer in the UI.
+- [x] Replace `/review` with the authenticated Entry Register at `/entries` and retain redirects.
+- [x] Add append-only quarterly BIR publications, deep Postgres locks, and publication metadata UI.
+- [x] Add reasoned Admin corrections before publication and versioned Admin amendments after publication.
+- [x] Count every active ledger row in reporting, balances, reconciliation, AOP actuals, and BIR calculations.
+
+ADR 0005 supersedes status-workflow tasks and terminology elsewhere in this historical plan.
+
 ## Phase 1: Project Scaffold
 
 - [x] Create a Next.js App Router web app shell directly in the repository root.
@@ -44,15 +55,14 @@
 - [x] Implement optional AOP Activity and Expenditure Item dropdowns. *(AOP filtered by selected MDA + derived fiscal year; Expenditure Item filtered by selected category; both optional.)*
 - [x] Implement `Other` remarks requirement. *(Funding: programme area / funding source. Expenditure: programme area / expenditure category / payment method.)*
 - [ ] Implement optional attachments.
-- [x] Implement pending-entry edit flow. *(Funding via `canEditFundingEntry`; Expenditure via `canEditExpenditureEntry` + `updatePendingExpenditureEntry` scoped to `status = 'pending'`.)*
+- [x] Implement publication-aware entry edit flow for authorized submitters and reasoned Admin corrections.
 
-## Phase 4: Review Workflow
+## Phase 4: Entry Register And Quarterly Publication
 
-- [ ] Build Reviewer/Admin queues for Funding Entries and Expenditure Entries.
-- [ ] Add status transitions for pending, approved, processed, rejected.
-- [ ] Require rejection comments.
-- [ ] Require audit reason for reviewed-entry edits.
-- [ ] Show audit history, comments, attachments, and Data Quality Warnings.
+- [x] Build Viewer/Admin Entry Register for Funding Entries and Expenditure Entries.
+- [x] Keep general comments, audit history, attachments, and Data Quality Warnings.
+- [x] Enforce quarter publication locks at the database boundary.
+- [x] Require audit reasons for Admin corrections and amendments.
 - [ ] Send in-app notifications and Resend email events for workflow changes.
 
 ## Phase 5: Reference Data Management

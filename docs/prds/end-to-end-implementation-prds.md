@@ -1,5 +1,7 @@
 # Kano Health Finance Tracker: End-to-End Implementation PRDs
 
+> **Superseded ledger workflow:** ADR 0005 replaces the Funding/Expenditure status and approval stories in this historical PRD. Current behavior is an Entry Register with Viewer comments, immediately reportable active rows, and Admin-only quarterly BIR publication locks plus versioned amendments. “Reviewer” remains only the internal database role slug; the UI says “Viewer.”
+
 These PRDs translate the current domain notes, ADRs, design system, implementation plan, workbook study, database model, and Supabase artifacts into implementation-ready product slices.
 
 Stack note: these PRDs specify a Next.js App Router implementation aligned with ADR 0002.

@@ -1,12 +1,14 @@
 # Supabase Implementation Notes
 
+> **Current schema revision:** `20260715132044_remove_ledger_statuses_add_bir_publication_locks.sql` removes Funding/Expenditure workflow statuses, archives legacy rejected rows, adds append-only quarterly BIR publication/amendment metadata, and installs deep publication-lock triggers plus Admin commands. It supersedes status/review details from the initial schema while leaving import, offline, export, and Reference Value Request statuses intact.
+
 This document explains the executable database artifacts produced from the workbook study and domain decisions.
 
 ## Files
 
 - `docs/nextjs-server-conventions.md` documents privileged workflow route handlers and server-only environment variables.
 - `supabase/migrations/202605290001_initial_schema.sql` creates the initial Postgres/Supabase schema.
-- `supabase/seeds/001_reference_data.sql` seeds statuses, MDA types, MDAs, funding sources, expenditure categories, programme areas, payment methods, LGAs, and PHC facilities.
+- `supabase/seeds/001_reference_data.sql` seeds MDA types, MDAs, funding sources, expenditure categories, programme areas, payment methods, LGAs, and PHC facilities.
 - `supabase/seeds/002_budget_2026.sql` seeds 2026 approved MDA budgets from the workbook.
 - `supabase/seeds/003_aop_2026.sql` seeds 2026 AOP activities from the workbook.
 - `supabase/migrations/20260714120000_approved_budget_lines.sql` adds the `approved_budget_lines` line-item table (NCOA chart-of-accounts detail behind the aggregate `approved_budgets`) and the `expenditure_entries.approved_budget_line_id` binding.

@@ -1,18 +1,20 @@
 # PRD: Kano Health Finance Tracker Web Platform
 
+> **Current product decision (2026-07-15):** ADR 0005 supersedes every ledger-status and per-entry approval/rejection requirement below. Funding and expenditure rows are reportable when recorded. The internal `reviewer` role is presented as **Viewer** and can read, comment, inspect evidence, warnings, and audit history, but cannot mutate ledger entries. Admin publication of a quarter-specific BIR irreversibly locks routine writes for that quarter; reasoned Admin amendments create successive BIR metadata versions. References to statuses in offline queues, imports, exports, and Reference Value Requests remain valid.
+
 ## Problem Statement
 
 Kano State health-sector funding and expenditure tracking currently depends on a complex Excel workbook with manual data entry, VLOOKUP-driven dropdowns, copied ledger rows, formula dashboards, and separate analysis tabs. This makes it easy for MDAs to enter inconsistent data, hard for admins to review submissions, and slow to produce reliable insights across funding, expenditure, budgets, AOP activities, LGAs, and facilities.
 
 IBP's fiscal analysis of the 2026 health budget surfaced the same problem at sector level: first-quarter execution at 9.5%, zero recorded overhead releases across 21 MDAs, a ₦14bn gap between AOP tracking and the Budget Implementation Report (BIR), and zero of 2,046 AOP activities mapped to budget codes. The platform must replace incomplete, delayed reporting with structured monthly data flows, real-time fund-flow visibility, and transparent fiscal intelligence — across all 21 health MDAs, 44 LGAs, and 450+ PHC facilities.
 
-The platform should replace routine spreadsheet reporting with authenticated web forms, controlled dropdowns, review workflows, auditability, admin insights, structured monthly submissions per MDA, a system-wide SMoH dashboard, a MoPB aggregate feed compatible with BIR, and a transparent rules-driven analytics layer.
+The platform should replace routine spreadsheet reporting with authenticated web forms, controlled dropdowns, an Entry Register with comments, database-enforced quarterly BIR publication locks, auditability, admin insights, structured monthly submissions per MDA, a system-wide SMoH dashboard, a MoPB aggregate feed compatible with BIR, and a transparent rules-driven analytics layer.
 
 ## Solution
 
 Build a Supabase/Postgres-backed web platform where MDA users submit Funding Entries, Budget Release Entries, Expenditure Entries, Activity Progress updates, and Release Notes through clean, authenticated forms grouped under a Monthly Submission Cycle. Most fields should be controlled dropdowns backed by admin-managed Reference Data.
 
-Admins and Reviewers should review, approve, reject, process, comment on, annotate, and audit entries. SMoH should get a system-wide dashboard with sector → MDA → programme → LGA → facility drill-down, a compliance matrix, a quarterly breakdown, and outputs from a transparent rules engine (variance flags, compliance alerts, lagging programme ranking, early warning signals, zero-release attribution, plain-language expenditure snapshots). MoPB should get a dedicated portal for the monthly aggregate feed in BIR-compatible Excel and machine-readable JSON/CSV, with a data quality flag matrix and a pre-publication BIR validation interface.
+Admins and Viewers should inspect, comment on, annotate, and audit entries. Admins can publish a selected quarterly BIR and make reasoned, versioned amendments after publication. SMoH should get a system-wide dashboard with sector → MDA → programme → LGA → facility drill-down, a compliance matrix, a quarterly breakdown, and outputs from a transparent rules engine (variance flags, compliance alerts, lagging programme ranking, early warning signals, zero-release attribution, plain-language expenditure snapshots). MoPB should get a dedicated portal for the monthly aggregate feed in BIR-compatible Excel and machine-readable JSON/CSV, with a data quality flag matrix and a pre-publication BIR validation interface.
 
 Admins manage reference data, import seed/planning data, export reports at every drill level, and configure submission windows and rule thresholds. MDA users see dashboards scoped to assigned MDAs. The platform is designed for offline-tolerant use through draft auto-save in v1, with a Progressive Web App (PWA) offline-first upgrade planned.
 

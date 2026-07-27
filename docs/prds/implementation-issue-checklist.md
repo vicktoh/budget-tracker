@@ -1,5 +1,18 @@
 # Implementation Issue Checklist
 
+## 2026-07-15 Superseding Ledger Slice
+
+- [x] Archive legacy rejected ledger rows and preserve comment/audit/attachment snapshots.
+- [x] Remove ledger workflow columns, values, commands, filters, calculations, fixtures, and controls.
+- [x] Replace the Review queue with `/entries`, shared details, comments, warnings, evidence, and audit history; redirect legacy URLs.
+- [x] Preserve internal `reviewer` authority and expose the role as Viewer.
+- [x] Add append-only quarterly BIR publication metadata and database-enforced ledger/allocation locks.
+- [x] Add Admin-only version-1 publication and reasoned funding/expenditure amendment commands.
+- [x] Make reporting include every active row and surface published/open-quarter summaries.
+- [x] Map queued writes for newly published quarters to visible permanent offline failures.
+
+The status-workflow wording in the historical slices below is superseded by ADR 0005.
+
 This checklist converts the end-to-end implementation PRDs into `to-issues` style tracer-bullet slices. Each slice is meant to be independently grabbable, demoable, and checkable as the project is implemented.
 
 Issue tracker publication note: no issue tracker configuration or triage label vocabulary is present in this repository yet. Until that setup exists, use this file as the local issue checklist. When an issue tracker is configured, publish these in dependency order and apply the `ready-for-agent` label.
@@ -30,7 +43,7 @@ Issue tracker publication note: no issue tracker configuration or triage label v
    - Type: AFK
    - Blocked by: Slices 1, 2
    - User stories covered: PRD 2 stories 1, 8-30
-5. [x] Reviewer/Admin entry detail, comments, and status workflow
+5. [x] Viewer/Admin Entry Register, detail, comments, and audit evidence
    - Type: AFK
    - Blocked by: Slices 3, 4
    - User stories covered: PRD 3 stories 1-16, 23-25
@@ -179,7 +192,7 @@ Status:
 
 ## What to build
 
-Build the complete MDA Funding Entry path from dashboard/navigation to form submission, pending entry display, and pending edit. The workflow should use controlled Reference Data, derive fiscal year and quarter from transaction date, enforce Funding Entry domain rules, and show the generated Public Entry ID after save.
+Build the complete MDA Funding Entry path from dashboard/navigation to form submission, active-entry display, and publication-aware edit. The workflow should use controlled Reference Data, derive fiscal year and quarter from transaction date, enforce Funding Entry domain rules, and show the generated Public Entry ID after save.
 
 ## Acceptance criteria
 
@@ -189,16 +202,16 @@ Build the complete MDA Funding Entry path from dashboard/navigation to form subm
 - [x] Amount must be positive. *(Validation rejects ≤ 0; Postgres `amount > 0` check is the final gate.)*
 - [x] Reference Number is required and duplicate scoped references are surfaced clearly. *(Required validation + `mapFundingEntryError` translates 23505 unique violations into a field-scoped message.)*
 - [x] Other Options require Remarks. *(`validateFundingEntry` flags Other Programme Area or Funding Source without remarks; trigger validation surfaces the same message if bypassed.)*
-- [x] Submitted entries default to pending. *(`insertFundingEntry` sets `status: "pending"`; DB default and `funding_insert_by_submitter` RLS also enforce.)*
-- [x] MDA users can edit their own assigned-MDA Funding Entries only while pending. *(UI uses `canEditFundingEntry`; the edit sheet calls `updatePendingFundingEntry` which scopes the update to `status = 'pending'`.)*
-- [x] Tests cover required fields, amount validation, Other requiring Remarks, duplicate Reference Number handling, and pending-only edit access. *(`src/test/funding-validation.test.ts`, 19 cases.)*
+- [x] Submitted entries are reportable immediately; published quarters reject new routine submissions.
+- [x] MDA users can edit their own assigned-MDA Funding Entries until the relevant quarter is published.
+- [x] Tests cover required fields, amount validation, Other requiring Remarks, duplicate Reference Number handling, and publication-aware edit access.
 
 ## Blocked by
 
 - Slice 1: Next.js App Shell And Authenticated Role Routing
 - Slice 2: Supabase Database Connection, Typed Access, And Capability Checks
 
-## Issue 4: Expenditure Entry Submit And Pending Edit Path
+## Issue 4: Expenditure Entry Submit And Publication-Aware Edit Path
 
 Status:
 - [ ] Not started
@@ -207,7 +220,7 @@ Status:
 
 ## What to build
 
-Build the complete MDA Expenditure Entry path from dashboard/navigation to form submission, pending entry display, and pending edit. The workflow should enforce Expenditure Entry domain rules, PHC LGA/facility validation, optional AOP Linkage, optional Expenditure Item, required Payment Method, required Voucher Reference Number, and generated Public Entry ID display.
+Build the complete MDA Expenditure Entry path from dashboard/navigation to form submission, active-entry display, and publication-aware edit. The workflow should enforce Expenditure Entry domain rules, PHC LGA/facility validation, optional AOP Linkage, optional Expenditure Item, required Payment Method, required Voucher Reference Number, and generated Public Entry ID display.
 
 ## Acceptance criteria
 
@@ -221,16 +234,16 @@ Build the complete MDA Expenditure Entry path from dashboard/navigation to form 
 - [x] Amount must be positive and Voucher Reference Number is required. *(Validation rejects ≤ 0 and blank voucher; Postgres `amount > 0` check + unique constraint are the final gates.)*
 - [x] Payment Method is required. *(Validation rejects missing payment method; column is `not null` in the schema.)*
 - [x] Other Options require Remarks. *(`validateExpenditureEntry` flags Other Programme Area, Expenditure Category, or Payment Method without remarks; trigger validation surfaces the same message if bypassed.)*
-- [x] Submitted entries default to pending. *(`insertExpenditureEntry` sets `status: "pending"`; DB default and `expenditure_insert_by_submitter` RLS also enforce.)*
-- [x] MDA users can edit their own assigned-MDA Expenditure Entries only while pending. *(UI uses `canEditExpenditureEntry`; the edit page calls `updatePendingExpenditureEntry` which scopes the update to `status = 'pending'`.)*
-- [x] Tests cover PHC validation, AOP mismatch, facility/LGA mismatch, Expenditure Item/category mismatch, duplicate Voucher Reference Number handling, and pending-only edit access. *(`src/test/expenditure-validation.test.ts`, 33 cases.)*
+- [x] Submitted entries are reportable immediately; published quarters reject new routine submissions.
+- [x] MDA users can edit their own assigned-MDA Expenditure Entries until the relevant quarter is published.
+- [x] Tests cover PHC validation, AOP mismatch, facility/LGA mismatch, Expenditure Item/category mismatch, duplicate Voucher Reference Number handling, and publication-aware edit access.
 
 ## Blocked by
 
 - Slice 1: Next.js App Shell And Authenticated Role Routing
 - Slice 2: Supabase Database Connection, Typed Access, And Capability Checks
 
-## Issue 5: Reviewer/Admin Entry Detail, Comments, And Status Workflow
+## Issue 5: Viewer/Admin Entry Register, Comments, And Publication Evidence
 
 Status:
 - [ ] Not started
@@ -239,24 +252,19 @@ Status:
 
 ## What to build
 
-Build review queues and entry detail workflows for Funding Entries and Expenditure Entries. Reviewers should act only on assigned MDAs, while Admins can act statewide. Entry detail should include fields, status, attachments, comments, audit history, and workflow actions.
+Build the Entry Register and entry details for Funding and Expenditure Entries. Viewers and Admins read statewide under RLS. Entry detail includes fields, attachments, comments, audit history, warnings, publication metadata, and amendment history.
 
 ## Acceptance criteria
 
-- [x] Reviewers can see pending entries for assigned MDAs. *(`src/routes/review.tsx` scopes list queries by `reviewableMdaIds(profile)`; reviewer SELECT RLS on `funding_entries`/`expenditure_entries` is unchanged.)*
-- [x] Admins can see entries statewide. *(Admins return `[]` from `reviewableMdaIds`, which leaves the list queries unfiltered.)*
-- [x] Review queues support status, fiscal year, MDA, and date filters. *(`ReviewFiltersPanel` + extended `ListFundingEntriesOptions` / `ListExpenditureEntriesOptions` with `fiscalYear`, `dateFrom`, `dateTo`.)*
-- [x] Entry detail shows form fields, Public Entry ID, comments, attachments, audit history, and status. *(`src/components/review/entry-review-detail.tsx` + `src/routes/review-entry-detail.tsx`; pages at `app/(authenticated)/review/{funding,expenditure}/[id]/page.tsx`.)*
-- [x] Reviewers/Admins can approve, reject, and process entries according to allowed workflow transitions. *(`src/lib/review/transitions.ts` state machine: pending->approved|rejected, approved->processed|rejected, rejected->pending via resubmit, processed terminal; enforced server-side by `public.review_entry` RPC.)*
-- [x] Rejection requires an Entry Comment with rejection reason. *(`ReviewActionDialog` requires non-empty text for reject; `review_entry` raises `22023` if neither reason nor comment is provided.)*
-- [x] Reviewed-entry edits require an audit reason. *(`ReviewedEditBanner` captures the reason; `public.update_reviewed_funding_entry` / `update_reviewed_expenditure_entry` reject empty reasons and `set_config('app.audit_reason', ...)` so the trigger records it.)*
-- [x] Audit Events are created for status changes and reviewed-entry edits. *(Existing `app_private.audit_row_change()` trigger picks up `app.audit_reason` set by the RPCs; reviewer access added via `audit_select_entry_reviewers` policy + `current_user_can_view_entry_audit` helper.)*
-- [x] Tests cover allowed/forbidden transitions, rejection comments, audit reasons, and role/MDA scope. *(`src/test/review-transitions.test.ts` covers the full 12-case state machine + `requiresComment` + `canResubmit`; existing `src/test/access.test.ts` covers reviewer vs admin scope. Full suite: 96 passing; `tsc --noEmit` clean; `next build` succeeds; migration applied to live project `znvcxidepemlmqdhavpl`.)*
+- [x] Viewers and Admins can read entries statewide; submitters can reach shared details for discussions.
+- [x] The Entry Register supports fiscal year, MDA, date, and ledger-specific filters without status state.
+- [x] Entry details show Public Entry ID, comments, attachments, audit history, warnings, publication metadata, and amendments.
+- [x] Viewers can add comments but cannot insert, edit, publish, amend, approve, reject, or process entries.
+- [x] Admin corrections and post-publication amendments require an audit reason.
+- [x] Audit Events are created for material ledger changes; amendments create the next BIR version atomically.
+- [x] Tests cover Viewer read/comment surfaces, absence of transition controls, publication-aware edit access, and role scope.
 
-Implementation notes:
-- Review actions and audit-reason capture run through Postgres `security definer` RPCs (`review_entry`, `resubmit_entry`, `update_reviewed_*_entry`) so the state-machine and `app.audit_reason` set are atomic with the row write.
-- A `success` variant alert was reused from Slice 24; no new UI primitive was needed.
-- Submitters can return rejected entries to pending via `resubmit_entry`, surfaced as a Resubmit button on the review-detail page when the viewer is the original author.
+Implementation notes: `/entries` is canonical and legacy `/review` URLs redirect. Postgres `security definer` commands provide reasoned Admin correction/publication/amendment boundaries while row/allocation triggers enforce locks for every other write path.
 
 ## Blocked by
 

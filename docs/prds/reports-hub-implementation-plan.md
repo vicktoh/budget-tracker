@@ -1,5 +1,7 @@
 # Reports Hub — Implementation Plan
 
+> **2026-07-15 update:** ADR 0005 removes ledger-status filtering and approved/processed-only actuals. Every active ledger row feeds reports. A BIR preview for one selected quarter exposes Admin-only publication, version metadata, and subsequent amendments; full-year previews cannot be published. Reviewer-facing text is now Viewer.
+
 **Status:** Approved design, ready to build
 **Design reference:** [UI proposal artifact](https://claude.ai/code/artifact/6499096a-f6e3-453f-8114-0290f3b3736c) · aligned to [DESIGN.md](../../DESIGN.md)
 **Feature owner route:** `/admin/reports`

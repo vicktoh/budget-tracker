@@ -9,8 +9,8 @@ Phases 3 and later.
 - Use semantic Tailwind classes (`bg-background`, `text-foreground`,
   `bg-card`, `text-muted-foreground`, `border-border`, `bg-primary`,
   `text-status-pending` …). Never use raw hex values or arbitrary HSL.
-- Status badges always use `pending`, `approved`, `processed`, `rejected`
-  via `StatusBadge`. Data Quality Warnings are amber (warning), not red.
+- Workflow status badges are not used for ledger entries. Semantic badge colors remain available for Reference Value Requests, validation state, and visual tone.
+- Data Quality Warnings are amber (warning), not red.
 - Charts use the `chart-1..chart-5` token sequence (green, teal, brown,
   amber, slate). Do not introduce new chart colors.
 
