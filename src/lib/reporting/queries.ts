@@ -4,6 +4,7 @@ import type {
   ApprovedBudgetLite,
   BudgetLineRevenueLite,
   ExpenditureEntryLite,
+  MonthlyTrackingLite,
   FundingEntryLite,
   ReportingDataset,
   ReportScope,
@@ -47,6 +48,12 @@ const AOP_SELECT = `
   mdas!inner(id, name)
 `;
 
+const MONTHLY_SELECT = `
+  id, mda_id, fiscal_year, budget_class, economic_code, description,
+  approved_budget_line_id, month, amount,
+  mdas!inner(id, name)
+`;
+
 const REVENUE_SELECT = `
   id, fiscal_year, mda_id, stream, economic_code, economic_description, approved_amount,
   mdas!inner(id, name),
@@ -54,6 +61,27 @@ const REVENUE_SELECT = `
 `;
 
 type RelatedNamed = { id: string; name: string } | { id: string; name: string }[] | null;
+
+/**
+ * PostgREST caps a single response at 1,000 rows and silently truncates the
+ * rest — large tables (monthly tracking cells, AOP activities) exceed that.
+ * Pages through `.range()` until a short page signals the end.
+ */
+const PAGE_SIZE = 1000;
+
+async function fetchAllPages<T>(
+  buildQuery: (from: number, to: number) => PromiseLike<{ data: unknown; error: unknown }>,
+): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await buildQuery(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const batch = (data ?? []) as T[];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) break;
+  }
+  return rows;
+}
 
 function pickRelatedName(value: RelatedNamed): string {
   if (!value) return "";
@@ -253,6 +281,50 @@ type RawRevenue = {
     | null;
 };
 
+type RawMonthly = {
+  id: string;
+  mda_id: string;
+  fiscal_year: number;
+  budget_class: string;
+  economic_code: string;
+  description: string | null;
+  approved_budget_line_id: string | null;
+  month: number;
+  amount: number;
+  mdas: RelatedNamed;
+};
+
+async function loadMonthly(
+  client: Client,
+  scope: ReportScope,
+): Promise<MonthlyTrackingLite[]> {
+  const rows = await fetchAllPages<RawMonthly>((from, to) => {
+    let query = client
+      .from("monthly_expenditure_tracking")
+      .select(MONTHLY_SELECT)
+      .order("id")
+      .range(from, to);
+    if (scope.mdaIds && scope.mdaIds.length > 0) {
+      query = query.in("mda_id", scope.mdaIds);
+    }
+    return query;
+  });
+  return rows.map((row) => ({
+    id: row.id,
+    mda_id: row.mda_id,
+    mda_name: pickRelatedName(row.mdas),
+    fiscal_year: row.fiscal_year,
+    budget_class: (["personnel", "overhead", "capital"].includes(row.budget_class)
+      ? row.budget_class
+      : "overhead") as MonthlyTrackingLite["budget_class"],
+    economic_code: row.economic_code,
+    description: row.description,
+    approved_budget_line_id: row.approved_budget_line_id,
+    month: Number(row.month),
+    amount: Number(row.amount),
+  }));
+}
+
 async function loadRevenues(
   client: Client,
   scope: ReportScope,
@@ -284,13 +356,13 @@ async function loadAopActivities(
   client: Client,
   scope: ReportScope,
 ): Promise<AopActivityLite[]> {
-  let query = client.from("aop_activities").select(AOP_SELECT);
-  if (scope.mdaIds && scope.mdaIds.length > 0) {
-    query = query.in("mda_id", scope.mdaIds);
-  }
-  const { data, error } = await query;
-  if (error) throw error;
-  const rows = (data ?? []) as unknown as RawAop[];
+  const rows = await fetchAllPages<RawAop>((from, to) => {
+    let query = client.from("aop_activities").select(AOP_SELECT).order("id").range(from, to);
+    if (scope.mdaIds && scope.mdaIds.length > 0) {
+      query = query.in("mda_id", scope.mdaIds);
+    }
+    return query;
+  });
   return rows.map((row) => ({
     id: row.id,
     mda_id: row.mda_id,
@@ -312,11 +384,12 @@ export async function loadReportingDataset(
   client: Client,
   scope: ReportScope = {},
 ): Promise<ReportingDataset> {
-  const [funding, expenditure, budgets, revenues, aopActivities, publicationResult] = await Promise.all([
+  const [funding, expenditure, budgets, revenues, monthly, aopActivities, publicationResult] = await Promise.all([
     loadFunding(client, scope),
     loadExpenditure(client, scope),
     loadBudgets(client, scope),
     loadRevenues(client, scope),
+    loadMonthly(client, scope),
     loadAopActivities(client, scope),
     client.from("budget_implementation_report_publications")
       .select("id, fiscal_year, quarter, version, published_at")
@@ -328,6 +401,7 @@ export async function loadReportingDataset(
     expenditure,
     budgets,
     revenues,
+    monthly,
     aopActivities,
     publications: (publicationResult.data ?? []) as unknown as ReportingDataset["publications"],
   };

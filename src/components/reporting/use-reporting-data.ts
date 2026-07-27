@@ -76,6 +76,7 @@ export function useReportingData(
           expenditure: [],
           budgets: [],
           revenues: [],
+          monthly: [],
           aopActivities: [],
           publications: [],
         },
@@ -151,6 +152,9 @@ export function useReportingData(
             // rather than letting the report crash on `undefined.filter`.
             revenues: Array.isArray(data.dataset.revenues)
               ? data.dataset.revenues
+              : [],
+            monthly: Array.isArray(data.dataset.monthly)
+              ? data.dataset.monthly
               : [],
           },
           options: data.options,

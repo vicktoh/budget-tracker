@@ -138,6 +138,25 @@ export type BudgetLineRevenueLite = {
   actuals: BudgetLineRevenueActualLite[];
 };
 
+/**
+ * One month's tracked figure for a budget line, from the IBP monthly tracking
+ * workbook. A row with amount 0 is an explicit zero submission; a month with
+ * no row at all means the MDA submitted nothing — the UI renders those
+ * differently, so absence must stay observable.
+ */
+export type MonthlyTrackingLite = {
+  id: string;
+  mda_id: string;
+  mda_name: string;
+  fiscal_year: number;
+  budget_class: "personnel" | "overhead" | "capital";
+  economic_code: string;
+  description: string | null;
+  approved_budget_line_id: string | null;
+  month: number;
+  amount: number;
+};
+
 export type AopActivityLite = {
   id: string;
   mda_id: string;
@@ -154,6 +173,7 @@ export type ReportingDataset = {
   expenditure: ExpenditureEntryLite[];
   budgets: ApprovedBudgetLite[];
   revenues: BudgetLineRevenueLite[];
+  monthly: MonthlyTrackingLite[];
   aopActivities: AopActivityLite[];
   publications: Array<{
     id: string;

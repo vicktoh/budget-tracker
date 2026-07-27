@@ -4,6 +4,7 @@ import {
   aggregateEconomicSummary,
   aggregateExceptions,
   aggregateHealthSectorObjectives,
+  aggregateMdaScorecards,
   aggregateRevenueComposition,
   aggregateRevenuePerformance,
   aggregateReconciliation,
@@ -25,6 +26,7 @@ import {
   budgetFixtures,
   expenditureFixtures,
   fundingFixtures,
+  monthlyFixtures,
   revenueFixtures,
 } from "@/test/reporting-fixtures";
 
@@ -34,6 +36,7 @@ function dataset(): ReportingDataset {
     expenditure: expenditureFixtures(),
     budgets: budgetFixtures(),
     revenues: revenueFixtures(),
+    monthly: monthlyFixtures(),
     aopActivities: aopFixtures(),
     publications: [],
   };
@@ -378,5 +381,59 @@ describe("stale offline snapshots", () => {
       { ...emptyReportFilters(), fiscalYear: 2026 },
     );
     expect(rows.find((r) => r.code === "unclassified")?.actual_amount).toBe(600_000);
+  });
+});
+
+describe("aggregateMdaScorecards", () => {
+  const fy2026 = { ...emptyReportFilters(), fiscalYear: 2026 };
+  const cards = () =>
+    aggregateMdaScorecards(budgetFixtures(), expenditureFixtures(), monthlyFixtures(), fy2026);
+
+  it("builds one card per MDA sorted by burn rate", () => {
+    const rows = cards();
+    // MoH: 800k official / 1.5M approved ≈ 53%; PHCMB: 350k / 1M = 35%.
+    expect(rows.map((r) => r.mda_name)).toEqual(["Ministry of Health", "PHCMB"]);
+    const moh = rows.find((r) => r.mda_name === "Ministry of Health");
+    expect(moh?.official_total).toBe(800_000);
+    expect(moh?.approved_total).toBe(1_500_000);
+  });
+
+  it("keeps the explicit-zero vs nothing-submitted distinction", () => {
+    const phcmb = cards().find((r) => r.mda_name === "PHCMB");
+    const overhead = phcmb?.components.find((c) => c.budget_class === "overhead");
+    const amounts = new Map(overhead?.months.map((m) => [m.month, m.amount]));
+    expect(amounts.get(1)).toBe(120_000); // reported
+    expect(amounts.get(3)).toBe(0); // explicit zero
+    expect(amounts.get(4)).toBeNull(); // nothing submitted
+    expect(overhead?.months).toHaveLength(6); // horizon defaults to June
+  });
+
+  it("flags official spend the tracking sheet never saw", () => {
+    const phcmb = cards().find((r) => r.mda_name === "PHCMB");
+    // e3: 350k official capital (via category fallback → 'other'... actually
+    // Drugs & Supplies → other). Capital component: tracked 5M, official 0.
+    const capital = phcmb?.components.find((c) => c.budget_class === "capital");
+    expect(capital?.verdict).toBe("tracking_only");
+    expect(capital?.tracked_amount).toBe(5_000_000);
+  });
+
+  it("excludes other fiscal years from tracking totals", () => {
+    const phcmb = cards().find((r) => r.mda_name === "PHCMB");
+    const overhead = phcmb?.components.find((c) => c.budget_class === "overhead");
+    expect(overhead?.tracked_amount).toBe(200_000); // mt-5 (2025) excluded
+  });
+
+  it("reports months with at least one submission", () => {
+    const phcmb = cards().find((r) => r.mda_name === "PHCMB");
+    expect(phcmb?.months_reported).toEqual([1, 2, 3]);
+  });
+
+  it("ignores the quarter filter for card totals", () => {
+    const rows = aggregateMdaScorecards(
+      budgetFixtures(), expenditureFixtures(), monthlyFixtures(),
+      { ...fy2026, quarter: 1 as const },
+    );
+    const moh = rows.find((r) => r.mda_name === "Ministry of Health");
+    expect(moh?.official_total).toBe(800_000); // Q1 600k + Q2 200k, both kept
   });
 });

@@ -16,6 +16,10 @@ import { ChartCard } from "@/components/reporting/chart-card";
 import { ReportFiltersBar } from "@/components/reporting/report-filters-bar";
 import { StatCard } from "@/components/reporting/stat-card";
 import { BudgetUtilizationBars } from "@/components/reporting/charts/budget-utilization-bars";
+import { DonutShareChart } from "@/components/reporting/charts/donut-share-chart";
+import { Leaderboard } from "@/components/reporting/insights/leaderboard";
+import { MdaAnalysis } from "@/components/reporting/insights/mda-analysis";
+import { SectorHero } from "@/components/reporting/insights/sector-hero";
 import { HorizontalBarReport } from "@/components/reporting/charts/horizontal-bar-report";
 import { useReportingData } from "@/components/reporting/use-reporting-data";
 import { OfflineDataNotice } from "@/components/offline/offline-data-notice";
@@ -24,16 +28,14 @@ import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 import {
   aggregateAopPlannedVsActual,
   aggregateBudgetVsActual,
-  aggregateExpenditureByCategory,
-  aggregateExpenditureByFundingSource,
-  aggregateFundingBySource,
+  aggregateMdaScorecards,
   aggregatePhcFacilitySummary,
   aggregatePhcLgaSummary,
   aggregateProgrammeAreaSummary,
   aggregateEntrySummary,
   aggregateUnlinkedExpenditure,
 } from "@/lib/reporting/aggregate";
-import { formatCompactNaira, formatInteger, formatNaira, formatPercent } from "@/lib/format";
+import { formatCompactNaira, formatInteger, formatNaira } from "@/lib/format";
 import type { ReportFilters } from "@/lib/reporting/types";
 
 export function AdminInsightsRoute() {
@@ -42,7 +44,8 @@ export function AdminInsightsRoute() {
     {},
   );
   const { filters, setFilters, setFilter, clearFilters } = useReportFilters();
-  const [tab, setTab] = React.useState<"overview" | "programme" | "phc" | "aop">("overview");
+  const [tab, setTab] = React.useState<"overview" | "mda" | "programme" | "phc" | "aop">("overview");
+  const [selectedMdaId, setSelectedMdaId] = React.useState<string | null>(null);
 
   if (!hasSupabaseConfig || !supabase) {
     return (
@@ -101,6 +104,7 @@ export function AdminInsightsRoute() {
       >
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="mda">MDA Analysis</TabsTrigger>
           <TabsTrigger value="programme">Programme</TabsTrigger>
           <TabsTrigger value="phc">PHC</TabsTrigger>
           <TabsTrigger value="aop">AOP</TabsTrigger>
@@ -114,6 +118,16 @@ export function AdminInsightsRoute() {
             dataset={dataset}
             filters={filters}
             setFilter={setFilter}
+          />
+        </TabsContent>
+
+        <TabsContent value="mda">
+          <MdaAnalysisTab
+            loading={loading}
+            dataset={dataset}
+            filters={filters}
+            selectedMdaId={selectedMdaId}
+            onSelectMda={setSelectedMdaId}
           />
         </TabsContent>
 
@@ -156,47 +170,164 @@ type OverviewTabProps = TabProps & {
 };
 
 function OverviewTab({ loading, dataset, filters, setFilter, summary }: OverviewTabProps) {
+  const scorecards = dataset
+    ? aggregateMdaScorecards(dataset.budgets, dataset.expenditure, dataset.monthly, filters, {})
+    : [];
   const budgetRows = dataset
-    ? aggregateBudgetVsActual(
-        dataset.budgets,
-        dataset.funding,
-        dataset.expenditure,
-        filters,
-        {},
+    ? aggregateBudgetVsActual(dataset.budgets, dataset.funding, dataset.expenditure, filters, {})
+    : [];
+  const approvedTotal = scorecards.reduce((sum, card) => sum + card.approved_total, 0);
+  const officialTotal = scorecards.reduce((sum, card) => sum + card.official_total, 0);
+  const monthsCovered = Math.max(
+    0,
+    ...scorecards.flatMap((card) => card.months_reported),
+  );
+  const reportingMdaCount = scorecards.filter((card) => card.months_reported.length > 0).length;
+  const benchmarkQuarter = benchmarkQuarterFor(dataset);
+
+  const classTotals = new Map<string, { label: string; approved: number; official: number }>();
+  for (const card of scorecards) {
+    for (const component of card.components) {
+      const existing = classTotals.get(component.budget_class) ?? {
+        label: component.label,
+        approved: 0,
+        official: 0,
+      };
+      existing.approved += component.approved_amount;
+      existing.official += component.official_amount;
+      classTotals.set(component.budget_class, existing);
+    }
+  }
+  const classRows = Array.from(classTotals.entries());
+  const watchlist = scorecards.flatMap((card) =>
+    card.components
+      .filter(
+        (component) =>
+          component.verdict === "differs" ||
+          component.verdict === "untracked_spend" ||
+          component.verdict === "tracking_only" ||
+          component.q2_silent,
       )
-    : [];
-  const fundingRows = dataset ? aggregateFundingBySource(dataset.funding, filters, {}) : [];
-  const expenditureRows = dataset
-    ? aggregateExpenditureByCategory(dataset.expenditure, filters, {})
-    : [];
-  const expenditureBySourceRows = dataset
-    ? aggregateExpenditureByFundingSource(dataset.expenditure, filters, {})
-    : [];
+      .map((component) => ({ card, component })),
+  );
 
   return (
     <div className="flex flex-col gap-5">
+      <SectorHero
+        approvedTotal={approvedTotal}
+        officialTotal={officialTotal}
+        mdaCount={scorecards.length}
+        monthsCovered={monthsCovered || 6}
+        reportingMdaCount={reportingMdaCount}
+        fiscalYear={filters.fiscalYear}
+      />
+
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Total entries"
-          value={summary ? formatInteger(summary.fundingCount + summary.expenditureCount) : "—"}
-          helper="All active ledger entries"
-        />
-        <StatCard
-          label="Published quarters"
-          value={dataset ? formatInteger(new Set(dataset.publications.map((row) => `${row.fiscal_year}:${row.quarter}`)).size) : "—"}
-          helper="Quarterly BIR locks"
-        />
-        <StatCard
-          label="Open quarters"
-          value={dataset ? formatInteger(Math.max(0, (filters.fiscalYear ? 4 : Math.max(1, new Set([...dataset.funding.map((r) => r.fiscal_year), ...dataset.expenditure.map((r) => r.fiscal_year)]).size) * 4) - new Set(dataset.publications.filter((row) => !filters.fiscalYear || row.fiscal_year === filters.fiscalYear).map((row) => `${row.fiscal_year}:${row.quarter}`)).size)) : "—"}
-          helper="Available for routine writes"
-        />
         <StatCard
           label="Recorded expenditure"
           value={summary ? formatCompactNaira(summary.totalExpenditure) : "—"}
-          helper="Immediately reportable"
+          helper="Official BPR ledger, all quarters"
+        />
+        <StatCard
+          label="Monthly tracked spend"
+          value={dataset ? formatCompactNaira(dataset.monthly.reduce((sum, row) => sum + row.amount, 0)) : "—"}
+          helper="IBP tracking workbook, Jan–Jun"
+        />
+        <StatCard
+          label="MDAs submitting monthly"
+          value={scorecards.length ? `${reportingMdaCount} / ${scorecards.length}` : "—"}
+          helper="At least one monthly return"
+        />
+        <StatCard
+          label="Reconciliation flags"
+          value={formatInteger(watchlist.length)}
+          helper="Component lines where sources disagree"
+          tone={watchlist.length > 0 ? "pending" : "approved"}
         />
       </section>
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <ChartCard
+          title="Approved budget composition"
+          description="Personnel, overhead and capital shares of the approved envelope."
+          loading={loading}
+          isEmpty={!loading && classRows.length === 0}
+        >
+          <DonutShareChart
+            data={classRows.map(([id, row]) => ({ id, label: row.label, value: row.approved }))}
+            centerValue={formatCompactNaira(approvedTotal)}
+            centerLabel="Approved"
+          />
+        </ChartCard>
+        <ChartCard
+          title="Actual spend composition"
+          description="The same split for money actually recorded spent."
+          loading={loading}
+          isEmpty={!loading && officialTotal === 0}
+        >
+          <DonutShareChart
+            data={classRows.map(([id, row]) => ({ id, label: row.label, value: row.official }))}
+            centerValue={formatCompactNaira(officialTotal)}
+            centerLabel="Recorded spent"
+          />
+        </ChartCard>
+        <ChartCard
+          title="Spend share by MDA"
+          description="Which agencies the recorded spending sits with. Top six shown."
+          loading={loading}
+          isEmpty={!loading && officialTotal === 0}
+        >
+          <DonutShareChart
+            data={(() => {
+              const bySpend = scorecards
+                .filter((card) => card.official_total > 0)
+                .sort((a, b) => b.official_total - a.official_total);
+              const top = bySpend.slice(0, 6);
+              const rest = bySpend.slice(6).reduce((sum, card) => sum + card.official_total, 0);
+              const rows = top.map((card) => ({
+                id: card.mda_id,
+                label: truncate(card.mda_name, 26),
+                value: card.official_total,
+              }));
+              if (rest > 0) rows.push({ id: "rest", label: "All others", value: rest });
+              return rows;
+            })()}
+            centerValue={formatInteger(scorecards.filter((card) => card.official_total > 0).length)}
+            centerLabel="MDAs with spend"
+          />
+        </ChartCard>
+      </section>
+
+      <Leaderboard
+        cards={scorecards}
+        benchmarkQuarter={benchmarkQuarter}
+        onSelect={(id) => setFilter("mdaId", id === filters.mdaId ? null : id)}
+      />
+
+      {watchlist.length > 0 ? (
+        <ChartCard
+          title="Reconciliation watchlist"
+          description="Where the monthly tracking workbook and the published BPR tell different stories. The BPR stays authoritative."
+          loading={loading}
+        >
+          <SummaryTable
+            headers={["MDA", "Component", "Official BPR", "Monthly tracked", "Signal"]}
+            rows={watchlist.map(({ card, component }) => [
+              card.mda_name,
+              component.label,
+              formatNaira(component.official_amount),
+              formatNaira(component.tracked_amount),
+              component.q2_silent
+                ? "Active in Q1, silent in Q2"
+                : component.verdict === "differs"
+                  ? "Totals disagree"
+                  : component.verdict === "untracked_spend"
+                    ? "Missing from monthly returns"
+                    : "Awaiting the quarterly BPR",
+            ])}
+          />
+        </ChartCard>
+      ) : null}
 
       <ChartCard
         title="Budget vs actual by MDA"
@@ -215,133 +346,22 @@ function OverviewTab({ loading, dataset, filters, setFilter, summary }: Overview
           activeId={filters.mdaId}
           onSelect={(id) => setFilter("mdaId", id === filters.mdaId ? null : id)}
         />
-        <Table className="mt-4" containerClassName="max-h-[70vh]">
-          <TableHeader>
-            <TableRow>
-              <TableHead>MDA</TableHead>
-              <TableHead>FY</TableHead>
-              <TableHead className="text-right">Budget</TableHead>
-              <TableHead className="text-right">Funding</TableHead>
-              <TableHead className="text-right">Expenditure</TableHead>
-              <TableHead className="text-right">Balance</TableHead>
-              <TableHead className="text-right">Used</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {budgetRows.map((row) => (
-              <TableRow key={`${row.mda_id}-${row.fiscal_year}`}>
-                <TableCell className="font-medium">{row.mda_name}</TableCell>
-                <TableCell>FY {row.fiscal_year}</TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatCompactNaira(row.total_budget_amount)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatCompactNaira(row.total_funding_amount)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatCompactNaira(row.total_expenditure_amount)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatCompactNaira(row.budget_balance_amount)}
-                </TableCell>
-                <TableCell className="text-right tabular-nums">
-                  {formatPercent(row.budget_used_ratio)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </ChartCard>
-
-      <section className="grid gap-4 lg:grid-cols-2">
-        <ChartCard
-          title="Funding by source"
-          description="Click a bar to filter all reports by that funding source."
-          loading={loading}
-          isEmpty={!loading && fundingRows.length === 0}
-        >
-          <HorizontalBarReport
-            data={fundingRows.map((row) => ({
-              id: row.funding_source_id,
-              label: row.funding_source_name,
-              value: row.total_amount,
-            }))}
-            activeId={filters.fundingSourceId}
-            onSelect={(id) =>
-              setFilter("fundingSourceId", id === filters.fundingSourceId ? null : id)
-            }
-          />
-          <SummaryTable
-            headers={["Funding source", "Total", "Entries"]}
-            rows={fundingRows.map((row) => [
-              row.funding_source_name,
-              formatNaira(row.total_amount),
-              formatInteger(row.entry_count),
-            ])}
-          />
-        </ChartCard>
-
-        <ChartCard
-          title="Expenditure by funding source"
-          description="Spend attributed to each funding source from allocation splits."
-          loading={loading}
-          isEmpty={!loading && expenditureBySourceRows.length === 0}
-        >
-          <HorizontalBarReport
-            data={expenditureBySourceRows.map((row) => ({
-              id: row.funding_source_id,
-              label: row.funding_source_name,
-              value: row.total_amount,
-            }))}
-            activeId={filters.fundingSourceId}
-            onSelect={(id) =>
-              setFilter("fundingSourceId", id === filters.fundingSourceId ? null : id)
-            }
-          />
-          <SummaryTable
-            headers={["Funding source", "Expenditure", "Entries"]}
-            rows={expenditureBySourceRows.map((row) => [
-              row.funding_source_name,
-              formatNaira(row.total_amount),
-              formatInteger(row.entry_count),
-            ])}
-          />
-        </ChartCard>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-2">
-        <ChartCard
-          title="Expenditure by category"
-          description="Click a bar to filter all reports by that expenditure category."
-          loading={loading}
-          isEmpty={!loading && expenditureRows.length === 0}
-        >
-          <HorizontalBarReport
-            data={expenditureRows.map((row) => ({
-              id: row.expenditure_category_id,
-              label: row.expenditure_category_name,
-              value: row.total_amount,
-            }))}
-            activeId={filters.expenditureCategoryId}
-            onSelect={(id) =>
-              setFilter(
-                "expenditureCategoryId",
-                id === filters.expenditureCategoryId ? null : id,
-              )
-            }
-          />
-          <SummaryTable
-            headers={["Expenditure category", "Total", "Entries"]}
-            rows={expenditureRows.map((row) => [
-              row.expenditure_category_name,
-              formatNaira(row.total_amount),
-              formatInteger(row.entry_count),
-            ])}
-          />
-        </ChartCard>
-      </section>
     </div>
   );
+}
+
+/**
+ * The pro-rata benchmark tracks the latest quarter with official spend, so a
+ * half-year dataset is judged against 50%, not the full-year 100%.
+ */
+function benchmarkQuarterFor(
+  dataset: ReturnType<typeof useReportingData>["dataset"],
+): 1 | 2 | 3 | 4 | null {
+  if (!dataset) return null;
+  const quarters = dataset.expenditure.map((row) => row.quarter).filter((q) => q >= 1 && q <= 4);
+  if (quarters.length === 0) return null;
+  return Math.max(...quarters) as 1 | 2 | 3 | 4;
 }
 
 function ProgrammeTab({ loading, dataset, filters, setFilter }: TabProps) {
@@ -566,6 +586,32 @@ function AopTab({
         </Table>
       </ChartCard>
     </div>
+  );
+}
+
+function MdaAnalysisTab({
+  loading,
+  dataset,
+  filters,
+  selectedMdaId,
+  onSelectMda,
+}: Omit<TabProps, "setFilter"> & {
+  selectedMdaId: string | null;
+  onSelectMda: (mdaId: string) => void;
+}) {
+  const scorecards = dataset
+    ? aggregateMdaScorecards(dataset.budgets, dataset.expenditure, dataset.monthly, filters, {})
+    : [];
+  if (loading && scorecards.length === 0) {
+    return <p className="py-10 text-center text-sm text-muted-foreground">Loading MDA analysis…</p>;
+  }
+  return (
+    <MdaAnalysis
+      cards={scorecards}
+      selectedId={selectedMdaId}
+      onSelect={onSelectMda}
+      benchmarkQuarter={benchmarkQuarterFor(dataset)}
+    />
   );
 }
 

@@ -3,6 +3,7 @@ import type {
   ApprovedBudgetLite,
   BudgetLineRevenueLite,
   ExpenditureEntryLite,
+  MonthlyTrackingLite,
   FundingEntryLite,
   ReportFilters,
   ReportScope,
@@ -501,6 +502,229 @@ export function aggregateHealthSectorObjectives(
     rows.push(toRow(UNCLASSIFIED_OBJECTIVE));
   }
   return rows;
+}
+
+/* -------------------------------------------------------------------------- */
+/* MDA scorecards (official BPR + monthly tracking reconciliation)            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * How a component's monthly tracking squares with the official BPR figure.
+ * The published BPR stays authoritative; verdicts exist to make disagreement
+ * visible, not to pick a winner. Comparison is H1-total vs H1-total on
+ * purpose — the sources routinely agree on the total while disagreeing about
+ * which quarter it belongs to.
+ */
+export type TrackingVerdict =
+  | "matches" // tracked total agrees with the official figure (±1% or ±₦1m)
+  | "differs" // both sources have figures and they disagree
+  | "untracked_spend" // official spend exists, tracking sheet shows (almost) none
+  | "tracking_only" // tracking has figures the official BPR doesn't
+  | "no_data"; // neither source has anything
+
+export type MonthCell = {
+  month: number;
+  /** null = nothing submitted for the month; 0 = explicitly reported zero. */
+  amount: number | null;
+};
+
+export type MdaComponentScore = {
+  budget_class: EconomicClass;
+  label: string;
+  approved_amount: number;
+  official_amount: number;
+  official_q1: number;
+  official_q2: number;
+  tracked_amount: number;
+  /** One cell per month from January to the dataset's horizon. */
+  months: MonthCell[];
+  verdict: TrackingVerdict;
+  /** Official / approved. Null when nothing was approved. */
+  burn_rate: number | null;
+  /** Official Q1 > 0 but Q2 = 0 — active then silent, worth chasing. */
+  q2_silent: boolean;
+};
+
+export type MdaScorecard = {
+  mda_id: string;
+  mda_name: string;
+  approved_total: number;
+  official_total: number;
+  tracked_total: number;
+  burn_rate: number | null;
+  components: MdaComponentScore[];
+  /** Months (1-12) where this MDA submitted at least one tracking figure. */
+  months_reported: number[];
+};
+
+const COMPONENT_ORDER: EconomicClass[] = ["personnel", "overhead", "capital", "other"];
+
+function verdictFor(official: number, tracked: number): TrackingVerdict {
+  const NEAR_ZERO = 1_000_000;
+  const officialLive = Math.abs(official) > NEAR_ZERO;
+  const trackedLive = Math.abs(tracked) > NEAR_ZERO;
+  if (!officialLive && !trackedLive) return "no_data";
+  if (officialLive && !trackedLive) return "untracked_spend";
+  if (!officialLive && trackedLive) return "tracking_only";
+  const delta = Math.abs(official - tracked);
+  if (delta <= NEAR_ZERO || delta / Math.max(Math.abs(official), 1) <= 0.01) {
+    return "matches";
+  }
+  return "differs";
+}
+
+/**
+ * Builds one card per MDA: approved budget, official BPR actuals (split
+ * Q1/Q2), monthly tracking cells, and a per-component reconciliation verdict.
+ * Sorted by burn rate descending, so callers slice the top and bottom of the
+ * list directly for best/worst views.
+ *
+ * The quarter filter is intentionally NOT applied to the official/tracked
+ * totals — the card's story is the year so far; quarter granularity is
+ * presented inside the card instead.
+ */
+export function aggregateMdaScorecards(
+  budgets: ApprovedBudgetLite[],
+  expenditure: ExpenditureEntryLite[],
+  monthly: MonthlyTrackingLite[],
+  filters: ReportFilters,
+  scope: ReportScope = {},
+): MdaScorecard[] {
+  const yearFilters: ReportFilters = { ...filters, quarter: null };
+  const filteredBudgets = filterBudgets(budgets, yearFilters, scope);
+  const filteredExpenditure = filterExpenditure(expenditure, yearFilters, scope);
+  const filteredMonthly = monthly.filter((row) => {
+    if (!withinScope(scope, row.mda_id)) return false;
+    if (yearFilters.fiscalYear !== null && row.fiscal_year !== yearFilters.fiscalYear) return false;
+    if (yearFilters.mdaId && row.mda_id !== yearFilters.mdaId) return false;
+    return true;
+  });
+
+  // The tracker renders January up to the latest month any MDA reported, so
+  // the display grows on its own when July data lands.
+  const monthHorizon = Math.max(6, ...filteredMonthly.map((row) => row.month));
+
+  type Bucket = {
+    official: number;
+    officialQ1: number;
+    officialQ2: number;
+    tracked: number;
+    // month -> summed amount; presence means "submitted", even at zero.
+    monthAmounts: Map<number, number>;
+  };
+  const emptyBucket = (): Bucket => ({
+    official: 0,
+    officialQ1: 0,
+    officialQ2: 0,
+    tracked: 0,
+    monthAmounts: new Map(),
+  });
+
+  const byMda = new Map<string, { name: string; classes: Map<EconomicClass, Bucket> }>();
+  const ensure = (mdaId: string, name: string, cls: EconomicClass): Bucket => {
+    let mda = byMda.get(mdaId);
+    if (!mda) {
+      mda = { name, classes: new Map() };
+      byMda.set(mdaId, mda);
+    }
+    if (name && !mda.name) mda.name = name;
+    let bucket = mda.classes.get(cls);
+    if (!bucket) {
+      bucket = emptyBucket();
+      mda.classes.set(cls, bucket);
+    }
+    return bucket;
+  };
+
+  for (const row of filteredExpenditure) {
+    const bucket = ensure(row.mda_id, row.mda_name, classifyEntry(row));
+    bucket.official += row.amount;
+    if (row.quarter === 1) bucket.officialQ1 += row.amount;
+    if (row.quarter === 2) bucket.officialQ2 += row.amount;
+  }
+  for (const row of filteredMonthly) {
+    const bucket = ensure(row.mda_id, row.mda_name, row.budget_class);
+    bucket.tracked += row.amount;
+    bucket.monthAmounts.set(row.month, (bucket.monthAmounts.get(row.month) ?? 0) + row.amount);
+  }
+
+  const approvedByMda = new Map(filteredBudgets.map((budget) => [budget.mda_id, budget]));
+  // Budgets can exist for MDAs with no activity at all; include them so the
+  // "least performing" view can show untouched budgets.
+  for (const budget of filteredBudgets) {
+    if (!byMda.has(budget.mda_id)) {
+      byMda.set(budget.mda_id, { name: budget.mda_name, classes: new Map() });
+    }
+  }
+
+  const approvedForClass = (
+    budget: ApprovedBudgetLite | undefined,
+    cls: EconomicClass,
+  ): number => {
+    if (!budget) return 0;
+    if (cls === "personnel") return budget.personnel_amount;
+    if (cls === "overhead") return budget.other_recurrent_amount;
+    if (cls === "capital") return budget.capital_amount;
+    return 0;
+  };
+
+  const cards: MdaScorecard[] = [];
+  for (const [mdaId, mda] of byMda) {
+    const budget = approvedByMda.get(mdaId);
+    const components: MdaComponentScore[] = [];
+    for (const cls of COMPONENT_ORDER) {
+      const bucket = mda.classes.get(cls);
+      const approved = approvedForClass(budget, cls);
+      if (!bucket && approved === 0) continue;
+      const official = bucket?.official ?? 0;
+      const tracked = bucket?.tracked ?? 0;
+      const months: MonthCell[] = [];
+      for (let month = 1; month <= monthHorizon; month += 1) {
+        const amount = bucket?.monthAmounts.get(month);
+        months.push({ month, amount: amount === undefined ? null : amount });
+      }
+      components.push({
+        budget_class: cls,
+        label: ECONOMIC_CLASS_LABEL[cls],
+        approved_amount: approved,
+        official_amount: official,
+        official_q1: bucket?.officialQ1 ?? 0,
+        official_q2: bucket?.officialQ2 ?? 0,
+        tracked_amount: tracked,
+        months,
+        verdict: verdictFor(official, tracked),
+        burn_rate: approved === 0 ? null : official / approved,
+        q2_silent: (bucket?.officialQ1 ?? 0) > 0 && (bucket?.officialQ2 ?? 0) === 0,
+      });
+    }
+    if (components.length === 0) continue;
+
+    const approvedTotal = components.reduce((sum, c) => sum + c.approved_amount, 0);
+    const officialTotal = components.reduce((sum, c) => sum + c.official_amount, 0);
+    const trackedTotal = components.reduce((sum, c) => sum + c.tracked_amount, 0);
+    const monthsReported = new Set<number>();
+    for (const component of components) {
+      for (const cell of component.months) {
+        if (cell.amount !== null) monthsReported.add(cell.month);
+      }
+    }
+    cards.push({
+      mda_id: mdaId,
+      mda_name: mda.name,
+      approved_total: approvedTotal,
+      official_total: officialTotal,
+      tracked_total: trackedTotal,
+      burn_rate: approvedTotal === 0 ? null : officialTotal / approvedTotal,
+      components,
+      months_reported: Array.from(monthsReported).sort((a, b) => a - b),
+    });
+  }
+
+  return cards.sort(
+    (a, b) =>
+      (b.burn_rate ?? -1) - (a.burn_rate ?? -1) ||
+      b.approved_total - a.approved_total,
+  );
 }
 
 /* -------------------------------------------------------------------------- */

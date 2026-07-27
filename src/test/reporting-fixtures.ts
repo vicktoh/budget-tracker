@@ -3,6 +3,7 @@ import type {
   ApprovedBudgetLite,
   BudgetLineRevenueLite,
   ExpenditureEntryLite,
+  MonthlyTrackingLite,
   FundingEntryLite,
 } from "@/lib/reporting/types";
 
@@ -306,5 +307,26 @@ export function revenueFixtures(): BudgetLineRevenueLite[] {
       approved_amount: 900_000,
       actuals: [{ quarter: 1, amount: 900_000 }],
     },
+  ];
+}
+
+export function monthlyFixtures(): MonthlyTrackingLite[] {
+  const base = {
+    mda_id: MDA_PHCMB,
+    mda_name: "PHCMB",
+    fiscal_year: 2026,
+    economic_code: "22020101",
+    description: "Local travel",
+    approved_budget_line_id: null,
+  };
+  return [
+    // Overhead: Jan and Feb reported, Mar explicit zero, Apr-Jun nothing.
+    { ...base, id: "mt-1", budget_class: "overhead", month: 1, amount: 120_000 },
+    { ...base, id: "mt-2", budget_class: "overhead", month: 2, amount: 80_000 },
+    { ...base, id: "mt-3", budget_class: "overhead", month: 3, amount: 0 },
+    // Capital tracked where the official ledger shows nothing.
+    { ...base, id: "mt-4", budget_class: "capital", economic_code: "23030105", month: 2, amount: 5_000_000 },
+    // Prior year row must be excluded by the fiscal year filter.
+    { ...base, id: "mt-5", budget_class: "overhead", fiscal_year: 2025, month: 1, amount: 999_999 },
   ];
 }

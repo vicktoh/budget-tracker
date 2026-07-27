@@ -15,6 +15,7 @@ import {
   budgetFixtures,
   expenditureFixtures,
   fundingFixtures,
+  monthlyFixtures,
   revenueFixtures,
 } from "@/test/reporting-fixtures";
 
@@ -24,6 +25,7 @@ function dataset(): ReportingDataset {
     expenditure: expenditureFixtures(),
     budgets: budgetFixtures(),
     revenues: revenueFixtures(),
+    monthly: monthlyFixtures(),
     aopActivities: aopFixtures(),
     publications: [],
   };
