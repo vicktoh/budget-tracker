@@ -7,7 +7,7 @@ import {
   InboxIcon,
   LandmarkIcon,
   LayoutDashboardIcon,
-  ListChecksIcon,
+  ListIcon,
   MessageSquarePlusIcon,
   PieChartIcon,
   ReceiptTextIcon,
@@ -19,7 +19,7 @@ import {
 import type { AppProfile } from "@/lib/auth-types";
 import { type AppRoute } from "@/lib/access";
 
-export type NavigationSection = "operations" | "entries" | "review" | "admin" | "personal";
+export type NavigationSection = "operations" | "entries" | "admin" | "personal";
 
 export type NavigationItem = {
   label: string;
@@ -32,7 +32,7 @@ export type NavigationItem = {
 
 export const navigationItems: NavigationItem[] = [
   {
-    label: "MDA Dashboard",
+    label: "Dashboard",
     path: "/mda",
     icon: LayoutDashboardIcon,
     roles: ["mda_user", "reviewer", "admin"],
@@ -53,11 +53,11 @@ export const navigationItems: NavigationItem[] = [
     section: "entries",
   },
   {
-    label: "Review Queue",
-    path: "/review",
-    icon: ListChecksIcon,
+    label: "Entry Register",
+    path: "/entries",
+    icon: ListIcon,
     roles: ["reviewer", "admin"],
-    section: "review",
+    section: "entries",
   },
   {
     label: "Admin Insights",
@@ -133,8 +133,7 @@ export const navigationItems: NavigationItem[] = [
 
 export const sectionLabels: Record<NavigationSection, string> = {
   operations: "Overview",
-  entries: "Workflow",
-  review: "Review",
+  entries: "Entries",
   admin: "Administration",
   personal: "Personal",
 };
@@ -142,7 +141,6 @@ export const sectionLabels: Record<NavigationSection, string> = {
 export const sectionOrder: NavigationSection[] = [
   "operations",
   "entries",
-  "review",
   "admin",
   "personal",
 ];

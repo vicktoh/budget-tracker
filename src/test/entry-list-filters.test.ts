@@ -13,7 +13,6 @@ describe("ledger entry list filters", () => {
       toLedgerListQueryOptions(
         {
           ...DEFAULT_LEDGER_ENTRY_FILTERS,
-          status: "pending",
           mdaId: "mda-a",
           fiscalYear: "2026",
           quarter: "2",
@@ -22,7 +21,6 @@ describe("ledger entry list filters", () => {
       ),
     ).toEqual({
       mdaIds: ["mda-a"],
-      status: "pending",
       fiscalYear: 2026,
       quarter: 2,
       limit: 100,
@@ -34,7 +32,6 @@ describe("ledger entry list filters", () => {
       toLedgerListQueryOptions(DEFAULT_LEDGER_ENTRY_FILTERS, ["mda-a"]),
     ).toEqual({
       mdaIds: ["mda-a"],
-      status: undefined,
       fiscalYear: undefined,
       quarter: undefined,
       limit: 100,

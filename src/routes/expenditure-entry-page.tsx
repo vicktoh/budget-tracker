@@ -2,16 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeftIcon } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeftIcon, LockIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth/auth-provider";
 import { ExpenditureEntryForm } from "@/components/expenditure/expenditure-entry-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { StatusBadge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ReviewedEditBanner } from "@/components/review/reviewed-edit-banner";
+import { ReasonedEditBanner } from "@/components/entries/reasoned-edit-banner";
 import {
   assignedFacilityIds,
   expenditureSubmittableMdaIds,
@@ -23,12 +23,16 @@ import {
   getApprovedBudgetLineBalance,
   getExpenditureEntry,
   insertExpenditureEntry,
-  updatePendingExpenditureEntry,
+  updateExpenditureEntry,
   type ExpenditureEntryRow,
 } from "@/lib/db/expenditure-entries";
 import { listApprovedBudgetLines } from "@/lib/db/planning";
-import { evaluateExpenditureFundingWarnings } from "@/lib/db/data-quality-warnings";
-import { updateReviewedExpenditureEntry } from "@/lib/db/review";
+import {
+  amendPublishedExpenditureEntry,
+  correctUnpublishedExpenditureEntry,
+  isPublishedPeriod,
+  listBirPublications,
+} from "@/lib/db/bir-publications";
 import {
   listExpenditureCategories,
   listExpenditureItems,
@@ -42,7 +46,6 @@ import {
 import {
   STATE_BUDGET_FUNDING_SOURCE_SLUG,
   UNSPECIFIED_FUNDING_SOURCE_SLUG,
-  type FundingOverAllocationWarning,
 } from "@/lib/expenditure/funding-allocations";
 import {
   canEditExpenditureEntry,
@@ -102,10 +105,12 @@ type Mode = { kind: "new" } | { kind: "edit"; entryId: string };
 
 export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, profile } = useAuth();
 
   const [reference, setReference] = React.useState<ReferenceData | null>(null);
   const [entry, setEntry] = React.useState<ExpenditureEntryRow | null>(null);
+  const [publications, setPublications] = React.useState<Awaited<ReturnType<typeof listBirPublications>>>([]);
   const [loading, setLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [cachedReferenceAt, setCachedReferenceAt] = React.useState<
@@ -116,10 +121,6 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
   const [serverErrors, setServerErrors] =
     React.useState<ExpenditureEntryFieldErrors>({});
   const [serverError, setServerError] = React.useState<string | null>(null);
-  const [fundingWarnings, setFundingWarnings] = React.useState<
-    FundingOverAllocationWarning[]
-  >([]);
-
   const admin = isAdmin(profile);
   const facilityUser = isFacilityUser(profile);
   const submittableIds = React.useMemo(
@@ -164,6 +165,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
           lgas,
           facilities,
           fetchedEntry,
+          fetchedPublications,
         ] = await Promise.all([
           listMdas(supabase!),
           listProgrammeAreas(supabase!),
@@ -176,6 +178,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
           editEntryId
             ? getExpenditureEntry(supabase!, editEntryId)
             : Promise.resolve(null),
+          listBirPublications(supabase!),
         ]);
 
         // AOP activities are loaded for any MDA the user can submit for.
@@ -276,6 +279,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
         setReference(nextReference);
         setCachedReferenceAt(null);
         setEntry(fetchedEntry);
+        setPublications(fetchedPublications);
         hasLoadedReferenceRef.current = true;
         // Mirror reference data so the form can still render offline.
         void putReference(EXPENDITURE_REFERENCE_CACHE_KEY, nextReference);
@@ -332,32 +336,31 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
   const facilityUserWithoutAssignments =
     facilityUser && assignedFacilityIdSet.length === 0;
 
-  const pendingEditable =
+  const publishedPeriods = React.useMemo(() => publications.map((row) => ({ fiscalYear: row.fiscal_year, quarter: row.quarter })), [publications]);
+  const quarterPublished = !!entry && isPublishedPeriod(publications, entry.transaction_date);
+  const amendmentMode = mode.kind === "edit" && admin && quarterPublished && searchParams.get("amend") === "1";
+  const routineEditable =
     mode.kind === "new" ||
     (entry
       ? canEditExpenditureEntry(
           {
-            status: entry.status,
             entered_by: entry.entered_by,
             mda_id: entry.mda_id,
+            fiscal_year: entry.fiscal_year,
+            quarter: entry.quarter,
           },
           {
             user_id: user?.id ?? null,
             submittable_mda_ids: submittableIds,
             is_admin: admin,
+            published_periods: amendmentMode ? [] : publishedPeriods,
           },
         )
       : true);
 
-  // Admin correction path: non-pending, non-processed entries.
-  const reviewedEditMode =
-    mode.kind === "edit" &&
-    entry !== null &&
-    (entry.status === "approved" || entry.status === "rejected") &&
-    admin;
-
-  const editable = pendingEditable || reviewedEditMode;
-  const [reviewReason, setReviewReason] = React.useState("");
+  const adminReasonedEdit = mode.kind === "edit" && admin && entry !== null;
+  const editable = routineEditable || amendmentMode;
+  const [editReason, setEditReason] = React.useState("");
 
   // Capture a create/pending-update to the offline outbox so it syncs on
   // reconnect. Returns true when queued.
@@ -381,32 +384,33 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
     setServerErrors({});
     setServerError(null);
 
-    // Reviewed-entry corrections need server-side rules + an audit reason, so
-    // they remain online-only.
-    if (mode.kind === "edit" && reviewedEditMode) {
+    if (isPublishedPeriod(publications, values.transaction_date) && !amendmentMode) {
+      setServerError("This quarter's Budget Implementation Report has been published, so new submissions and routine edits are locked.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (mode.kind === "edit" && adminReasonedEdit) {
       if (!supabase) {
         setServerError(
-          "Reviewed-entry corrections need an internet connection. Reconnect and try again.",
+          "Admin corrections and amendments need an internet connection. Reconnect and try again.",
         );
         setSubmitting(false);
         return;
       }
       try {
-        const trimmed = reviewReason.trim();
+        const trimmed = editReason.trim();
         if (trimmed.length === 0) {
           setServerError(
-            "An audit reason is required for reviewed-entry edits.",
+            amendmentMode ? "An amendment reason is required." : "An audit reason is required for Admin corrections.",
           );
           setSubmitting(false);
           return;
         }
-        await updateReviewedExpenditureEntry(supabase, {
-          entryId: mode.entryId,
-          reason: trimmed,
-          values,
-        });
+        if (amendmentMode) await amendPublishedExpenditureEntry(supabase, mode.entryId, trimmed, values);
+        else await correctUnpublishedExpenditureEntry(supabase, mode.entryId, trimmed, values);
         toast.success(
-          `Updated reviewed expenditure entry ${entry?.public_id ?? mode.entryId.slice(0, 8)}.`,
+          amendmentMode ? "Amended expenditure entry and created the next BIR version." : `Corrected expenditure entry ${entry?.public_id ?? mode.entryId.slice(0, 8)}.`,
         );
         router.push("/expenditure");
       } catch (error) {
@@ -415,7 +419,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
         // generic error.
         if (classifySyncError(error) === "retry") {
           setServerError(
-            "Reviewed-entry corrections need an internet connection. Reconnect and try again.",
+            "Admin corrections and amendments need an internet connection. Reconnect and try again.",
           );
           setSubmitting(false);
           return;
@@ -456,7 +460,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
 
     try {
       if (mode.kind === "edit") {
-        const saved = await updatePendingExpenditureEntry(
+        const saved = await updateExpenditureEntry(
           supabase,
           mode.entryId,
           values,
@@ -466,13 +470,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
         );
       } else {
         const saved = await insertExpenditureEntry(supabase, values, user.id);
-        toast.success(
-          `Submitted expenditure entry ${saved.public_id ?? saved.id.slice(0, 8)}.`,
-          {
-            description:
-              "It is pending viewer approval. You can still edit while pending.",
-          },
-        );
+        toast.success(`Recorded expenditure entry ${saved.public_id ?? saved.id.slice(0, 8)}.`);
       }
       router.push("/expenditure");
     } catch (error) {
@@ -544,27 +542,11 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
     [mode],
   );
 
-  const evaluateFundingWarnings = React.useCallback(
-    async (
-      values: Parameters<
-        NonNullable<React.ComponentProps<typeof ExpenditureEntryForm>["evaluateFundingWarnings"]>
-      >[0],
-    ) => {
-      if (!supabase) return [];
-      return evaluateExpenditureFundingWarnings(supabase, {
-        values,
-        excludeExpenditureEntryId:
-          mode.kind === "edit" ? mode.entryId : null,
-      });
-    },
-    [mode],
-  );
-
   const isEdit = mode.kind === "edit";
   const title = isEdit ? "Edit expenditure entry" : "New expenditure entry";
   const subtitle = isEdit
-    ? "Updates apply only while the entry is pending. After review, only admins can correct fields with an audit reason."
-    : "Capture an expenditure paid by an assigned MDA. Viewers see it in the pending queue.";
+    ? quarterPublished ? "This published-quarter entry can only be changed through an Admin amendment." : "Updates are allowed until this quarter's BIR is published."
+    : "Capture expenditure paid by an assigned MDA. Valid entries are reportable immediately.";
 
   return (
     <div className="-mx-4 -mb-4 flex flex-col bg-background md:-mx-6 md:-mb-6">
@@ -596,7 +578,7 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
                 <span className="font-mono text-xs text-muted-foreground">
                   {entry.public_id ?? entry.id.slice(0, 8)}
                 </span>
-                <StatusBadge status={entry.status} />
+                {quarterPublished ? <Badge variant="outline"><LockIcon className="size-3" /> Published quarter</Badge> : <Badge variant="secondary">Open quarter</Badge>}
               </div>
             ) : null}
           </div>
@@ -636,11 +618,9 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
             <Alert variant="warning">
               <AlertTitle>Locked from editing</AlertTitle>
               <AlertDescription>
-                {entry?.status === "pending"
-                  ? "Only the original submitter on an assigned MDA can edit a pending expenditure entry."
-                  : entry?.status === "processed"
-                    ? "Processed entries are terminal and cannot be edited."
-                    : `This entry is ${entry?.status}. Only admins can correct reviewed entry fields.`}
+                {quarterPublished
+                  ? "This quarter has been published. Only an Admin can open an amendment from the Entry Detail page."
+                  : "Only the original submitter on an assigned MDA, or an Admin with a reason, can edit this entry."}
               </AlertDescription>
             </Alert>
             <div className="mt-4 flex justify-end">
@@ -694,11 +674,11 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
                 </Alert>
               </div>
             ) : null}
-            {reviewedEditMode && entry ? (
-              <ReviewedEditBanner
-                status={entry.status as "approved" | "rejected"}
-                reason={reviewReason}
-                onReasonChange={setReviewReason}
+            {adminReasonedEdit && entry ? (
+              <ReasonedEditBanner
+                published={amendmentMode}
+                reason={editReason}
+                onReasonChange={setEditReason}
               />
             ) : null}
             <ExpenditureEntryForm
@@ -716,15 +696,12 @@ export function ExpenditureEntryPage({ mode }: { mode: Mode }) {
               stateBudgetFundingSourceId={reference.stateBudgetFundingSourceId}
               evaluateBudgetLineBalance={evaluateBudgetLineBalance}
               initial={initial}
-              fundingWarnings={fundingWarnings}
-              evaluateFundingWarnings={evaluateFundingWarnings}
-              onFundingWarningsChange={setFundingWarnings}
               serverErrors={serverErrors}
               serverError={serverError}
               submitting={submitting}
               submitLabel={
-                reviewedEditMode
-                  ? "Save with audit reason"
+                adminReasonedEdit
+                  ? amendmentMode ? "Create BIR amendment" : "Save with audit reason"
                   : isEdit
                     ? "Save changes"
                     : "Submit expenditure entry"

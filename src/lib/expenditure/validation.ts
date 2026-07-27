@@ -18,7 +18,7 @@
  * authority but surfacing the same rules client-side gives the submitter
  * fast, friendly feedback.
  */
-import type { Tables } from "@/lib/db/types";
+import type { FiscalPeriod, Tables } from "@/lib/db/types";
 import {
   emptyFundingAllocationsDraft,
   parseAllocationAmount,
@@ -411,6 +411,10 @@ export function mapExpenditureEntryError(error: {
   const message = error.message ?? "";
   const code = error.code ?? "";
 
+  if (/quarter q\d fy\d+ has been published|quarter_published/i.test(message)) {
+    return { message: "This quarter's Budget Implementation Report has been published, so the entry is locked." };
+  }
+
   if (code === "23505" && /voucher_ref_no/i.test(message)) {
     return {
       field: "voucher_ref_no",
@@ -479,14 +483,14 @@ export function mapExpenditureEntryError(error: {
 }
 
 /**
- * Pending-only edit gate. Mirrors the Postgres RLS policy
- * `expenditure_update_pending_by_submitter`. Used by the UI to hide/disable
- * edit affordances; RLS still enforces authoritatively.
+ * Publication-aware edit gate. RLS and the publication trigger remain
+ * authoritative when client metadata becomes stale.
  */
 export type ExpenditureEntryEditableInput = {
-  status: Tables<"expenditure_entries">["status"];
   entered_by: Tables<"expenditure_entries">["entered_by"];
   mda_id: Tables<"expenditure_entries">["mda_id"];
+  fiscal_year: number;
+  quarter: number;
 };
 
 export function canEditExpenditureEntry(
@@ -495,9 +499,12 @@ export function canEditExpenditureEntry(
     user_id: string | null | undefined;
     submittable_mda_ids: string[];
     is_admin: boolean;
+    published_periods?: FiscalPeriod[];
   },
 ): boolean {
-  if (entry.status !== "pending") return false;
+  if (options.published_periods?.some(
+    (period) => period.fiscalYear === entry.fiscal_year && period.quarter === entry.quarter,
+  )) return false;
   if (options.is_admin) return true;
   if (!options.user_id) return false;
   if (entry.entered_by !== options.user_id) return false;

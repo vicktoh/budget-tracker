@@ -5,7 +5,7 @@ export type AppRole = "admin" | "reviewer" | "mda_user" | "facility_user";
 export type MdaMembership = {
   id: string;
   mda_id: string;
-  membership_role: "funding_submitter" | "expenditure_submitter" | "reviewer";
+  membership_role: "funding_submitter" | "expenditure_submitter";
   mdas?: {
     id: string;
     name: string;

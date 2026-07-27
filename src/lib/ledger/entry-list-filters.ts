@@ -1,10 +1,8 @@
 import type { ExpenditureEntryRow } from "@/lib/db/expenditure-entries";
 import type { FundingEntryRow } from "@/lib/db/funding-entries";
-import type { EntryStatusSlug } from "@/lib/db/types";
 
 export type LedgerEntryListFilters = {
   search: string;
-  status: "all" | EntryStatusSlug;
   mdaId: string;
   fiscalYear: string;
   quarter: "all" | "1" | "2" | "3" | "4";
@@ -12,7 +10,6 @@ export type LedgerEntryListFilters = {
 
 export const DEFAULT_LEDGER_ENTRY_FILTERS: LedgerEntryListFilters = {
   search: "",
-  status: "all",
   mdaId: "all",
   fiscalYear: "",
   quarter: "all",
@@ -71,7 +68,6 @@ export function toLedgerListQueryOptions(
 
   return {
     mdaIds,
-    status: filters.status === "all" ? undefined : filters.status,
     fiscalYear: filters.fiscalYear ? Number(filters.fiscalYear) : undefined,
     quarter: filters.quarter === "all" ? undefined : Number(filters.quarter),
     limit: 100,

@@ -15,7 +15,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { OfflineDataNotice } from "@/components/offline/offline-data-notice";
 import { PendingSyncCard } from "@/components/offline/pending-sync-card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { StatusBadge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -44,7 +44,11 @@ import {
   type ExpenditureEntryRow,
 } from "@/lib/db/expenditure-entries";
 import { listMdas } from "@/lib/db/reference-data";
-import type { Tables } from "@/lib/db/types";
+import {
+  listBirPublications,
+  normaliseFiscalPeriods,
+} from "@/lib/db/bir-publications";
+import type { FiscalPeriod, Tables } from "@/lib/db/types";
 import { canEditExpenditureEntry } from "@/lib/expenditure/validation";
 import {
   DEFAULT_LEDGER_ENTRY_FILTERS,
@@ -57,6 +61,7 @@ import { formatCompactNaira, formatNaira } from "@/lib/format";
 import { formatFundingSourceSummary } from "@/lib/expenditure/funding-allocations";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 import { readThroughCache } from "@/lib/offline/data-cache";
+import { useReconnectTrigger } from "@/lib/offline/use-reconnect-trigger";
 import { cn } from "@/lib/utils";
 
 type LoadState = "idle" | "loading" | "ready" | "error";
@@ -64,6 +69,7 @@ type CachedMda = Pick<Tables<"mdas">, "id" | "name" | "abbreviation">;
 
 export function ExpenditureEntriesRoute() {
   const { user, profile } = useAuth();
+  const reconnectTrigger = useReconnectTrigger();
 
   const [loadState, setLoadState] = React.useState<LoadState>("idle");
   const [loadError, setLoadError] = React.useState<string | null>(null);
@@ -74,6 +80,7 @@ export function ExpenditureEntriesRoute() {
   const [page, setPage] = React.useState(1);
   const [mdas, setMdas] = React.useState<CachedMda[]>([]);
   const [cachedAt, setCachedAt] = React.useState<string | null>(null);
+  const [publishedPeriods, setPublishedPeriods] = React.useState<FiscalPeriod[]>([]);
 
   const admin = isAdmin(profile);
   const assignedMdaIds = React.useMemo(
@@ -109,7 +116,7 @@ export function ExpenditureEntriesRoute() {
 
   React.useEffect(() => {
     setPage(1);
-  }, [filters.status, filters.mdaId, filters.fiscalYear, filters.quarter]);
+  }, [filters.mdaId, filters.fiscalYear, filters.quarter]);
 
   React.useEffect(() => {
     if (!profile) return;
@@ -120,6 +127,7 @@ export function ExpenditureEntriesRoute() {
     if (noScope) {
       setEntries([]);
       setMdas([]);
+      setPublishedPeriods([]);
       setLoadState("ready");
       return;
     }
@@ -132,12 +140,13 @@ export function ExpenditureEntriesRoute() {
       try {
         const { data, fromCache, cachedAt: snapshotAt } =
           await readThroughCache(cacheKey, async () => {
-            const [mdaList, entryList] = await Promise.all([
+            const [mdaList, entryList, publications] = await Promise.all([
               listMdas(supabase!),
               listExpenditureEntries(
                 supabase!,
                 toLedgerListQueryOptions(filters, scopedMdaIds),
               ),
+              listBirPublications(supabase!),
             ]);
             return {
               mdas: mdaList.map((mda) => ({
@@ -146,11 +155,13 @@ export function ExpenditureEntriesRoute() {
                 abbreviation: mda.abbreviation,
               })) as CachedMda[],
               entries: entryList,
+              publications: publications.map((row) => ({ fiscalYear: row.fiscal_year, quarter: row.quarter })),
             };
           });
         if (!active) return;
         setMdas(data.mdas);
         setEntries(data.entries);
+        setPublishedPeriods(normaliseFiscalPeriods(data.publications));
         setCachedAt(fromCache ? snapshotAt : null);
         setLoadState("ready");
       } catch (error) {
@@ -164,7 +175,15 @@ export function ExpenditureEntriesRoute() {
     return () => {
       active = false;
     };
-  }, [admin, assignedMdaIds, filters, noScope, profile, scopedMdaIds]);
+  }, [
+    admin,
+    assignedMdaIds,
+    filters,
+    noScope,
+    profile,
+    reconnectTrigger,
+    scopedMdaIds,
+  ]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -183,7 +202,7 @@ export function ExpenditureEntriesRoute() {
             New expenditure entry
           </Link>
         }
-        description="Record expenditure paid against assigned MDAs. Entries enter the pending queue and remain editable until a viewer acts."
+        description="Record expenditure paid against assigned MDAs. Entries remain editable until their quarter's BIR is published."
         title="Expenditure Entries"
       />
 
@@ -226,7 +245,7 @@ export function ExpenditureEntriesRoute() {
 
       <OfflineDataNotice cachedAt={cachedAt} />
 
-      <ExpenditureSummaryCards entries={filteredEntries} />
+      <ExpenditureSummaryCards entries={filteredEntries} publishedPeriods={publishedPeriods} />
 
       <PendingSyncCard domain="expenditure" />
 
@@ -237,7 +256,7 @@ export function ExpenditureEntriesRoute() {
             <CardDescription>
               {admin
                 ? "All submitted expenditure entries across the state."
-                : "Entries for MDAs you are assigned to. Pending entries you authored remain editable."}
+                : "Entries for MDAs you are assigned to remain editable until quarterly publication."}
             </CardDescription>
           </div>
         </CardHeader>
@@ -265,6 +284,7 @@ export function ExpenditureEntriesRoute() {
                 isAdmin={admin}
                 submittableMdaIds={assignedMdaIds}
                 userId={user?.id ?? null}
+                publishedPeriods={publishedPeriods}
               />
               <LedgerEntryTableFooter
                 page={pagination.page}
@@ -284,46 +304,44 @@ export function ExpenditureEntriesRoute() {
 
 function ExpenditureSummaryCards({
   entries,
+  publishedPeriods = [],
 }: {
   entries: ExpenditureEntryRow[];
+  publishedPeriods?: FiscalPeriod[];
 }) {
   const totals = React.useMemo(() => {
-    let pending = 0;
-    let approved = 0;
+    let locked = 0;
     let phc = 0;
     let totalAmount = 0;
     for (const entry of entries) {
-      if (entry.status === "pending") pending += 1;
-      if (entry.status === "approved" || entry.status === "processed") {
-        approved += 1;
-      }
+      if (publishedPeriods.some((period) => period.fiscalYear === entry.fiscal_year && period.quarter === entry.quarter)) locked += 1;
       if (entry.is_phc) phc += 1;
       totalAmount += Number(entry.amount);
     }
-    return { pending, approved, phc, totalAmount };
-  }, [entries]);
+    return { locked, phc, totalAmount };
+  }, [entries, publishedPeriods]);
 
   return (
     <section className="grid gap-4 md:grid-cols-4">
       <Card>
         <CardHeader>
-          <CardDescription>Pending entries</CardDescription>
-          <CardTitle className="text-2xl">{totals.pending}</CardTitle>
+          <CardDescription>Total entries</CardDescription>
+          <CardTitle className="text-2xl">{entries.length}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Awaiting viewer action. Editable while pending.
+            All active rows are reportable.
           </p>
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardDescription>Approved or processed</CardDescription>
-          <CardTitle className="text-2xl">{totals.approved}</CardTitle>
+          <CardDescription>Published-quarter locks</CardDescription>
+          <CardTitle className="text-2xl">{totals.locked}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Locked from normal editing once reviewed.
+            Amendments are Admin-only.
           </p>
         </CardContent>
       </Card>
@@ -360,11 +378,13 @@ function ExpenditureEntriesTable({
   isAdmin: adminUser,
   submittableMdaIds: submittable,
   userId,
+  publishedPeriods,
 }: {
   entries: ExpenditureEntryRow[];
   isAdmin: boolean;
   submittableMdaIds: string[];
   userId: string | null;
+  publishedPeriods: FiscalPeriod[];
 }) {
   return (
     <Table>
@@ -379,22 +399,25 @@ function ExpenditureEntriesTable({
           <TableHead>PHC</TableHead>
           <TableHead>Voucher</TableHead>
           <TableHead className="text-right">Amount</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead>Publication</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {entries.map((entry) => {
+          const published = publishedPeriods.some((period) => period.fiscalYear === entry.fiscal_year && period.quarter === entry.quarter);
           const editable = canEditExpenditureEntry(
             {
-              status: entry.status,
               entered_by: entry.entered_by,
               mda_id: entry.mda_id,
+              fiscal_year: entry.fiscal_year,
+              quarter: entry.quarter,
             },
             {
               user_id: userId,
               submittable_mda_ids: submittable,
               is_admin: adminUser,
+              published_periods: publishedPeriods,
             },
           );
           return (
@@ -450,7 +473,7 @@ function ExpenditureEntriesTable({
                 {formatNaira(Number(entry.amount))}
               </TableCell>
               <TableCell>
-                <StatusBadge status={entry.status} />
+                {published ? <Badge variant="outline">Locked</Badge> : <Badge variant="secondary">Open</Badge>}
               </TableCell>
               <TableCell className="text-right">
                 {editable ? (
@@ -469,14 +492,10 @@ function ExpenditureEntriesTable({
                 ) : (
                   <span
                     className="inline-flex items-center gap-1 text-xs text-muted-foreground"
-                    title={
-                      entry.status === "pending"
-                        ? "You can only edit your own pending entries on assigned MDAs."
-                        : "Reviewed entries are locked from normal editing."
-                    }
+                    title={published ? "This quarter's BIR has been published." : "You can only edit your own assigned entries."}
                   >
                     <AlertCircleIcon aria-hidden="true" className="size-3.5" />
-                    Locked
+                    <Link href={`/entries/expenditure/${entry.id}`} className="hover:underline">Details</Link>
                   </span>
                 )}
               </TableCell>

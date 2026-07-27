@@ -181,7 +181,6 @@ export function ExpenditureEntryForm({
   onSubmit,
 }: ExpenditureEntryFormProps) {
   const facilityLocked = Boolean(facilityScope);
-  const financialSectionEyebrow = showPhcLocation ? "04" : "03";
   const notesSectionEyebrow = showPhcLocation ? "05" : "04";
   const [draft, setDraft] = React.useState<ExpenditureEntryDraft>(() => {
     const base = { ...emptyExpenditureDraft(), ...initial };
@@ -694,7 +693,15 @@ export function ExpenditureEntryForm({
       line.budget_class === "capital" && line.project_description
         ? line.project_description
         : `${line.economic_code} — ${line.economic_description}`;
-    return { value: line.id, label };
+    return {
+      value: line.id,
+      label,
+      searchTerms: [
+        line.economic_code,
+        line.economic_description,
+        line.project_description ?? "",
+      ],
+    };
   });
   const paymentMethodOptions: ComboboxOption[] = paymentMethods.map((item) => ({
     value: item.id,
@@ -826,354 +833,6 @@ export function ExpenditureEntryForm({
 
       <FormSection
         eyebrow="02"
-        icon={LandmarkIcon}
-        title="Classification"
-        description="Programme area and expenditure category determine how this spend rolls up into sector reporting and budget-vs-actual views. Optional AOP linkage and Expenditure Item add further detail."
-      >
-        <div className="grid gap-6 md:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor="programme-area">Programme Area</FieldLabel>
-            <Combobox
-              id="programme-area"
-              options={programmeOptions}
-              placeholder="Select Programme Area"
-              value={draft.programme_area_id || undefined}
-              onValueChange={(value) => {
-                markTouched("programme_area_id");
-                setField("programme_area_id", value);
-              }}
-            />
-            {errors.programme_area_id ? (
-              <FieldDescription className="text-status-rejected">
-                {errors.programme_area_id}
-              </FieldDescription>
-            ) : (
-              <FieldDescription>
-                Health-sector programme this spend belongs to.
-              </FieldDescription>
-            )}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="expenditure-category">
-              Expenditure Category
-            </FieldLabel>
-            <Combobox
-              id="expenditure-category"
-              options={categoryOptions}
-              placeholder="Select Expenditure Category"
-              value={draft.expenditure_category_id || undefined}
-              onValueChange={(value) => {
-                markTouched("expenditure_category_id");
-                setField("expenditure_category_id", value);
-              }}
-              disabled={stateBudgetInUse && Boolean(selectedBudgetLine)}
-            />
-            {errors.expenditure_category_id ? (
-              <FieldDescription className="text-status-rejected">
-                {errors.expenditure_category_id}
-              </FieldDescription>
-            ) : stateBudgetInUse && selectedBudgetLine ? (
-              <FieldDescription>
-                Set automatically from the selected budget line.
-              </FieldDescription>
-            ) : (
-              <FieldDescription>
-                Personnel, drugs, capital works, training, or another approved category.
-              </FieldDescription>
-            )}
-          </Field>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {stateBudgetInUse ? (
-            <Field>
-              <FieldLabel
-                htmlFor="approved-budget-line"
-                className="flex items-center gap-2"
-              >
-                Approved Budget Item
-                <span className="rounded-full border border-status-approved/30 bg-status-approved-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-status-approved">
-                  State budget
-                </span>
-              </FieldLabel>
-              <Combobox
-                id="approved-budget-line"
-                options={budgetLineOptions}
-                placeholder={
-                  !draft.mda_id || !period
-                    ? "Pick MDA and date first"
-                    : budgetLineOptions.length
-                      ? "Select approved budget line"
-                      : "No approved budget lines for this MDA / FY"
-                }
-                value={draft.approved_budget_line_id || undefined}
-                onValueChange={handleSelectBudgetLine}
-                disabled={
-                  !draft.mda_id || !period || budgetLineOptions.length === 0
-                }
-              />
-              {errors.approved_budget_line_id ? (
-                <FieldDescription className="text-status-rejected">
-                  {errors.approved_budget_line_id}
-                </FieldDescription>
-              ) : selectedBudgetLine ? (
-                <FieldDescription
-                  className={
-                    lineWouldOverspend ? "text-status-pending" : undefined
-                  }
-                >
-                  {`Approved: ₦${selectedBudgetLine.approved_amount.toLocaleString(
-                    "en-NG",
-                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-                  )}`}
-                  {lineRemaining !== null
-                    ? ` · Remaining: ₦${lineRemaining.toLocaleString("en-NG", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                    : ""}
-                  {lineWouldOverspend
-                    ? " — this entry exceeds the remaining balance."
-                    : ""}
-                </FieldDescription>
-              ) : (
-                <FieldDescription>
-                  Choose the approved budget line this state-funded spend draws
-                  down. Sets the expenditure category automatically.
-                </FieldDescription>
-              )}
-            </Field>
-          ) : (
-            <Field>
-              <FieldLabel htmlFor="expenditure-item" className="flex items-center gap-2">
-                Expenditure Item
-                <span className="text-xs font-normal text-muted-foreground">
-                  Optional
-                </span>
-              </FieldLabel>
-              <Combobox
-                id="expenditure-item"
-                options={itemOptions}
-                placeholder={
-                  draft.expenditure_category_id
-                    ? "Select expenditure item"
-                    : "Pick a category first"
-                }
-                value={draft.expenditure_item_id || undefined}
-                onValueChange={(value) => {
-                  markTouched("expenditure_item_id");
-                  setField("expenditure_item_id", value);
-                }}
-                disabled={!draft.expenditure_category_id}
-              />
-              {errors.expenditure_item_id ? (
-                <FieldDescription className="text-status-rejected">
-                  {errors.expenditure_item_id}
-                </FieldDescription>
-              ) : (
-                <FieldDescription>
-                  Filtered by selected expenditure category.
-                </FieldDescription>
-              )}
-            </Field>
-          )}
-
-          <Field>
-            <FieldLabel htmlFor="aop-activity" className="flex items-center gap-2">
-              AOP Activity
-              <span className="text-xs font-normal text-muted-foreground">
-                Optional
-              </span>
-            </FieldLabel>
-            <Combobox
-              id="aop-activity"
-              options={aopOptions}
-              placeholder={
-                draft.mda_id && period
-                  ? aopOptions.length
-                    ? "Link to AOP activity"
-                    : "No AOP activities for this MDA / FY"
-                  : "Pick MDA and date first"
-              }
-              value={draft.aop_activity_id || undefined}
-              onValueChange={(value) => {
-                markTouched("aop_activity_id");
-                setField("aop_activity_id", value);
-              }}
-              disabled={
-                !draft.mda_id || !period || aopOptions.length === 0
-              }
-            />
-            {errors.aop_activity_id ? (
-              <FieldDescription className="text-status-rejected">
-                {errors.aop_activity_id}
-              </FieldDescription>
-            ) : (
-              <FieldDescription>
-                Filtered by selected MDA and fiscal year.
-              </FieldDescription>
-            )}
-          </Field>
-        </div>
-
-        {otherSelected ? (
-          <div className="rounded-md border border-status-pending/30 bg-status-pending-bg px-4 py-3 text-sm text-status-pending">
-            <strong className="font-semibold">Other selected.</strong>{" "}
-            Viewers will need a remark below to interpret this entry.
-          </div>
-        ) : null}
-      </FormSection>
-
-      {showPhcLocation ? (
-      <FormSection
-        eyebrow="03"
-        icon={HospitalIcon}
-        title="PHC location"
-        description={
-          facilityLocked
-            ? "This entry is locked to your assigned facility. The LGA is derived from the facility and cannot be changed."
-            : "Toggle PHC on for primary health care expenditure. PHC entries require both an LGA and a PHC-classified facility — non-PHC entries clear them automatically."
-        }
-      >
-        {facilityLocked ? (
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center gap-2.5 rounded-md border border-status-approved/30 bg-status-approved-bg/60 px-4 py-3 text-sm text-status-approved">
-              <LockIcon aria-hidden="true" className="size-4 shrink-0" />
-              <span className="font-medium">
-                PHC expenditure — locked on for facility users.
-              </span>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="facility">PHC Facility</FieldLabel>
-                {facilities.length === 1 ? (
-                  <LockedValue
-                    label={facilities[0]?.name ?? "Assigned facility"}
-                  />
-                ) : (
-                  <Combobox
-                    id="facility"
-                    options={facilityOptions}
-                    placeholder="Select your facility"
-                    value={draft.facility_id || undefined}
-                    onValueChange={(value) => {
-                      markTouched("facility_id");
-                      setField("facility_id", value);
-                    }}
-                  />
-                )}
-                {errors.facility_id ? (
-                  <FieldDescription className="text-status-rejected">
-                    {errors.facility_id}
-                  </FieldDescription>
-                ) : (
-                  <FieldDescription>
-                    {facilities.length === 1
-                      ? "Locked to your assigned facility."
-                      : "Choose from the facilities assigned to you."}
-                  </FieldDescription>
-                )}
-              </Field>
-              <Field>
-                <FieldLabel>LGA</FieldLabel>
-                <LockedValue
-                  label={
-                    lgas.find((l) => l.id === draft.lga_id)?.name ??
-                    "Derived from facility"
-                  }
-                />
-                <FieldDescription>
-                  Derived from the selected facility. Read-only.
-                </FieldDescription>
-              </Field>
-            </div>
-          </div>
-        ) : (
-        <>
-        <div className="flex items-start justify-between gap-6 rounded-md border bg-muted/30 px-4 py-3">
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-foreground">
-              This is PHC expenditure
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Routes the entry through the PHC LGA / facility validation chain.
-            </span>
-          </div>
-          <Switch
-            checked={draft.is_phc}
-            onCheckedChange={(checked) => {
-              markTouched("is_phc");
-              setField("is_phc", checked);
-            }}
-            label="PHC expenditure"
-          />
-        </div>
-
-        {draft.is_phc ? (
-          <div className="grid gap-6 md:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="lga">LGA</FieldLabel>
-              <Combobox
-                id="lga"
-                options={lgaOptions}
-                placeholder="Select LGA"
-                value={draft.lga_id || undefined}
-                onValueChange={(value) => {
-                  markTouched("lga_id");
-                  setField("lga_id", value);
-                }}
-              />
-              {errors.lga_id ? (
-                <FieldDescription className="text-status-rejected">
-                  {errors.lga_id}
-                </FieldDescription>
-              ) : (
-                <FieldDescription>
-                  Local Government Area where the facility operates.
-                </FieldDescription>
-              )}
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="facility">PHC Facility</FieldLabel>
-              <Combobox
-                id="facility"
-                options={facilityOptions}
-                placeholder={
-                  draft.lga_id
-                    ? "Select PHC facility"
-                    : "Pick an LGA first"
-                }
-                value={draft.facility_id || undefined}
-                onValueChange={(value) => {
-                  markTouched("facility_id");
-                  setField("facility_id", value);
-                }}
-                disabled={!draft.lga_id}
-              />
-              {errors.facility_id ? (
-                <FieldDescription className="text-status-rejected">
-                  {errors.facility_id}
-                </FieldDescription>
-              ) : (
-                <FieldDescription>
-                  Filtered by LGA. Must be a PHC-classified facility.
-                </FieldDescription>
-              )}
-            </Field>
-          </div>
-        ) : (
-          <p className="text-xs text-muted-foreground">
-            Non-PHC entry — LGA and facility are not required.
-          </p>
-        )}
-        </>
-        )}
-      </FormSection>
-      ) : null}
-
-      <FormSection
-        eyebrow={financialSectionEyebrow}
         icon={ReceiptTextIcon}
         title="Financial traceability"
         description="The voucher reference number must be unique within this MDA and fiscal year so the same voucher can never be counted twice."
@@ -1444,6 +1103,354 @@ export function ExpenditureEntryForm({
       </FormSection>
 
       <FormSection
+        eyebrow="03"
+        icon={LandmarkIcon}
+        title="Classification"
+        description="Programme area and expenditure category determine how this spend rolls up into sector reporting and budget-vs-actual views. Optional AOP linkage and Expenditure Item add further detail."
+      >
+        <div className="grid gap-6 md:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="programme-area">Programme Area</FieldLabel>
+            <Combobox
+              id="programme-area"
+              options={programmeOptions}
+              placeholder="Select Programme Area"
+              value={draft.programme_area_id || undefined}
+              onValueChange={(value) => {
+                markTouched("programme_area_id");
+                setField("programme_area_id", value);
+              }}
+            />
+            {errors.programme_area_id ? (
+              <FieldDescription className="text-status-rejected">
+                {errors.programme_area_id}
+              </FieldDescription>
+            ) : (
+              <FieldDescription>
+                Health-sector programme this spend belongs to.
+              </FieldDescription>
+            )}
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="expenditure-category">
+              Expenditure Category
+            </FieldLabel>
+            <Combobox
+              id="expenditure-category"
+              options={categoryOptions}
+              placeholder="Select Expenditure Category"
+              value={draft.expenditure_category_id || undefined}
+              onValueChange={(value) => {
+                markTouched("expenditure_category_id");
+                setField("expenditure_category_id", value);
+              }}
+              disabled={stateBudgetInUse && Boolean(selectedBudgetLine)}
+            />
+            {errors.expenditure_category_id ? (
+              <FieldDescription className="text-status-rejected">
+                {errors.expenditure_category_id}
+              </FieldDescription>
+            ) : stateBudgetInUse && selectedBudgetLine ? (
+              <FieldDescription>
+                Set automatically from the selected budget line.
+              </FieldDescription>
+            ) : (
+              <FieldDescription>
+                Personnel, drugs, capital works, training, or another approved category.
+              </FieldDescription>
+            )}
+          </Field>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {stateBudgetInUse ? (
+            <Field>
+              <FieldLabel
+                htmlFor="approved-budget-line"
+                className="flex items-center gap-2"
+              >
+                Approved Budget Item
+                <span className="rounded-full border border-status-approved/30 bg-status-approved-bg px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-status-approved">
+                  State budget
+                </span>
+              </FieldLabel>
+              <Combobox
+                id="approved-budget-line"
+                options={budgetLineOptions}
+                placeholder={
+                  !draft.mda_id || !period
+                    ? "Pick MDA and date first"
+                    : budgetLineOptions.length
+                      ? "Select approved budget line"
+                      : "No approved budget lines for this MDA / FY"
+                }
+                value={draft.approved_budget_line_id || undefined}
+                onValueChange={handleSelectBudgetLine}
+                disabled={
+                  !draft.mda_id || !period || budgetLineOptions.length === 0
+                }
+              />
+              {errors.approved_budget_line_id ? (
+                <FieldDescription className="text-status-rejected">
+                  {errors.approved_budget_line_id}
+                </FieldDescription>
+              ) : selectedBudgetLine ? (
+                <FieldDescription
+                  className={
+                    lineWouldOverspend ? "text-status-pending" : undefined
+                  }
+                >
+                  {`Approved: ₦${selectedBudgetLine.approved_amount.toLocaleString(
+                    "en-NG",
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                  )}`}
+                  {lineRemaining !== null
+                    ? ` · Remaining: ₦${lineRemaining.toLocaleString("en-NG", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : ""}
+                  {lineWouldOverspend
+                    ? " — this entry exceeds the remaining balance."
+                    : ""}
+                </FieldDescription>
+              ) : (
+                <FieldDescription>
+                  Choose the approved budget line this state-funded spend draws
+                  down. Sets the expenditure category automatically.
+                </FieldDescription>
+              )}
+            </Field>
+          ) : (
+            <Field>
+              <FieldLabel htmlFor="expenditure-item" className="flex items-center gap-2">
+                Expenditure Item
+                <span className="text-xs font-normal text-muted-foreground">
+                  Optional
+                </span>
+              </FieldLabel>
+              <Combobox
+                id="expenditure-item"
+                options={itemOptions}
+                placeholder={
+                  draft.expenditure_category_id
+                    ? "Select expenditure item"
+                    : "Pick a category first"
+                }
+                value={draft.expenditure_item_id || undefined}
+                onValueChange={(value) => {
+                  markTouched("expenditure_item_id");
+                  setField("expenditure_item_id", value);
+                }}
+                disabled={!draft.expenditure_category_id}
+              />
+              {errors.expenditure_item_id ? (
+                <FieldDescription className="text-status-rejected">
+                  {errors.expenditure_item_id}
+                </FieldDescription>
+              ) : (
+                <FieldDescription>
+                  Filtered by selected expenditure category.
+                </FieldDescription>
+              )}
+            </Field>
+          )}
+
+          <Field>
+            <FieldLabel htmlFor="aop-activity" className="flex items-center gap-2">
+              AOP Activity
+              <span className="text-xs font-normal text-muted-foreground">
+                Optional
+              </span>
+            </FieldLabel>
+            <Combobox
+              id="aop-activity"
+              options={aopOptions}
+              placeholder={
+                draft.mda_id && period
+                  ? aopOptions.length
+                    ? "Link to AOP activity"
+                    : "No AOP activities for this MDA / FY"
+                  : "Pick MDA and date first"
+              }
+              value={draft.aop_activity_id || undefined}
+              onValueChange={(value) => {
+                markTouched("aop_activity_id");
+                setField("aop_activity_id", value);
+              }}
+              disabled={
+                !draft.mda_id || !period || aopOptions.length === 0
+              }
+            />
+            {errors.aop_activity_id ? (
+              <FieldDescription className="text-status-rejected">
+                {errors.aop_activity_id}
+              </FieldDescription>
+            ) : (
+              <FieldDescription>
+                Filtered by selected MDA and fiscal year.
+              </FieldDescription>
+            )}
+          </Field>
+        </div>
+
+        {otherSelected ? (
+          <div className="rounded-md border border-status-pending/30 bg-status-pending-bg px-4 py-3 text-sm text-status-pending">
+            <strong className="font-semibold">Other selected.</strong>{" "}
+            Viewers will need a remark below to interpret this entry.
+          </div>
+        ) : null}
+      </FormSection>
+
+      {showPhcLocation ? (
+      <FormSection
+        eyebrow="04"
+        icon={HospitalIcon}
+        title="PHC location"
+        description={
+          facilityLocked
+            ? "This entry is locked to your assigned facility. The LGA is derived from the facility and cannot be changed."
+            : "Toggle PHC on for primary health care expenditure. PHC entries require both an LGA and a PHC-classified facility — non-PHC entries clear them automatically."
+        }
+      >
+        {facilityLocked ? (
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-2.5 rounded-md border border-status-approved/30 bg-status-approved-bg/60 px-4 py-3 text-sm text-status-approved">
+              <LockIcon aria-hidden="true" className="size-4 shrink-0" />
+              <span className="font-medium">
+                PHC expenditure — locked on for facility users.
+              </span>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="facility">PHC Facility</FieldLabel>
+                {facilities.length === 1 ? (
+                  <LockedValue
+                    label={facilities[0]?.name ?? "Assigned facility"}
+                  />
+                ) : (
+                  <Combobox
+                    id="facility"
+                    options={facilityOptions}
+                    placeholder="Select your facility"
+                    value={draft.facility_id || undefined}
+                    onValueChange={(value) => {
+                      markTouched("facility_id");
+                      setField("facility_id", value);
+                    }}
+                  />
+                )}
+                {errors.facility_id ? (
+                  <FieldDescription className="text-status-rejected">
+                    {errors.facility_id}
+                  </FieldDescription>
+                ) : (
+                  <FieldDescription>
+                    {facilities.length === 1
+                      ? "Locked to your assigned facility."
+                      : "Choose from the facilities assigned to you."}
+                  </FieldDescription>
+                )}
+              </Field>
+              <Field>
+                <FieldLabel>LGA</FieldLabel>
+                <LockedValue
+                  label={
+                    lgas.find((l) => l.id === draft.lga_id)?.name ??
+                    "Derived from facility"
+                  }
+                />
+                <FieldDescription>
+                  Derived from the selected facility. Read-only.
+                </FieldDescription>
+              </Field>
+            </div>
+          </div>
+        ) : (
+        <>
+        <div className="flex items-start justify-between gap-6 rounded-md border bg-muted/30 px-4 py-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium text-foreground">
+              This is PHC expenditure
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Routes the entry through the PHC LGA / facility validation chain.
+            </span>
+          </div>
+          <Switch
+            checked={draft.is_phc}
+            onCheckedChange={(checked) => {
+              markTouched("is_phc");
+              setField("is_phc", checked);
+            }}
+            label="PHC expenditure"
+          />
+        </div>
+
+        {draft.is_phc ? (
+          <div className="grid gap-6 md:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="lga">LGA</FieldLabel>
+              <Combobox
+                id="lga"
+                options={lgaOptions}
+                placeholder="Select LGA"
+                value={draft.lga_id || undefined}
+                onValueChange={(value) => {
+                  markTouched("lga_id");
+                  setField("lga_id", value);
+                }}
+              />
+              {errors.lga_id ? (
+                <FieldDescription className="text-status-rejected">
+                  {errors.lga_id}
+                </FieldDescription>
+              ) : (
+                <FieldDescription>
+                  Local Government Area where the facility operates.
+                </FieldDescription>
+              )}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="facility">PHC Facility</FieldLabel>
+              <Combobox
+                id="facility"
+                options={facilityOptions}
+                placeholder={
+                  draft.lga_id
+                    ? "Select PHC facility"
+                    : "Pick an LGA first"
+                }
+                value={draft.facility_id || undefined}
+                onValueChange={(value) => {
+                  markTouched("facility_id");
+                  setField("facility_id", value);
+                }}
+                disabled={!draft.lga_id}
+              />
+              {errors.facility_id ? (
+                <FieldDescription className="text-status-rejected">
+                  {errors.facility_id}
+                </FieldDescription>
+              ) : (
+                <FieldDescription>
+                  Filtered by LGA. Must be a PHC-classified facility.
+                </FieldDescription>
+              )}
+            </Field>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Non-PHC entry — LGA and facility are not required.
+          </p>
+        )}
+        </>
+        )}
+      </FormSection>
+      ) : null}
+
+      <FormSection
         eyebrow={notesSectionEyebrow}
         icon={StickyNoteIcon}
         title="Notes & remarks"
@@ -1510,7 +1517,6 @@ export function ExpenditureEntryForm({
     </form>
   );
 }
-
 function LockedValue({ label }: { label: string }) {
   return (
     <div className="flex h-11 items-center gap-2.5 rounded-md border border-dashed bg-muted/40 px-3.5 text-sm text-foreground">

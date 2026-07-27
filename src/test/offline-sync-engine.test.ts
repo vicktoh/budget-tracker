@@ -17,9 +17,9 @@ const store = vi.hoisted(() => {
 
 const dbMocks = vi.hoisted(() => ({
   insertFundingEntry: vi.fn(),
-  updatePendingFundingEntry: vi.fn(),
+  updateFundingEntry: vi.fn(),
   insertExpenditureEntry: vi.fn(),
-  updatePendingExpenditureEntry: vi.fn(),
+  updateExpenditureEntry: vi.fn(),
 }));
 
 vi.mock("@/lib/offline/idb", () => ({
@@ -30,12 +30,12 @@ vi.mock("@/lib/offline/idb", () => ({
 
 vi.mock("@/lib/db/funding-entries", () => ({
   insertFundingEntry: dbMocks.insertFundingEntry,
-  updatePendingFundingEntry: dbMocks.updatePendingFundingEntry,
+  updateFundingEntry: dbMocks.updateFundingEntry,
 }));
 
 vi.mock("@/lib/db/expenditure-entries", () => ({
   insertExpenditureEntry: dbMocks.insertExpenditureEntry,
-  updatePendingExpenditureEntry: dbMocks.updatePendingExpenditureEntry,
+  updateExpenditureEntry: dbMocks.updateExpenditureEntry,
 }));
 
 import {
@@ -148,6 +148,26 @@ describe("processQueue", () => {
     const queue = await getQueue();
     expect(queue).toHaveLength(2);
     expect(queue.every((op) => op.status === "pending")).toBe(true);
+  });
+
+  it("permanently fails a queued write when its quarter was published", async () => {
+    dbMocks.insertFundingEntry.mockRejectedValue({
+      code: "P0001",
+      message: "Quarter Q1 FY2026 has been published. New submissions are locked.",
+      hint: "quarter_published",
+    });
+    await enqueueOperation({
+      kind: "funding.create",
+      payload: fundingPayload("LATE"),
+      enteredBy: "user-1",
+    });
+
+    const result = await processQueue(CLIENT);
+
+    expect(result.failed).toBe(1);
+    const queue = await getQueue();
+    expect(queue[0]?.status).toBe("failed");
+    expect(queue[0]?.lastError).toMatch(/Budget Implementation Report was published/i);
   });
 
   it("does nothing without a client", async () => {

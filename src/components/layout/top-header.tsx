@@ -1,12 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { BellIcon, ChevronsUpDownIcon, LogOutIcon, UserCogIcon } from "lucide-react";
+import { ChevronsUpDownIcon, LogOutIcon, UserCogIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -14,7 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
-import { Tooltip } from "@/components/ui/tooltip";
+import { NotificationCenter } from "@/components/notifications/notification-center";
 import { getRoleLabel } from "@/lib/access";
 import { supabase } from "@/lib/supabase";
 import { navigationItems } from "@/components/layout/navigation";
@@ -76,16 +75,7 @@ export function TopHeader({ profile }: { profile: AppProfile }) {
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <Tooltip label="Notifications" side="bottom">
-          <Button
-            aria-label="Notifications"
-            size="icon"
-            type="button"
-            variant="ghost"
-          >
-            <BellIcon aria-hidden="true" />
-          </Button>
-        </Tooltip>
+        <NotificationCenter recipientId={profile.id} />
         <DropdownMenu
           align="end"
           trigger={

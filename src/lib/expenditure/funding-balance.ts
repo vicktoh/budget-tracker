@@ -9,7 +9,6 @@ type FundingEntryLike = {
   programme_area_id: string;
   funding_source_id: string;
   amount: number;
-  status: string;
 };
 
 type ExpenditureAllocationLike = {
@@ -19,11 +18,7 @@ type ExpenditureAllocationLike = {
   mda_id: string;
   fiscal_year: number;
   programme_area_id: string;
-  status: string;
 };
-
-const RECEIVED_STATUSES = new Set(["approved", "processed"]);
-const ALLOCATED_STATUSES = new Set(["pending", "approved", "processed"]);
 
 export function computeFundingPoolBalance(args: {
   mdaId: string;
@@ -44,8 +39,7 @@ export function computeFundingPoolBalance(args: {
         row.mda_id === args.mdaId &&
         row.fiscal_year === args.fiscalYear &&
         row.programme_area_id === args.programmeAreaId &&
-        row.funding_source_id === args.fundingSourceId &&
-        RECEIVED_STATUSES.has(row.status),
+        row.funding_source_id === args.fundingSourceId,
     )
     .reduce((sum, row) => sum + row.amount, 0);
 
@@ -56,7 +50,6 @@ export function computeFundingPoolBalance(args: {
         row.fiscal_year === args.fiscalYear &&
         row.programme_area_id === args.programmeAreaId &&
         row.funding_source_id === args.fundingSourceId &&
-        ALLOCATED_STATUSES.has(row.status) &&
         row.expenditure_entry_id !== args.excludeExpenditureEntryId,
     )
     .reduce((sum, row) => sum + row.amount, 0);

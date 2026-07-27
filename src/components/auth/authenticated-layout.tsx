@@ -18,7 +18,7 @@ const authenticatedRoutes: AppRoute[] = [
   "/mda",
   "/funding",
   "/expenditure",
-  "/review",
+  "/entries",
   "/admin/users",
   "/admin/reports",
   "/admin",

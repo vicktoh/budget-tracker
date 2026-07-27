@@ -1,4 +1,4 @@
-import { ReviewEntryDetailRoute } from "@/routes/review-entry-detail";
+import { redirect } from "next/navigation";
 
 export default async function ReviewExpenditureEntryPage({
   params,
@@ -6,5 +6,5 @@ export default async function ReviewExpenditureEntryPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <ReviewEntryDetailRoute mode={{ kind: "expenditure", entryId: id }} />;
+  redirect(`/entries/expenditure/${id}`);
 }

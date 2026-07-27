@@ -18,7 +18,6 @@ import {
   isFacilityUser,
   isMdaUser,
   isReviewer,
-  reviewableMdaIds,
   submittableMdaIds,
   viewableMdaIds,
 } from "@/lib/access";
@@ -105,22 +104,21 @@ describe("canAccessRoute", () => {
     expect(canAccessRoute(admin, "/funding")).toBe(true);
   });
 
-  it("reviewers reach review and report routes by role", () => {
-    // Route access to the review queue and reports is role-based; the reviewer
-    // role reviews every MDA. Admin-only surfaces stay closed.
+  it("viewers reach the entry register and report routes by role", () => {
     const reviewer = profile("reviewer");
     expect(canAccessRoute(reviewer, "/admin")).toBe(false);
     expect(canAccessRoute(reviewer, "/imports")).toBe(false);
-    expect(canAccessRoute(reviewer, "/review")).toBe(true);
+    expect(canAccessRoute(reviewer, "/entries")).toBe(true);
     expect(canAccessRoute(reviewer, "/admin/reports")).toBe(true);
     expect(canAccessRoute(reviewer, "/admin/reports/audit")).toBe(true);
     expect(canAccessRoute(reviewer, "/admin/reports/bir")).toBe(true);
+    expect(canAccessRoute(reviewer, "/mda")).toBe(true);
     expect(canAccessRoute(reviewer, "/funding")).toBe(false);
   });
 
   it("mda users without grants cannot reach entry routes", () => {
     const submitter = profile("mda_user");
-    expect(canAccessRoute(submitter, "/review")).toBe(false);
+    expect(canAccessRoute(submitter, "/entries")).toBe(true);
     expect(canAccessRoute(submitter, "/imports")).toBe(false);
     expect(canAccessRoute(submitter, "/funding")).toBe(false);
     expect(canAccessRoute(submitter, "/expenditure")).toBe(false);
@@ -133,20 +131,17 @@ describe("canAccessRoute", () => {
     ]);
     expect(canAccessRoute(submitter, "/funding")).toBe(true);
     expect(canAccessRoute(submitter, "/expenditure")).toBe(true);
-    expect(canAccessRoute(submitter, "/review")).toBe(false);
+    expect(canAccessRoute(submitter, "/entries")).toBe(true);
   });
 
-  it("mda users reach submit routes from grants but not role-gated review routes", () => {
-    // Submit access is grant-based; review-queue and report access is role-based,
-    // so an mda_user (even with a reviewer membership) does not get those routes.
+  it("mda users reach submit routes from grants and the shared register", () => {
     const hybrid = profile("mda_user", [
       membership(MDA_A, "funding_submitter"),
       membership(MDA_B, "expenditure_submitter"),
-      membership(MDA_C, "reviewer"),
     ]);
     expect(canAccessRoute(hybrid, "/funding")).toBe(true);
     expect(canAccessRoute(hybrid, "/expenditure")).toBe(true);
-    expect(canAccessRoute(hybrid, "/review")).toBe(false);
+    expect(canAccessRoute(hybrid, "/entries")).toBe(true);
     expect(canAccessRoute(hybrid, "/admin/reports")).toBe(false);
   });
 
@@ -155,7 +150,7 @@ describe("canAccessRoute", () => {
     expect(canAccessRoute(facility, "/expenditure")).toBe(true);
     expect(canAccessRoute(facility, "/settings")).toBe(true);
     expect(canAccessRoute(facility, "/funding")).toBe(false);
-    expect(canAccessRoute(facility, "/review")).toBe(false);
+    expect(canAccessRoute(facility, "/entries")).toBe(true);
     expect(canAccessRoute(facility, "/admin")).toBe(false);
     expect(canAccessRoute(facility, "/admin/users")).toBe(false);
     expect(canAccessRoute(facility, "/mda")).toBe(false);
@@ -201,8 +196,8 @@ describe("getDefaultPathForProfile", () => {
     expect(getDefaultPathForProfile(profile(role))).toBe(expected);
   });
 
-  it("routes reviewers to the review queue by role", () => {
-    expect(getDefaultPathForProfile(profile("reviewer"))).toBe("/review");
+  it("routes viewers to the statewide dashboard by role", () => {
+    expect(getDefaultPathForProfile(profile("reviewer"))).toBe("/mda");
   });
 
   it("routes submit-capable users to the MDA dashboard", () => {
@@ -259,9 +254,8 @@ describe("facility-user capability helpers", () => {
     expect(viewableMdaIds(singleFacility)).toEqual([MDA_A]);
   });
 
-  it("never grants review access to facility users", () => {
+  it("never grants review authority to facility users", () => {
     expect(canReviewMda(singleFacility, MDA_A)).toBe(false);
-    expect(reviewableMdaIds(singleFacility)).toEqual([]);
   });
 
   it("returns no MDA scope for unassigned facility users", () => {
@@ -340,22 +334,19 @@ describe("granular MDA-scoped capability helpers", () => {
     expect(canSubmitExpenditureForMda(submitter, MDA_B)).toBe(true);
     expect(canReviewMda(submitter, MDA_A)).toBe(false);
     expect(canReviewMda(submitter, MDA_C)).toBe(false);
-    expect(reviewableMdaIds(submitter)).toEqual([]);
     expect(fundingSubmittableMdaIds(submitter)).toEqual([MDA_A]);
     expect(expenditureSubmittableMdaIds(submitter)).toEqual([MDA_B]);
   });
 
-  it("computes submittable / reviewable / viewable MDA ID sets", () => {
+  it("computes submittable and viewable MDA ID sets", () => {
     expect(fundingSubmittableMdaIds(dualLedger).sort()).toEqual([MDA_A, MDA_B]);
     expect(expenditureSubmittableMdaIds(dualLedger).sort()).toEqual([
       MDA_A,
       MDA_B,
     ]);
     expect(submittableMdaIds(dualLedger).sort()).toEqual([MDA_A, MDA_B]);
-    expect(reviewableMdaIds(dualLedger)).toEqual([]);
     expect(viewableMdaIds(dualLedger).sort()).toEqual([MDA_A, MDA_B]);
     expect(submittableMdaIds(admin)).toEqual([]);
-    expect(reviewableMdaIds(admin)).toEqual([]);
   });
 
   it("flags single vs multi MDA membership", () => {

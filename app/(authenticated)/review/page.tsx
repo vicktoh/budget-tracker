@@ -1,5 +1,5 @@
-import { ReviewRoute } from "@/routes/review";
+import { redirect } from "next/navigation";
 
 export default function ReviewPage() {
-  return <ReviewRoute />;
+  redirect("/entries");
 }

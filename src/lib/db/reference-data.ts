@@ -108,12 +108,6 @@ export async function listPaymentMethods(
   return unwrap<Tables<"payment_methods">>(await query);
 }
 
-export async function listEntryStatuses(client: Client) {
-  return unwrap<Tables<"entry_statuses">>(
-    await client.from("entry_statuses").select("*").eq("active", true),
-  );
-}
-
 export async function listLgas(
   client: Client,
   options: ActiveReferenceOptions = {},

@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EntryReviewDetail } from "@/components/review/entry-review-detail";
+import { EntryDetail } from "@/components/entries/entry-detail";
 import { FundingEntryForm } from "@/components/funding/funding-entry-form";
 import { AdminUsersRoute } from "@/routes/admin-users";
 
@@ -36,68 +36,66 @@ afterEach(() => {
   cleanup();
 });
 
-const reviewEntry = {
+const registerEntry = {
   id: "entry-1",
   publicId: "FND-001",
-  status: "pending" as const,
   transactionDate: "2026-06-01",
   fiscalYear: 2026,
   quarter: 2,
   mdaLabel: "ALP",
   amount: 1000,
-  enteredBy: "submitter-1",
 };
 
-const reviewSections = [{ label: "MDA", value: "MDA Alpha" }];
+const entrySections = [{ label: "MDA", value: "MDA Alpha" }];
 
-describe("EntryReviewDetail reviewed-entry edit affordance", () => {
-  it("hides edit action for reviewers", () => {
+describe("EntryDetail publication amendment affordance", () => {
+  it("contains no approve, reject, or process controls for viewers", () => {
     render(
-      <EntryReviewDetail
+      <EntryDetail
         entryType="funding_entry"
-        entry={reviewEntry}
-        sections={reviewSections}
+        entry={registerEntry}
+        sections={entrySections}
         remarks={null}
-        canReview
-        canEditReviewed={false}
-        reviewedEditHref="/funding/entry-1/edit"
+        canAmend={false}
+        editHref="/funding/entry-1/edit"
         currentUserId="reviewer-1"
         comments={[]}
         attachments={[]}
         auditEvents={[]}
-        loading={false}
+        amendments={[]}
+        publishedVersion={1}
         loadError={null}
         onRefresh={() => undefined}
       />,
     );
 
-    expect(screen.queryByRole("link", { name: /edit with reason/i })).toBeNull();
-    expect(screen.getByRole("button", { name: /approve/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /approve|reject|process/i })).toBeNull();
+    expect(screen.queryByRole("link", { name: /amend published/i })).toBeNull();
   });
 
-  it("shows edit action for admins on reviewed entries", () => {
+  it("shows the published amendment action only when authorized", () => {
     render(
-      <EntryReviewDetail
+      <EntryDetail
         entryType="funding_entry"
-        entry={{ ...reviewEntry, status: "approved" }}
-        sections={reviewSections}
+        entry={registerEntry}
+        sections={entrySections}
         remarks={null}
-        canReview
-        canEditReviewed
-        reviewedEditHref="/funding/entry-1/edit"
+        canAmend
+        editHref="/funding/entry-1/edit"
         currentUserId="admin-1"
         comments={[]}
         attachments={[]}
         auditEvents={[]}
-        loading={false}
+        amendments={[]}
+        publishedVersion={1}
         loadError={null}
         onRefresh={() => undefined}
       />,
     );
 
     expect(
-      screen.getByRole("link", { name: /edit with reason/i }),
-    ).toHaveAttribute("href", "/funding/entry-1/edit");
+      screen.getByRole("link", { name: /amend published/i }),
+    ).toHaveAttribute("href", "/funding/entry-1/edit?amend=1");
   });
 });
 

@@ -79,7 +79,6 @@ type WriteBuilder = {
 
 export type ListExpenditureEntriesOptions = {
   mdaIds?: string[];
-  status?: Tables<"expenditure_entries">["status"];
   fiscalYear?: number;
   quarter?: number;
   dateFrom?: string;
@@ -110,9 +109,6 @@ export async function listExpenditureEntries(
 
   if (options.mdaIds && options.mdaIds.length > 0) {
     query = query.in("mda_id", options.mdaIds);
-  }
-  if (options.status) {
-    query = query.eq("status", options.status);
   }
   if (options.fiscalYear) {
     query = query.eq("fiscal_year", options.fiscalYear);
@@ -169,7 +165,6 @@ export async function insertExpenditureEntry(
     payment_method_id: values.payment_method_id,
     remarks: values.remarks,
     entered_by: enteredBy,
-    status: "pending",
   };
   const builder = client.from("expenditure_entries") as unknown as WriteBuilder;
   const { data, error } = await builder
@@ -191,7 +186,7 @@ export async function insertExpenditureEntry(
   return saved;
 }
 
-export async function updatePendingExpenditureEntry(
+export async function updateExpenditureEntry(
   client: Client,
   id: string,
   values: ValidatedExpenditureEntry,
@@ -216,7 +211,6 @@ export async function updatePendingExpenditureEntry(
   const { data, error } = await builder
     .update(updateRow)
     .eq("id", id)
-    .eq("status", "pending")
     .select(SELECT_WITH_RELATIONS)
     .single();
   if (error) throw error;
@@ -231,7 +225,7 @@ export async function updatePendingExpenditureEntry(
 
 /**
  * Committed spend against an approved budget line, for the form's soft
- * remaining-balance warning. Counts every non-rejected entry bound to the line
+ * remaining-balance warning. Counts every active entry bound to the line
  * (optionally excluding the entry being edited) and returns it alongside the
  * line's approved amount.
  */
@@ -249,8 +243,7 @@ export async function getApprovedBudgetLineBalance(
   let entriesQuery = client
     .from("expenditure_entries")
     .select("amount")
-    .eq("approved_budget_line_id", lineId)
-    .neq("status", "rejected");
+    .eq("approved_budget_line_id", lineId);
   if (excludeEntryId) {
     entriesQuery = entriesQuery.neq("id", excludeEntryId);
   }
@@ -284,13 +277,12 @@ export async function listExpenditureAllocationBalances(
     mda_id: string;
     fiscal_year: number;
     programme_area_id: string;
-    status: Tables<"expenditure_entries">["status"];
   }>
 > {
   let query = client
     .from("expenditure_funding_allocations")
     .select(
-      "funding_source_id, amount, expenditure_entries!inner(id, mda_id, fiscal_year, programme_area_id, status)",
+      "funding_source_id, amount, expenditure_entries!inner(id, mda_id, fiscal_year, programme_area_id)",
     );
 
   if (mdaIds && mdaIds.length > 0) {
@@ -308,7 +300,6 @@ export async function listExpenditureAllocationBalances(
       mda_id: string;
       fiscal_year: number;
       programme_area_id: string;
-      status: Tables<"expenditure_entries">["status"];
     };
   };
 
@@ -319,6 +310,5 @@ export async function listExpenditureAllocationBalances(
     mda_id: row.expenditure_entries.mda_id,
     fiscal_year: row.expenditure_entries.fiscal_year,
     programme_area_id: row.expenditure_entries.programme_area_id,
-    status: row.expenditure_entries.status,
   }));
 }

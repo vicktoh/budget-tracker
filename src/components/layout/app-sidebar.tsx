@@ -43,7 +43,7 @@ export function AppSidebar({
     <aside
       aria-label="Primary navigation"
       className={cn(
-        "hidden min-h-screen shrink-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex md:flex-col",
+        "sticky top-0 hidden h-screen shrink-0 self-start border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 md:flex md:flex-col",
         collapsed ? "w-16" : "w-64",
       )}
     >

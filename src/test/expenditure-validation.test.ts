@@ -468,12 +468,13 @@ describe("mapExpenditureEntryError", () => {
 
 describe("canEditExpenditureEntry", () => {
   const baseEntry = {
-    status: "pending" as const,
     entered_by: "user-1",
     mda_id: MDA_A,
+    fiscal_year: 2026,
+    quarter: 1,
   };
 
-  it("allows submitter to edit own pending entry on assigned MDA", () => {
+  it("allows submitter to edit an unpublished own entry on assigned MDA", () => {
     expect(
       canEditExpenditureEntry(baseEntry, {
         user_id: "user-1",
@@ -483,14 +484,15 @@ describe("canEditExpenditureEntry", () => {
     ).toBe(true);
   });
 
-  it("blocks edit once the entry is approved", () => {
+  it("blocks edit once the entry quarter is published", () => {
     expect(
       canEditExpenditureEntry(
-        { ...baseEntry, status: "approved" },
+        baseEntry,
         {
           user_id: "user-1",
           submittable_mda_ids: [MDA_A],
           is_admin: false,
+          published_periods: [{ fiscalYear: 2026, quarter: 1 }],
         },
       ),
     ).toBe(false);

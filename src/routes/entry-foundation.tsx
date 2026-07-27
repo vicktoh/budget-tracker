@@ -64,7 +64,7 @@ export function EntryFoundationRoute({ type }: { type: "funding" | "expenditure"
                 <Select id="status" disabled>
                   <option>Pending</option>
                 </Select>
-                <FieldDescription>New submissions enter the pending queue.</FieldDescription>
+                <FieldDescription>New submissions are reportable once recorded.</FieldDescription>
               </Field>
             </div>
             <Field>

@@ -13,10 +13,32 @@
 export type AppRoleSlug = "admin" | "reviewer" | "mda_user" | "facility_user";
 export type MembershipRoleSlug =
   | "funding_submitter"
-  | "expenditure_submitter"
-  | "reviewer";
-export type EntryStatusSlug = "pending" | "approved" | "processed" | "rejected";
+  | "expenditure_submitter";
 export type EntryType = "funding_entry" | "expenditure_entry";
+export type FiscalQuarter = 1 | 2 | 3 | 4;
+export type FiscalPeriod = { fiscalYear: number; quarter: FiscalQuarter };
+export type BirPublication = {
+  id: string;
+  fiscal_year: number;
+  quarter: FiscalQuarter;
+  version: number;
+  published_by: string;
+  published_at: string;
+  supersedes_publication_id: string | null;
+  amendment_reason: string | null;
+};
+export type BirAmendment = {
+  id: string;
+  entry_type: EntryType;
+  entry_id: string;
+  source_publication_id: string;
+  resulting_publication_id: string;
+  reason: string;
+  before_values: Record<string, unknown>;
+  after_values: Record<string, unknown>;
+  amended_by: string;
+  amended_at: string;
+};
 
 type ISODate = string;
 type ISOTimestamp = string;
@@ -123,12 +145,6 @@ export type Database = {
         active: boolean;
       }>;
       payment_methods: ReferenceTable;
-      entry_statuses: BaseRow<{
-        slug: EntryStatusSlug;
-        name: string;
-        description: string;
-        active: boolean;
-      }>;
       lgas: BaseRow<{ id: string; name: string; active: boolean }>;
       facilities: BaseRow<{
         id: string;
@@ -188,10 +204,7 @@ export type Database = {
           amount: Numeric;
           reference_no: string;
           remarks: string | null;
-          status: EntryStatusSlug;
           entered_by: string;
-          approved_by: string | null;
-          approved_at: ISOTimestamp | null;
           created_at: ISOTimestamp;
           updated_at: ISOTimestamp;
         };
@@ -205,10 +218,7 @@ export type Database = {
           amount: Numeric;
           reference_no: string;
           remarks?: string | null;
-          status?: EntryStatusSlug;
           entered_by: string;
-          approved_by?: string | null;
-          approved_at?: ISOTimestamp | null;
           created_at?: ISOTimestamp;
           updated_at?: ISOTimestamp;
         };
@@ -220,9 +230,6 @@ export type Database = {
           amount: Numeric;
           reference_no: string;
           remarks: string | null;
-          status: EntryStatusSlug;
-          approved_by: string | null;
-          approved_at: ISOTimestamp | null;
         }>;
       };
       expenditure_entries: {
@@ -245,10 +252,7 @@ export type Database = {
           voucher_ref_no: string;
           payment_method_id: string;
           remarks: string | null;
-          status: EntryStatusSlug;
           entered_by: string;
-          approved_by: string | null;
-          approved_at: ISOTimestamp | null;
           created_at: ISOTimestamp;
           updated_at: ISOTimestamp;
         };
@@ -269,10 +273,7 @@ export type Database = {
           voucher_ref_no: string;
           payment_method_id: string;
           remarks?: string | null;
-          status?: EntryStatusSlug;
           entered_by: string;
-          approved_by?: string | null;
-          approved_at?: ISOTimestamp | null;
           created_at?: ISOTimestamp;
           updated_at?: ISOTimestamp;
         };
@@ -291,9 +292,6 @@ export type Database = {
           voucher_ref_no: string;
           payment_method_id: string;
           remarks: string | null;
-          status: EntryStatusSlug;
-          approved_by: string | null;
-          approved_at: ISOTimestamp | null;
         }>;
       };
       expenditure_funding_allocations: {
@@ -318,6 +316,36 @@ export type Database = {
           funding_source_id: string;
           amount: Numeric;
         }>;
+      };
+      budget_implementation_report_publications: {
+        Row: BirPublication;
+        Insert: never;
+        Update: never;
+      };
+      budget_implementation_report_amendments: {
+        Row: BirAmendment;
+        Insert: never;
+        Update: never;
+      };
+      archived_ledger_entries: {
+        Row: {
+          id: string;
+          entry_type: EntryType;
+          original_entry_id: string;
+          public_id: string | null;
+          fiscal_year: number;
+          quarter: FiscalQuarter;
+          mda_id: string;
+          archive_reason: string;
+          entry_snapshot: Record<string, unknown>;
+          comments_snapshot: unknown[];
+          audit_snapshot: unknown[];
+          attachments_snapshot: unknown[];
+          archived_at: ISOTimestamp;
+          archived_by: string | null;
+        };
+        Insert: never;
+        Update: never;
       };
       report_publishers: {
         Row: {
@@ -407,12 +435,10 @@ export type Database = {
           entry_type: EntryType;
           entry_id: string;
           body: string;
-          comment_type:
-            | "general"
-            | "clarification"
-            | "rejection_reason"
-            | "approval_note";
+          comment_type: "general" | "clarification";
           author_id: string;
+          author_name: string;
+          author_role: AppRoleSlug;
           created_at: ISOTimestamp;
         };
         Insert: {
@@ -420,12 +446,10 @@ export type Database = {
           entry_type: EntryType;
           entry_id: string;
           body: string;
-          comment_type?:
-            | "general"
-            | "clarification"
-            | "rejection_reason"
-            | "approval_note";
+          comment_type?: "general" | "clarification";
           author_id: string;
+          author_name?: string;
+          author_role?: AppRoleSlug;
           created_at?: ISOTimestamp;
         };
         Update: Partial<{ body: string }>;
@@ -777,24 +801,11 @@ export type Database = {
       };
     };
     Functions: {
-      review_entry: {
-        Args: {
-          p_entry_type: EntryType;
-          p_entry_id: string;
-          p_action: "approve" | "reject" | "process";
-          p_reason?: string | null;
-          p_comment?: string | null;
-        };
-        Returns: void;
+      publish_budget_implementation_report: {
+        Args: { p_fiscal_year: number; p_quarter: FiscalQuarter };
+        Returns: BirPublication;
       };
-      resubmit_entry: {
-        Args: {
-          p_entry_type: EntryType;
-          p_entry_id: string;
-        };
-        Returns: void;
-      };
-      update_reviewed_funding_entry: {
+      correct_unpublished_funding_entry: {
         Args: {
           p_id: string;
           p_reason: string;
@@ -808,7 +819,7 @@ export type Database = {
         };
         Returns: void;
       };
-      update_reviewed_expenditure_entry: {
+      correct_unpublished_expenditure_entry: {
         Args: {
           p_id: string;
           p_reason: string;
@@ -828,6 +839,41 @@ export type Database = {
           p_allocations?: unknown;
         };
         Returns: void;
+      };
+      amend_published_funding_entry: {
+        Args: {
+          p_id: string;
+          p_reason: string;
+          p_transaction_date: ISODate;
+          p_mda_id: string;
+          p_programme_area_id: string;
+          p_funding_source_id: string;
+          p_amount: Numeric;
+          p_reference_no: string;
+          p_remarks: string | null;
+        };
+        Returns: BirPublication;
+      };
+      amend_published_expenditure_entry: {
+        Args: {
+          p_id: string;
+          p_reason: string;
+          p_transaction_date: ISODate;
+          p_mda_id: string;
+          p_programme_area_id: string;
+          p_expenditure_category_id: string;
+          p_expenditure_item_id: string | null;
+          p_aop_activity_id: string | null;
+          p_is_phc: boolean;
+          p_lga_id: string | null;
+          p_facility_id: string | null;
+          p_amount: Numeric;
+          p_voucher_ref_no: string;
+          p_payment_method_id: string;
+          p_remarks: string | null;
+          p_allocations: unknown;
+        };
+        Returns: BirPublication;
       };
       replace_expenditure_funding_allocations: {
         Args: {

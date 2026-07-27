@@ -33,10 +33,3 @@ export interface BadgeProps
 export function Badge({ className, variant, ...props }: BadgeProps) {
   return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
-
-export type StatusVariant = "pending" | "approved" | "processed" | "rejected";
-
-export function StatusBadge({ status }: { status: StatusVariant }) {
-  const label = status.charAt(0).toUpperCase() + status.slice(1);
-  return <Badge variant={status}>{label}</Badge>;
-}

@@ -34,7 +34,6 @@ type WriteBuilder = {
 
 export type ListFundingEntriesOptions = {
   mdaIds?: string[];
-  status?: Tables<"funding_entries">["status"];
   fiscalYear?: number;
   quarter?: number;
   dateFrom?: string;
@@ -53,9 +52,6 @@ export async function listFundingEntries(
 
   if (options.mdaIds && options.mdaIds.length > 0) {
     query = query.in("mda_id", options.mdaIds);
-  }
-  if (options.status) {
-    query = query.eq("status", options.status);
   }
   if (options.fiscalYear) {
     query = query.eq("fiscal_year", options.fiscalYear);
@@ -105,7 +101,6 @@ export async function insertFundingEntry(
     reference_no: values.reference_no,
     remarks: values.remarks,
     entered_by: enteredBy,
-    status: "pending",
   };
   // The hand-authored Database types don't yet describe the table
   // `Relationships`, which causes supabase-js v2 to infer Insert as `never`
@@ -121,7 +116,7 @@ export async function insertFundingEntry(
   return data;
 }
 
-export async function updatePendingFundingEntry(
+export async function updateFundingEntry(
   client: Client,
   id: string,
   values: ValidatedFundingEntry,
@@ -139,7 +134,6 @@ export async function updatePendingFundingEntry(
   const { data, error } = await builder
     .update(updateRow)
     .eq("id", id)
-    .eq("status", "pending")
     .select(SELECT_WITH_RELATIONS)
     .single();
   if (error) throw error;

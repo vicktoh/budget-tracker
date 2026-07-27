@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Kano Health Financing Flow Dashboard",
     short_name: "KHFF Dashboard",
     description:
-      "Capture funding and expenditure entries, review submissions, and track health-financing flows — works offline and syncs on reconnect.",
+      "Capture funding and expenditure entries, discuss records, and track health-financing flows — works offline and syncs on reconnect.",
     start_url: "/",
     scope: "/",
     display: "standalone",

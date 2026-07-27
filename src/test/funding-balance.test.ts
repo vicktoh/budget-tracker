@@ -22,7 +22,6 @@ describe("computeFundingPoolBalance", () => {
           programme_area_id: PA,
           funding_source_id: FS,
           amount: 1_000_000,
-          status: "approved",
         },
         {
           mda_id: MDA,
@@ -30,7 +29,6 @@ describe("computeFundingPoolBalance", () => {
           programme_area_id: PA,
           funding_source_id: FS,
           amount: 500_000,
-          status: "pending",
         },
       ],
       expenditureAllocations: [
@@ -41,15 +39,14 @@ describe("computeFundingPoolBalance", () => {
           programme_area_id: PA,
           funding_source_id: FS,
           amount: 300_000,
-          status: "approved",
         },
       ],
     });
 
     expect(pool).toEqual({
-      received_amount: 1_000_000,
+      received_amount: 1_500_000,
       allocated_amount: 300_000,
-      available_amount: 700_000,
+      available_amount: 1_200_000,
     });
   });
 });
@@ -68,7 +65,6 @@ describe("evaluateFundingAllocationWarnings", () => {
           programme_area_id: PA,
           funding_source_id: FS,
           amount: 500_000,
-          status: "processed",
         },
       ],
       expenditureAllocations: [],

@@ -9,7 +9,7 @@ export type AppRoute =
   | "/mda"
   | "/funding"
   | "/expenditure"
-  | "/review"
+  | "/entries"
   | "/admin"
   | "/admin/reports"
   | "/admin/reports/cso"
@@ -29,7 +29,7 @@ const routeRoles: Record<AppRoute, AppRole[]> = {
   "/mda": ["mda_user", "reviewer", "admin"],
   "/funding": ["mda_user", "admin"],
   "/expenditure": ["mda_user", "admin", "facility_user"],
-  "/review": ["reviewer", "admin"],
+  "/entries": ["mda_user", "reviewer", "admin", "facility_user"],
   "/admin": ["admin"],
   "/admin/reports": ["admin", "reviewer"],
   "/admin/reports/cso": ["admin", "reviewer"],
@@ -140,19 +140,6 @@ export function submittableMdaIds(profile: ProfileForCapability): string[] {
   );
 }
 
-/** The set of MDA IDs a user can review on (excluding admins, who are global). */
-export function reviewableMdaIds(profile: ProfileForCapability): string[] {
-  if (!profile) return [];
-  if (isAdmin(profile)) return [];
-  const ids = new Set<string>();
-  for (const membership of profile.memberships) {
-    if (membership.membership_role === "reviewer") {
-      ids.add(membership.mda_id);
-    }
-  }
-  return Array.from(ids);
-}
-
 /** Every MDA ID a user has any kind of membership in. */
 export function viewableMdaIds(profile: ProfileForCapability): string[] {
   if (!profile) return [];
@@ -173,8 +160,7 @@ export function hasMdaScopedGrants(profile: ProfileForCapability): boolean {
   if (!profile || isAdmin(profile) || isFacilityUser(profile)) return false;
   return (
     fundingSubmittableMdaIds(profile).length > 0 ||
-    expenditureSubmittableMdaIds(profile).length > 0 ||
-    reviewableMdaIds(profile).length > 0
+    expenditureSubmittableMdaIds(profile).length > 0
   );
 }
 
@@ -186,7 +172,7 @@ export function getDefaultPathForProfile(profile: ProfileForCapability) {
   const canSubmit = submittableMdaIds(profile).length > 0;
 
   if (canSubmit) return "/mda";
-  if (isReviewer(profile)) return "/review";
+  if (isReviewer(profile)) return "/mda";
 
   return "/mda";
 }
@@ -206,10 +192,15 @@ export function canAccessRoute(
         isFacilityUser(profile) ||
         expenditureSubmittableMdaIds(profile).length > 0
       );
-    case "/review":
-      return isReviewer(profile);
+    case "/entries":
+      return true;
     case "/mda":
-      return !isFacilityUser(profile) && viewableMdaIds(profile).length > 0;
+      // Viewers have statewide oversight by role and intentionally carry no
+      // per-MDA memberships. MDA users still need at least one scoped grant.
+      return (
+        isReviewer(profile) ||
+        (!isFacilityUser(profile) && viewableMdaIds(profile).length > 0)
+      );
     case "/admin/reports":
     case "/admin/reports/cso":
     case "/admin/reports/bir":

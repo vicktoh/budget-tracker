@@ -1,11 +1,11 @@
 import type { TypedSupabaseClient } from "@/lib/supabase/client";
 import {
   insertFundingEntry,
-  updatePendingFundingEntry,
+  updateFundingEntry,
 } from "@/lib/db/funding-entries";
 import {
   insertExpenditureEntry,
-  updatePendingExpenditureEntry,
+  updateExpenditureEntry,
 } from "@/lib/db/expenditure-entries";
 import type { ValidatedFundingEntry } from "@/lib/funding/validation";
 import type { ValidatedExpenditureEntry } from "@/lib/expenditure/validation";
@@ -119,14 +119,14 @@ async function runOperation(
       return;
     case "funding.update":
       if (!op.targetEntryId) throw new Error("Missing target entry id.");
-      await updatePendingFundingEntry(client, op.targetEntryId, op.payload);
+      await updateFundingEntry(client, op.targetEntryId, op.payload);
       return;
     case "expenditure.create":
       await insertExpenditureEntry(client, op.payload, op.enteredBy);
       return;
     case "expenditure.update":
       if (!op.targetEntryId) throw new Error("Missing target entry id.");
-      await updatePendingExpenditureEntry(client, op.targetEntryId, op.payload);
+      await updateExpenditureEntry(client, op.targetEntryId, op.payload);
       return;
     default: {
       const exhaustive: never = op;
@@ -174,8 +174,10 @@ export async function processQueue(
         notify();
       } catch (error) {
         const errorClass = classifySyncError(error);
-        const message =
-          (error as { message?: string }).message ?? "Sync failed.";
+        const rawMessage = (error as { message?: string }).message ?? "Sync failed.";
+        const message = /quarter q\d fy\d+ has been published|quarter_published/i.test(rawMessage)
+          ? "This quarter's Budget Implementation Report was published before this change synced. The queued change is permanently locked."
+          : rawMessage;
         await putOperation(markAttemptFailure(op, errorClass, message));
         notify();
         if (errorClass === "retry") {

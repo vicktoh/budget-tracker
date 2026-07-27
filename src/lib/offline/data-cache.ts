@@ -27,8 +27,26 @@ export async function readThroughCache<T>(
   } catch (error) {
     const cached = await getCachedData<T>(key).catch(() => null);
     if (cached) {
+      // Keep the underlying live-read failure visible during diagnostics. The
+      // cached result keeps the screen usable, but must not hide backend or
+      // schema errors behind an apparently offline state.
+      console.warn(
+        `Live read failed; using cached data for "${key}": ${describeCacheFallbackError(error)}`,
+      );
       return { data: cached.data, fromCache: true, cachedAt: cached.cachedAt };
     }
     throw error;
   }
+}
+
+function describeCacheFallbackError(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  if (typeof error === "object" && error !== null) {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "Unknown live-read error";
+    }
+  }
+  return String(error);
 }

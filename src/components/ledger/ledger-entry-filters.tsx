@@ -7,15 +7,6 @@ import type { Tables } from "@/lib/db/types";
 import type { LedgerEntryListFilters } from "@/lib/ledger/entry-list-filters";
 import { cn } from "@/lib/utils";
 
-const STATUS_OPTIONS: { value: LedgerEntryListFilters["status"]; label: string }[] =
-  [
-    { value: "all", label: "All statuses" },
-    { value: "pending", label: "Pending" },
-    { value: "approved", label: "Approved" },
-    { value: "processed", label: "Processed" },
-    { value: "rejected", label: "Rejected" },
-  ];
-
 const QUARTER_OPTIONS: {
   value: LedgerEntryListFilters["quarter"];
   label: string;
@@ -75,7 +66,7 @@ export function LedgerEntryFilters({
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
-      <div className="grid gap-3 md:grid-cols-6">
+      <div className="grid gap-3 md:grid-cols-5">
         <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground md:col-span-2">
           Search
           <Input
@@ -83,21 +74,6 @@ export function LedgerEntryFilters({
             value={filters.search}
             onChange={(event) => update("search", event.target.value)}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
-          Status
-          <Select
-            value={filters.status}
-            onChange={(event) =>
-              update("status", event.target.value as LedgerEntryListFilters["status"])
-            }
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
         </label>
         <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
           MDA
