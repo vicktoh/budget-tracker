@@ -1,12 +1,21 @@
-import { BellIcon } from "lucide-react";
-import { Empty } from "@/components/ui/empty";
+"use client";
+
+import { NotificationItems } from "@/components/notifications/notification-items";
+import { useNotifications } from "@/components/notifications/use-notifications";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export function NotificationList() {
+  const { profile } = useAuth();
+  const state = useNotifications(profile?.id ?? "");
+
+  if (!profile) return null;
+
   return (
-    <Empty
-      description="Workflow notifications for submitted, approved, rejected, and processed entries will appear here."
-      icon={BellIcon}
-      title="No notifications"
+    <NotificationItems
+      error={state.error}
+      loading={state.loading}
+      notifications={state.notifications}
+      onMarkRead={state.markRead}
     />
   );
 }
