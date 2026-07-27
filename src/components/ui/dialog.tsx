@@ -11,6 +11,7 @@ type DialogProps = {
   title: string;
   description?: string;
   children: React.ReactNode;
+  contentClassName?: string;
 };
 
 export function Dialog({
@@ -19,6 +20,7 @@ export function Dialog({
   title,
   description,
   children,
+  contentClassName,
 }: DialogProps) {
   React.useEffect(() => {
     if (!open) return;
@@ -43,7 +45,10 @@ export function Dialog({
         aria-describedby={description ? "dialog-description" : undefined}
         aria-labelledby="dialog-title"
         aria-modal="true"
-        className="w-full max-w-lg rounded-lg border bg-popover p-5 text-popover-foreground shadow-lg"
+        className={cn(
+          "max-h-[calc(100vh-2rem)] w-full max-w-lg overflow-y-auto rounded-lg border bg-popover p-5 text-popover-foreground shadow-lg",
+          contentClassName,
+        )}
         role="dialog"
       >
         <div className="flex items-start justify-between gap-4">

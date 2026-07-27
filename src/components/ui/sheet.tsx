@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export function Sheet({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-40 flex">
       <div
         aria-hidden="true"
@@ -80,6 +81,7 @@ export function Sheet({
         <div className="flex-1 overflow-y-auto p-5">{children}</div>
         {footer ? <div className="border-t p-5">{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

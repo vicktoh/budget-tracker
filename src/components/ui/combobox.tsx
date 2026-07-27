@@ -10,6 +10,7 @@ export type ComboboxOption = {
   value: string;
   label: string;
   description?: string;
+  searchTerms?: string[];
   disabled?: boolean;
 };
 
@@ -43,7 +44,9 @@ export function Combobox({
     if (!query.trim()) return options;
     const q = query.toLowerCase();
     return options.filter((option) =>
-      option.label.toLowerCase().includes(q),
+      [option.label, option.description, ...(option.searchTerms ?? [])]
+        .filter(Boolean)
+        .some((term) => term!.toLowerCase().includes(q)),
     );
   }, [options, query]);
 
