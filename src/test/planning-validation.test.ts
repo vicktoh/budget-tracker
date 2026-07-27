@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   emptyAopActivityDraft,
   emptyApprovedBudgetDraft,
+  emptyApprovedBudgetLineDraft,
   mapAopActivityWriteError,
+  mapBudgetLineWriteError,
   mapBudgetWriteError,
   previewBudgetTotals,
   validateAopActivity,
   validateApprovedBudget,
+  validateApprovedBudgetLine,
 } from "@/lib/planning/validation";
 import {
   defaultFiscalYearOptions,
@@ -181,6 +184,82 @@ describe("mapBudgetWriteError", () => {
       message: "permission denied",
     });
     expect(mapped.message).toBe("permission denied");
+  });
+});
+
+describe("validateApprovedBudgetLine", () => {
+  function draft(
+    overrides: Partial<ReturnType<typeof emptyApprovedBudgetLineDraft>> = {},
+  ) {
+    return { ...emptyApprovedBudgetLineDraft(), ...overrides };
+  }
+
+  it("requires the classification, budget code, title, and amount", () => {
+    const result = validateApprovedBudgetLine(
+      draft({ fiscal_year: "", approved_amount: "" }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.fiscal_year).toBeTruthy();
+      expect(result.errors.mda_id).toBeTruthy();
+      expect(result.errors.budget_class).toBeTruthy();
+      expect(result.errors.economic_code).toBeTruthy();
+      expect(result.errors.economic_description).toBeTruthy();
+      expect(result.errors.approved_amount).toBeTruthy();
+    }
+  });
+
+  it("normalises a valid line and keeps optional codes nullable", () => {
+    const result = validateApprovedBudgetLine(
+      draft({
+        fiscal_year: "2026",
+        mda_id: MDA,
+        budget_class: "capital",
+        economic_code: " 23010101 ",
+        economic_description: " Medical equipment ",
+        approved_amount: "₦1,250,000.50",
+        function_code: " 70721 ",
+        source_row_number: "14",
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.values.economic_code).toBe("23010101");
+      expect(result.values.approved_amount).toBe(1_250_000.5);
+      expect(result.values.function_code).toBe("70721");
+      expect(result.values.project_description).toBeNull();
+      expect(result.values.source_row_number).toBe(14);
+    }
+  });
+
+  it("rejects negative amounts and fractional source rows", () => {
+    const result = validateApprovedBudgetLine(
+      draft({
+        fiscal_year: "2026",
+        mda_id: MDA,
+        budget_class: "overhead",
+        economic_code: "22020101",
+        economic_description: "Travel",
+        approved_amount: "-1",
+        source_row_number: "1.5",
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.approved_amount).toBeTruthy();
+      expect(result.errors.source_row_number).toBeTruthy();
+    }
+  });
+});
+
+describe("mapBudgetLineWriteError", () => {
+  it("maps natural-key conflicts to the budget code field", () => {
+    const mapped = mapBudgetLineWriteError({ code: "23505" });
+    expect(mapped.field).toBe("economic_code");
+    expect(mapped.message).toMatch(/already exists/i);
   });
 });
 

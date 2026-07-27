@@ -187,6 +187,160 @@ export function mapBudgetWriteError(error: {
 }
 
 /* -------------------------------------------------------------------------- */
+/* Approved Budget Line                                                        */
+/* -------------------------------------------------------------------------- */
+
+export const BUDGET_LINE_CLASSES = [
+  "personnel",
+  "overhead",
+  "capital",
+] as const;
+
+export type ApprovedBudgetLineClass = (typeof BUDGET_LINE_CLASSES)[number];
+
+export type ApprovedBudgetLineDraft = {
+  fiscal_year: string;
+  mda_id: string;
+  budget_class: ApprovedBudgetLineClass | "";
+  economic_code: string;
+  economic_description: string;
+  project_description: string;
+  function_code: string;
+  location_code: string;
+  fund_code: string;
+  programme_code: string;
+  approved_amount: string;
+  source_label: string;
+  source_row_number: string;
+};
+
+export type ApprovedBudgetLineFieldErrors = Partial<
+  Record<keyof ApprovedBudgetLineDraft, string>
+>;
+
+export type ValidatedApprovedBudgetLine = {
+  fiscal_year: number;
+  mda_id: string;
+  budget_class: ApprovedBudgetLineClass;
+  economic_code: string;
+  economic_description: string;
+  project_description: string | null;
+  function_code: string | null;
+  location_code: string | null;
+  fund_code: string | null;
+  programme_code: string | null;
+  approved_amount: number;
+  source_label: string | null;
+  source_row_number: number | null;
+};
+
+export type ApprovedBudgetLineValidationResult =
+  | { ok: true; values: ValidatedApprovedBudgetLine }
+  | { ok: false; errors: ApprovedBudgetLineFieldErrors };
+
+export function emptyApprovedBudgetLineDraft(
+  today: Date = new Date(),
+): ApprovedBudgetLineDraft {
+  return {
+    fiscal_year: String(today.getFullYear()),
+    mda_id: "",
+    budget_class: "",
+    economic_code: "",
+    economic_description: "",
+    project_description: "",
+    function_code: "",
+    location_code: "",
+    fund_code: "",
+    programme_code: "",
+    approved_amount: "",
+    source_label: "",
+    source_row_number: "",
+  };
+}
+
+function optionalText(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+export function validateApprovedBudgetLine(
+  draft: ApprovedBudgetLineDraft,
+): ApprovedBudgetLineValidationResult {
+  const errors: ApprovedBudgetLineFieldErrors = {};
+  const fiscalYear = Number(draft.fiscal_year);
+
+  if (!isValidFiscalYear(fiscalYear)) {
+    errors.fiscal_year = "Pick a fiscal year between 2000 and 2100.";
+  }
+  if (!draft.mda_id) errors.mda_id = "Pick the MDA this line belongs to.";
+  if (!BUDGET_LINE_CLASSES.includes(draft.budget_class as ApprovedBudgetLineClass)) {
+    errors.budget_class = "Pick personnel, overhead, or capital.";
+  }
+
+  const economicCode = draft.economic_code.trim();
+  if (!economicCode) errors.economic_code = "Budget code is required.";
+
+  const economicDescription = draft.economic_description.trim();
+  if (!economicDescription) {
+    errors.economic_description = "Add the budget-line title or description.";
+  }
+
+  const approvedAmount = parseAmount(draft.approved_amount);
+  if (approvedAmount === null) {
+    errors.approved_amount = "Enter the approved amount in naira.";
+  } else if (approvedAmount < 0) {
+    errors.approved_amount = "Approved amount must be zero or greater.";
+  }
+
+  const sourceRow = draft.source_row_number.trim();
+  const sourceRowNumber = sourceRow ? Number(sourceRow) : null;
+  if (
+    sourceRowNumber !== null &&
+    (!Number.isInteger(sourceRowNumber) || sourceRowNumber < 0)
+  ) {
+    errors.source_row_number = "Source row must be a whole number.";
+  }
+
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+
+  return {
+    ok: true,
+    values: {
+      fiscal_year: fiscalYear,
+      mda_id: draft.mda_id,
+      budget_class: draft.budget_class as ApprovedBudgetLineClass,
+      economic_code: economicCode,
+      economic_description: economicDescription,
+      project_description: optionalText(draft.project_description),
+      function_code: optionalText(draft.function_code),
+      location_code: optionalText(draft.location_code),
+      fund_code: optionalText(draft.fund_code),
+      programme_code: optionalText(draft.programme_code),
+      approved_amount: round2(approvedAmount as number),
+      source_label: optionalText(draft.source_label),
+      source_row_number: sourceRowNumber,
+    },
+  };
+}
+
+export function mapBudgetLineWriteError(error: {
+  code?: string | null;
+  message?: string | null;
+}): { field?: keyof ApprovedBudgetLineDraft; message: string } {
+  if (error.code === "23505") {
+    return {
+      field: "economic_code",
+      message:
+        "This coded budget line already exists for the selected year, MDA, class, programme, and source row.",
+    };
+  }
+  if (error.code === "23514") {
+    return { message: "The budget class or approved amount is invalid." };
+  }
+  return { message: error.message ?? "Couldn't save the budget line." };
+}
+
+/* -------------------------------------------------------------------------- */
 /* AOP Activity                                                                */
 /* -------------------------------------------------------------------------- */
 

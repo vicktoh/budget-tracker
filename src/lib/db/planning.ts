@@ -29,6 +29,7 @@ import type { Tables } from "@/lib/db/types";
 import type {
   ValidatedAopActivity,
   ValidatedApprovedBudget,
+  ValidatedApprovedBudgetLine,
 } from "@/lib/planning/validation";
 
 type Client = TypedSupabaseClient;
@@ -259,6 +260,31 @@ export type ListApprovedBudgetLinesOptions = {
   includeInactive?: boolean;
 };
 
+export type ApprovedBudgetLineStatus = "all" | "active" | "inactive";
+
+export type ListApprovedBudgetLinesPageOptions = {
+  page: number;
+  pageSize: number;
+  fiscalYear?: number;
+  mdaId?: string;
+  budgetClass?: "personnel" | "overhead" | "capital";
+  status?: ApprovedBudgetLineStatus;
+  search?: string;
+};
+
+export type ApprovedBudgetLinesPage = {
+  rows: ApprovedBudgetLineRow[];
+  count: number;
+};
+
+/**
+ * PostgREST's `.or()` accepts raw filter syntax, so keep the free-text term to
+ * ordinary searchable characters before interpolating it into `ilike` filters.
+ */
+export function sanitizeBudgetLineSearch(value: string): string {
+  return value.replace(/[,%()]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 /**
  * Lists the NCOA line-item detail behind the approved budget. The expenditure
  * form loads these for the MDAs a submitter can act on, then filters client-side
@@ -287,4 +313,113 @@ export async function listApprovedBudgetLines(
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as ApprovedBudgetLineRow[];
+}
+
+/** Server-paginated admin listing with a deliberately narrow search surface. */
+export async function listApprovedBudgetLinesPage(
+  client: Client,
+  options: ListApprovedBudgetLinesPageOptions,
+): Promise<ApprovedBudgetLinesPage> {
+  const page = Math.max(1, Math.trunc(options.page));
+  const pageSize = Math.min(100, Math.max(1, Math.trunc(options.pageSize)));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = client
+    .from("approved_budget_lines")
+    .select(BUDGET_LINE_SELECT, { count: "exact" });
+
+  if (typeof options.fiscalYear === "number") {
+    query = query.eq("fiscal_year", options.fiscalYear);
+  }
+  if (options.mdaId) query = query.eq("mda_id", options.mdaId);
+  if (options.budgetClass) {
+    query = query.eq("budget_class", options.budgetClass);
+  }
+  if (options.status === "active") query = query.eq("active", true);
+  if (options.status === "inactive") query = query.eq("active", false);
+
+  const search = sanitizeBudgetLineSearch(options.search ?? "");
+  if (search) {
+    const pattern = `%${search}%`;
+    query = query.or(
+      [
+        `economic_code.ilike.${pattern}`,
+        `economic_description.ilike.${pattern}`,
+        `project_description.ilike.${pattern}`,
+        `function_code.ilike.${pattern}`,
+        `programme_code.ilike.${pattern}`,
+      ].join(","),
+    );
+  }
+
+  const { data, error, count } = await query
+    .order("fiscal_year", { ascending: false })
+    .order("budget_class", { ascending: true })
+    .order("economic_code", { ascending: true })
+    .order("source_row_number", { ascending: true, nullsFirst: false })
+    .range(from, to);
+
+  if (error) throw new Error(error.message);
+  return {
+    rows: (data ?? []) as unknown as ApprovedBudgetLineRow[],
+    count: count ?? 0,
+  };
+}
+
+function budgetLinePayload(values: ValidatedApprovedBudgetLine) {
+  return {
+    fiscal_year: values.fiscal_year,
+    mda_id: values.mda_id,
+    budget_class: values.budget_class,
+    economic_code: values.economic_code,
+    economic_description: values.economic_description,
+    project_description: values.project_description,
+    function_code: values.function_code,
+    location_code: values.location_code,
+    fund_code: values.fund_code,
+    programme_code: values.programme_code,
+    approved_amount: values.approved_amount,
+    source_label: values.source_label,
+    source_row_number: values.source_row_number,
+  };
+}
+
+export async function createApprovedBudgetLine(
+  client: Client,
+  values: ValidatedApprovedBudgetLine,
+): Promise<ApprovedBudgetLineRow> {
+  const result = await table(client, "approved_budget_lines")
+    .insert(budgetLinePayload(values))
+    .select(BUDGET_LINE_SELECT)
+    .single();
+  return throwOnError(result) as ApprovedBudgetLineRow;
+}
+
+export async function updateApprovedBudgetLine(
+  client: Client,
+  id: string,
+  values: ValidatedApprovedBudgetLine,
+): Promise<ApprovedBudgetLineRow> {
+  const result = await table(client, "approved_budget_lines")
+    .update(budgetLinePayload(values))
+    .eq("id", id)
+    .select(BUDGET_LINE_SELECT)
+    .single();
+  return throwOnError(result) as ApprovedBudgetLineRow;
+}
+
+export async function setApprovedBudgetLineActive(
+  client: Client,
+  id: string,
+  active: boolean,
+): Promise<void> {
+  const result = await table(client, "approved_budget_lines")
+    .update({ active })
+    .eq("id", id);
+  if (result.error) {
+    throw Object.assign(new Error(result.error.message), {
+      code: result.error.code,
+    });
+  }
 }

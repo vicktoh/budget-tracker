@@ -10,14 +10,14 @@ export function AdminApprovedBudgetsRoute() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Approved budgets"
-        description="Manage multi-year MDA-level approved budgets. Personnel + other recurrent must equal total recurrent, and total recurrent + capital must equal total budget."
+        description="Manage MDA-level approved totals and the NCOA budget lines used for expenditure traceability."
       />
 
       {!hasSupabaseConfig || !supabase ? (
         <Alert variant="warning">
           <AlertTitle>Supabase is not configured</AlertTitle>
           <AlertDescription>
-            Add Supabase environment variables to manage approved budgets.
+            Add Supabase environment variables to manage approved budgets and budget lines.
           </AlertDescription>
         </Alert>
       ) : (

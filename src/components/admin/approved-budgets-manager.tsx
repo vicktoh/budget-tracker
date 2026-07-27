@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { PencilIcon, PlusIcon } from "lucide-react";
+import { PencilIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
+import { ApprovedBudgetLinesManager } from "@/components/admin/approved-budget-lines-manager";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
@@ -10,7 +11,9 @@ import { Dialog, DialogFooter } from "@/components/ui/dialog";
 import { Empty } from "@/components/ui/empty";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -56,6 +59,8 @@ type EditingState = {
   formError: string | null;
 };
 
+const BUDGET_PAGE_SIZE = 10;
+
 function draftFromRow(row: ApprovedBudgetRow): ApprovedBudgetDraft {
   return {
     fiscal_year: String(row.fiscal_year),
@@ -77,6 +82,9 @@ export function ApprovedBudgetsManager({
   const [loading, setLoading] = React.useState(true);
   const [filterYear, setFilterYear] = React.useState<string>("all");
   const [filterMda, setFilterMda] = React.useState<string>("all");
+  const [search, setSearch] = React.useState("");
+  const [page, setPage] = React.useState(1);
+  const [activeTab, setActiveTab] = React.useState("budgets");
   const [editing, setEditing] = React.useState<EditingState | null>(null);
 
   const refresh = React.useCallback(async () => {
@@ -108,14 +116,37 @@ export function ApprovedBudgetsManager({
   }, [rows]);
 
   const filtered = React.useMemo(() => {
+    const query = search.trim().toLowerCase();
     return rows.filter((row) => {
       if (filterYear !== "all" && String(row.fiscal_year) !== filterYear) {
         return false;
       }
       if (filterMda !== "all" && row.mda_id !== filterMda) return false;
+      if (
+        query &&
+        ![
+          String(row.fiscal_year),
+          row.mdas?.name,
+          row.mdas?.abbreviation,
+          mdas.find((mda) => mda.id === row.mda_id)?.code,
+          row.source_label,
+        ].some((value) => value?.toLowerCase().includes(query))
+      ) {
+        return false;
+      }
       return true;
     });
-  }, [rows, filterYear, filterMda]);
+  }, [rows, filterYear, filterMda, mdas, search]);
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [filterMda, filterYear, search]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / BUDGET_PAGE_SIZE));
+  const paginated = filtered.slice(
+    (page - 1) * BUDGET_PAGE_SIZE,
+    page * BUDGET_PAGE_SIZE,
+  );
 
   function openCreate() {
     setEditing({
@@ -177,64 +208,123 @@ export function ApprovedBudgetsManager({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <Field className="w-44">
-            <FieldLabel htmlFor="budget-filter-year">Fiscal year</FieldLabel>
-            <Combobox
-              id="budget-filter-year"
-              options={[
-                { value: "all", label: "All fiscal years" },
-                ...yearOptions.map((year) => ({
-                  value: String(year),
-                  label: `FY ${year}`,
-                })),
-              ]}
-              value={filterYear}
-              onValueChange={setFilterYear}
-            />
-          </Field>
-          <Field className="w-72">
-            <FieldLabel htmlFor="budget-filter-mda">MDA</FieldLabel>
-            <Combobox
-              id="budget-filter-mda"
-              options={[
-                { value: "all", label: "All MDAs" },
-                ...mdas.map((mda) => ({
-                  value: mda.id,
-                  label: mda.name,
-                  description: mda.code,
-                })),
-              ]}
-              value={filterMda}
-              onValueChange={setFilterMda}
-            />
-          </Field>
+    <Tabs
+      className="min-w-0"
+      defaultValue="budgets"
+      value={activeTab}
+      onValueChange={setActiveTab}
+    >
+      <TabsList className="w-fit">
+        <TabsTrigger value="budgets">MDA budgets</TabsTrigger>
+        <TabsTrigger value="lines">Budget lines</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="budgets" className="flex min-w-0 flex-col gap-4">
+        <div className="flex flex-col gap-3 rounded-md border bg-card p-3">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <Field className="min-w-64 flex-1 lg:max-w-md">
+              <FieldLabel htmlFor="budget-search">Search approved budgets</FieldLabel>
+              <div className="relative">
+                <SearchIcon
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  id="budget-search"
+                  className="w-full pl-9 pr-9"
+                  placeholder="MDA name, code, abbreviation, year or source"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+                {search ? (
+                  <Button
+                    aria-label="Clear search"
+                    className="absolute right-0 top-0"
+                    size="icon"
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setSearch("")}
+                  >
+                    <XIcon aria-hidden="true" />
+                  </Button>
+                ) : null}
+              </div>
+            </Field>
+            <Button size="sm" type="button" onClick={openCreate}>
+              <PlusIcon aria-hidden="true" data-icon="inline-start" />
+              Add approved budget
+            </Button>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:max-w-2xl">
+            <Field>
+              <FieldLabel htmlFor="budget-filter-year">Fiscal year</FieldLabel>
+              <Combobox
+                id="budget-filter-year"
+                options={[
+                  { value: "all", label: "All fiscal years" },
+                  ...yearOptions.map((year) => ({
+                    value: String(year),
+                    label: `FY ${year}`,
+                  })),
+                ]}
+                value={filterYear}
+                onValueChange={setFilterYear}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="budget-filter-mda">MDA</FieldLabel>
+              <Combobox
+                id="budget-filter-mda"
+                options={[
+                  { value: "all", label: "All MDAs" },
+                  ...mdas.map((mda) => ({
+                    value: mda.id,
+                    label: mda.name,
+                    description: mda.code,
+                  })),
+                ]}
+                value={filterMda}
+                onValueChange={setFilterMda}
+              />
+            </Field>
+          </div>
         </div>
-        <Button size="sm" type="button" onClick={openCreate}>
-          <PlusIcon aria-hidden="true" data-icon="inline-start" />
-          Add approved budget
-        </Button>
-      </div>
 
-      <BudgetsTable
-        rows={filtered}
-        loading={loading}
-        onEdit={openEdit}
-      />
+        <BudgetsTable rows={paginated} loading={loading} onEdit={openEdit} />
 
-      {editing ? (
-        <BudgetEditDialog
-          editing={editing}
-          mdas={mdas}
+        {filtered.length > 0 ? (
+          <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+            <p>
+              Showing {(page - 1) * BUDGET_PAGE_SIZE + 1}–
+              {Math.min(page * BUDGET_PAGE_SIZE, filtered.length)} of{" "}
+              {filtered.length} budgets
+            </p>
+            <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+          </div>
+        ) : null}
+
+        {editing ? (
+          <BudgetEditDialog
+            editing={editing}
+            mdas={mdas}
+            fiscalYears={yearOptions}
+            onChange={setEditing}
+            onClose={() => setEditing(null)}
+            onSave={saveDraft}
+          />
+        ) : null}
+      </TabsContent>
+
+      <TabsContent value="lines">
+        <ApprovedBudgetLinesManager
+          client={client}
           fiscalYears={yearOptions}
-          onChange={setEditing}
-          onClose={() => setEditing(null)}
-          onSave={saveDraft}
+          mdas={mdas}
         />
-      ) : null}
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }
 
@@ -267,7 +357,7 @@ function BudgetsTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
+    <div className="w-full max-w-full overflow-x-auto rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
