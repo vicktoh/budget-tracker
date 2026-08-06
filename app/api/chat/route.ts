@@ -13,9 +13,9 @@ export const maxDuration = 120;
  * security gives the assistant exactly the same visibility as the user.
  */
 export async function POST(request: Request) {
-  if (!process.env.AI_GATEWAY_API_KEY) {
+  if (!process.env.OPENAI_API_KEY) {
     return NextResponse.json(
-      { error: "Assistant is not configured (missing AI_GATEWAY_API_KEY)." },
+      { error: "Assistant is not configured (missing OPENAI_API_KEY)." },
       { status: 503 },
     );
   }

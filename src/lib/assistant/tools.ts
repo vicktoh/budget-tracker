@@ -86,6 +86,46 @@ const filterSchema = z.object({
 /** Rough cap so a huge result set cannot blow up the model context. */
 const MAX_RESULT_CHARS = 40_000;
 
+export const chartInputSchema = z.object({
+  type: z
+    .enum(["bar", "horizontal-bar", "stacked-bar", "line", "area", "pie", "donut"])
+    .describe(
+      "Chart form. bar/horizontal-bar for comparisons (horizontal when category names are long), " +
+        "stacked-bar for part-of-whole across categories, line/area for change over time, " +
+        "pie/donut only for a single share-of-total with at most 6 slices.",
+    ),
+  title: z.string().max(90).describe("Short chart headline, e.g. 'Q2 2026 expenditure by category'"),
+  description: z
+    .string()
+    .max(160)
+    .optional()
+    .describe("One-line caption clarifying scope, units, or source"),
+  xKey: z
+    .string()
+    .describe("Key in each data row holding the category / x-axis value (a string)"),
+  series: z
+    .array(
+      z.object({
+        dataKey: z.string().describe("Key in each data row holding this numeric series"),
+        label: z.string().optional().describe("Human label for the legend"),
+      }),
+    )
+    .min(1)
+    .max(5)
+    .describe("Numeric series to plot. Pie/donut use only the first series."),
+  data: z
+    .array(z.record(z.string(), z.union([z.string(), z.number(), z.null()])))
+    .min(1)
+    .max(60)
+    .describe("Rows of plain objects. Keep it under ~30 categories for readability."),
+  valueFormat: z
+    .enum(["naira", "number", "percent"])
+    .default("naira")
+    .describe("How to format numeric values on axes and tooltips"),
+});
+
+export type AssistantChartInput = z.infer<typeof chartInputSchema>;
+
 export function createAssistantTools(supabase: TypedSupabaseClient) {
   // The whitelist includes views and tables newer than the hand-written
   // Database type, so queries go through an untyped handle. RLS on the
@@ -98,7 +138,8 @@ export function createAssistantTools(supabase: TypedSupabaseClient) {
       "Row-level security applies: results only contain rows this user is allowed to see. " +
       "Prefer the reporting views for totals and summaries. " +
       "Supports PostgREST select syntax including nested relations " +
-      "(e.g. 'id,amount,mdas(name)') and aggregates (e.g. 'total_amount.sum()', 'id.count()').",
+      "(e.g. 'id,amount,mdas(name)'). Aggregate functions like sum() are NOT enabled — " +
+      "fetch rows (paginate with offset if needed) and compute totals yourself.",
     inputSchema: z.object({
       table: z
         .enum(ASSISTANT_QUERYABLE_TABLES)
@@ -217,5 +258,21 @@ export function createAssistantTools(supabase: TypedSupabaseClient) {
     },
   });
 
-  return { queryDatabase };
+  const renderChart = tool({
+    description:
+      "Render an interactive chart inline in the conversation. Use this whenever numbers would " +
+      "read better as a picture: comparisons across MDAs or categories, trends across quarters or " +
+      "months, budget vs actual, shares of a total. Always base the data on results you already " +
+      "queried in this conversation — never invent values. Give values in plain Naira (not " +
+      "millions) and let the chart handle formatting.",
+    inputSchema: chartInputSchema,
+    execute: async ({ type, data, series }) => ({
+      rendered: true,
+      type,
+      points: data.length,
+      seriesCount: series.length,
+    }),
+  });
+
+  return { queryDatabase, renderChart };
 }

@@ -1,4 +1,5 @@
 import { ToolLoopAgent, isStepCount, type InferAgentUIMessage } from "ai";
+import { openai } from "@ai-sdk/openai";
 import type { TypedSupabaseClient } from "@/lib/supabase/client";
 import type { AppProfile } from "@/lib/auth-types";
 import { getRoleLabel } from "@/lib/access";
@@ -53,11 +54,21 @@ You answer questions by querying the live database with the queryDatabase tool. 
 
 ## Query guidance
 - Prefer the reporting views (mda_budget_vs_actual, funding_by_source, expenditure_by_category, expenditure_by_funding_source, programme_area_summary, phc_lga_expenditure_summary, phc_facility_expenditure_summary, aop_planned_vs_actual, unlinked_expenditure) for totals and summaries — they are pre-aggregated.
-- For custom aggregates over raw tables, use PostgREST aggregate select syntax, e.g. select "amount.sum()" or "mda_id,total_amount.sum()". If an aggregate query fails, fall back to fetching rows and computing yourself.
+- SQL aggregate functions (sum/avg in select) are NOT available through this connection. For custom totals, fetch the relevant rows with a narrow select (paginate with offset until possiblyMore is false) and sum them yourself, or use a reporting view that already aggregates.
 - Resolve human names to ids first (e.g. look up an MDA in mdas by name with ilike) before filtering ledger tables.
 - Use countOnly for "how many" questions.
 - Keep limits modest and paginate with offset when you genuinely need more rows.
+- Break complex questions into several small queries rather than one huge fetch: resolve reference ids, pull each aggregate separately, then combine. For derived figures (variance, utilisation %, per-facility averages, quarter-over-quarter growth) compute them carefully step by step from queried numbers and show your working in the answer.
 - Never fabricate numbers. Every figure you present must come from a query result in this conversation. If you cannot find the data, say so.
+
+## Visualizations
+Use the renderChart tool proactively — most numeric answers land better with a chart next to the numbers.
+- Comparisons across MDAs, categories, or funding sources: bar (horizontal-bar when names are long).
+- Change across quarters or months: line, or area for cumulative totals.
+- Budget vs actual and similar pairs: bar with two series.
+- Composition across categories: stacked-bar; a single share-of-total with few slices: donut.
+- Chart data must come from query results in this conversation. Pass raw Naira values; the chart formats them. Sort bars by value (largest first) unless the axis has a natural order like time. Keep it to at most ~20 categories — aggregate the tail into "Other" if needed.
+- Still include the key figures in text or a small table alongside the chart, so the answer stands without it.
 
 ## Answer style
 - Lead with the answer, then show supporting figures.
@@ -75,7 +86,7 @@ export function createAssistantAgent(options: {
   profile: AppProfile;
 }) {
   return new ToolLoopAgent({
-    model: "anthropic/claude-sonnet-5",
+    model: openai("gpt-5.1"),
     instructions: buildInstructions(options.profile),
     tools: createAssistantTools(options.supabase),
     stopWhen: isStepCount(15),

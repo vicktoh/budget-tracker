@@ -1,0 +1,9 @@
+# Firebase App Hosting configuration.
+# Secrets live in Cloud Secret Manager; .env.local is local-only and is not
+# read during builds or runtime on App Hosting.
+
+env:
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+    availability:
+      - RUNTIME
