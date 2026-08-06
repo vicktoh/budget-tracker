@@ -29,6 +29,7 @@ import {
   aggregateFundingBySource,
   aggregateHeadlineKpis,
   aggregateHealthSectorObjectives,
+  aggregatePhcProgrammeClassification,
   aggregateProgrammeAreaSummary,
   aggregateQuarterlyTrend,
   aggregateRevenueComposition,
@@ -37,13 +38,14 @@ import {
   type EconomicSummaryRow,
   type FundingBySourceRow,
   type HealthSectorObjectiveRow,
+  type PhcProgrammeClassificationRow,
   type RevenuePerformanceRow,
   type ProgrammeAreaSummaryRow,
 } from "@/lib/reporting/aggregate";
 import { resolvePhcmbMdaId } from "@/lib/reporting/mda-lookup";
 import { proRataBand, proRataTarget } from "@/lib/reporting/signals";
 import { formatCompactNaira, formatNaira, formatPercent } from "@/lib/format";
-import type { ReportFilters } from "@/lib/reporting/types";
+import type { ReportFilters, ReportQuarter } from "@/lib/reporting/types";
 import type { FiscalQuarter } from "@/lib/db/types";
 import { getLatestBirPublication, publishBirQuarter, type BirPublicationWithPublisher } from "@/lib/db/bir-publications";
 import { isAdmin } from "@/lib/access";
@@ -120,6 +122,26 @@ function foldOtherIntoCapital(rows: EconomicSummaryRow[]): EconomicSummaryRow[] 
     });
 }
 
+/** Section 3 of the published BIR excludes PHCMB personnel. */
+function excludePersonnel(rows: EconomicSummaryRow[]): EconomicSummaryRow[] {
+  const detail = rows.filter(
+    (row) => row.economic_class !== "personnel" && row.economic_class !== "total",
+  );
+  const budget = detail.reduce((sum, row) => sum + row.budget_amount, 0);
+  const actual = detail.reduce((sum, row) => sum + row.actual_amount, 0);
+  return [
+    ...detail,
+    {
+      economic_class: "total",
+      label: "Total",
+      budget_amount: budget,
+      actual_amount: actual,
+      performance_rate: budget === 0 ? null : actual / budget,
+      balance_amount: budget - actual,
+    },
+  ];
+}
+
 function BirReportBody({
   dataset,
   effectiveFilters,
@@ -177,8 +199,18 @@ function BirReportBody({
     ? { ...effectiveFilters, mdaId: phcmbId }
     : null;
   const phcEconomic = phcFilters
-    ? foldOtherIntoCapital(
-        aggregateEconomicSummary(dataset.budgets, dataset.expenditure, phcFilters, {}),
+    ? excludePersonnel(
+        foldOtherIntoCapital(
+          aggregateEconomicSummary(dataset.budgets, dataset.expenditure, phcFilters, {}),
+        ),
+      )
+    : [];
+  const phcNcoaProgrammes = phcmbId
+    ? aggregatePhcProgrammeClassification(
+        dataset.approvedBudgetLines,
+        dataset.expenditure,
+        effectiveFilters,
+        phcmbId,
       )
     : [];
   const phcProgrammes = phcFilters
@@ -476,6 +508,12 @@ function BirReportBody({
         {phcFilters ? (
           <div className="flex flex-col gap-6">
             <ReportTable
+              caption="Table 22: Primary Healthcare Expenditure by Programme Classification"
+              columns={phcProgrammeClassificationColumns(quarter)}
+              rows={phcNcoaProgrammes}
+              getRowKey={(row) => row.row_id}
+            />
+            <ReportTable
               caption="Table 23: Primary Healthcare Expenditure by Economic Classification"
               columns={economicColumns}
               rows={phcEconomic}
@@ -485,8 +523,8 @@ function BirReportBody({
             {phcProgrammes.length > 0 ? (
               <div className="flex flex-col gap-4">
                 <ChartCard
-                  title="Primary healthcare spending by programme"
-                  description="Recorded PHCMB expenditure per programme area, largest first."
+                  title="PHCMB operational programme-area summary"
+                  description="Recorded PHCMB funding and expenditure by the application's operational programme areas. This is separate from the official NCOA Table 22 above."
                   loading={loading}
                 >
                   <HorizontalBarReport
@@ -499,7 +537,7 @@ function BirReportBody({
                   />
                 </ChartCard>
                 <ReportTable
-                  caption="Table 22: Primary Healthcare Expenditure by Programme"
+                  caption="PHCMB Operational Programme-Area Summary"
                   columns={programmeColumns}
                   rows={phcProgrammes}
                   getRowKey={(row) => row.programme_area_id}
@@ -687,6 +725,53 @@ const programmeColumns: ReportTableColumn<ProgrammeAreaSummaryRow>[] = [
     render: (row) => naira(row.gap_amount),
   },
 ];
+
+function phcProgrammeClassificationColumns(
+  quarter: ReportQuarter | null,
+): ReportTableColumn<PhcProgrammeClassificationRow>[] {
+  return [
+    {
+      key: "code",
+      header: "Code",
+      render: (row) => row.code ?? "—",
+    },
+    {
+      key: "programme",
+      header: "Programme (Sector and Objective)",
+      render: (row) => row.programme_name,
+    },
+    {
+      key: "budget",
+      header: "Approved budget",
+      align: "right",
+      render: (row) => naira(row.budget_amount),
+    },
+    {
+      key: "quarter",
+      header: quarter ? `Q${quarter} performance` : "Period actual",
+      align: "right",
+      render: (row) => naira(row.quarter_actual),
+    },
+    {
+      key: "ytd",
+      header: "YTD actual",
+      align: "right",
+      render: (row) => naira(row.ytd_actual),
+    },
+    {
+      key: "performance",
+      header: "% perf.",
+      align: "right",
+      render: (row) => formatPercent(row.performance_rate),
+    },
+    {
+      key: "balance",
+      header: "Balance",
+      align: "right",
+      render: (row) => naira(row.balance_amount),
+    },
+  ];
+}
 
 /* -------------------------------------------------------------------------- */
 /* Presentational pieces                                                      */

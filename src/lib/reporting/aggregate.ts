@@ -1,5 +1,6 @@
 import type {
   AopActivityLite,
+  ApprovedBudgetLineLite,
   ApprovedBudgetLite,
   BudgetLineRevenueLite,
   ExpenditureEntryLite,
@@ -17,6 +18,7 @@ import {
 import {
   HEALTH_SECTOR_OBJECTIVES,
   UNCLASSIFIED_OBJECTIVE,
+  programmeSegment,
   resolveObjective,
 } from "@/lib/reporting/health-sector-objectives";
 
@@ -502,6 +504,158 @@ export function aggregateHealthSectorObjectives(
     rows.push(toRow(UNCLASSIFIED_OBJECTIVE));
   }
   return rows;
+}
+
+export type PhcProgrammeClassificationRow = {
+  row_id: string;
+  code: string | null;
+  programme_name: string;
+  budget_amount: number;
+  quarter_actual: number;
+  ytd_actual: number;
+  performance_rate: number | null;
+  balance_amount: number;
+};
+
+type ProgrammeAmounts = {
+  budget: number;
+  quarter: number;
+  ytd: number;
+};
+
+const emptyProgrammeAmounts = (): ProgrammeAmounts => ({
+  budget: 0,
+  quarter: 0,
+  ytd: 0,
+});
+
+function addProgrammeAmounts(
+  target: ProgrammeAmounts,
+  source: ProgrammeAmounts,
+): ProgrammeAmounts {
+  target.budget += source.budget;
+  target.quarter += source.quarter;
+  target.ytd += source.ytd;
+  return target;
+}
+
+function phcProgrammeName(code: string): string {
+  if (code === "unclassified") return "Unclassified programme";
+  return resolveObjective(code)?.description ?? `Programme ${code}`;
+}
+
+function toPhcProgrammeRow(
+  rowId: string,
+  code: string | null,
+  programmeName: string,
+  amounts: ProgrammeAmounts,
+): PhcProgrammeClassificationRow {
+  return {
+    row_id: rowId,
+    code,
+    programme_name: programmeName,
+    budget_amount: amounts.budget,
+    quarter_actual: amounts.quarter,
+    ytd_actual: amounts.ytd,
+    performance_rate: amounts.budget === 0 ? null : amounts.ytd / amounts.budget,
+    balance_amount: amounts.budget - amounts.ytd,
+  };
+}
+
+/**
+ * Reproduces BIR Table 22 from the official NCOA programme dimension.
+ *
+ * Section 3 is the PHCMB non-personnel envelope, not the full PHCMB MDA and
+ * not facility-level `is_phc` spend. Linked actuals inherit the first four
+ * digits of their approved line's programme code. When an aggregate actual is
+ * unlinked, it may be assigned only when the eligible budget has exactly one
+ * programme segment; otherwise it remains visibly unclassified.
+ */
+export function aggregatePhcProgrammeClassification(
+  budgetLines: ApprovedBudgetLineLite[],
+  expenditure: ExpenditureEntryLite[],
+  filters: ReportFilters,
+  phcmbMdaId: string,
+): PhcProgrammeClassificationRow[] {
+  const fiscalYear = filters.fiscalYear;
+  if (fiscalYear === null) return [];
+
+  const eligibleLines = budgetLines.filter(
+    (line) =>
+      line.fiscal_year === fiscalYear &&
+      line.mda_id === phcmbMdaId &&
+      line.budget_class !== "personnel",
+  );
+  const programmeSegments = new Set(
+    eligibleLines
+      .map((line) => programmeSegment(line.programme_code))
+      .filter((code): code is string => code !== null),
+  );
+  const soleProgrammeSegment =
+    programmeSegments.size === 1 ? Array.from(programmeSegments)[0] : null;
+
+  const byProgramme = new Map<string, ProgrammeAmounts>();
+  const getBucket = (code: string): ProgrammeAmounts => {
+    const existing = byProgramme.get(code);
+    if (existing) return existing;
+    const created = emptyProgrammeAmounts();
+    byProgramme.set(code, created);
+    return created;
+  };
+
+  for (const line of eligibleLines) {
+    const code = programmeSegment(line.programme_code) ?? "unclassified";
+    getBucket(code).budget += line.approved_amount;
+  }
+
+  const selectedQuarter = filters.quarter;
+  const eligibleActuals = expenditure.filter(
+    (row) =>
+      row.fiscal_year === fiscalYear &&
+      row.mda_id === phcmbMdaId &&
+      classifyEntry(row) !== "personnel",
+  );
+
+  for (const row of eligibleActuals) {
+    const code =
+      programmeSegment(row.programme_code) ??
+      soleProgrammeSegment ??
+      "unclassified";
+    const bucket = getBucket(code);
+    if (selectedQuarter === null || row.quarter === selectedQuarter) {
+      bucket.quarter += row.amount;
+    }
+    if (selectedQuarter === null || row.quarter <= selectedQuarter) {
+      bucket.ytd += row.amount;
+    }
+  }
+
+  const detailRows = Array.from(byProgramme.entries())
+    .filter(([, amounts]) => amounts.budget !== 0 || amounts.quarter !== 0 || amounts.ytd !== 0)
+    .sort(([left], [right]) => {
+      if (left === "unclassified") return 1;
+      if (right === "unclassified") return -1;
+      return left.localeCompare(right);
+    });
+
+  const total = detailRows.reduce(
+    (sum, [, amounts]) => addProgrammeAmounts(sum, amounts),
+    emptyProgrammeAmounts(),
+  );
+  const health = detailRows
+    .filter(([code]) => code.startsWith("04"))
+    .reduce(
+      (sum, [, amounts]) => addProgrammeAmounts(sum, amounts),
+      emptyProgrammeAmounts(),
+    );
+
+  return [
+    toPhcProgrammeRow("total", null, "Total expenditure", total),
+    toPhcProgrammeRow("sector-04", "04", "Health", health),
+    ...detailRows.map(([code, amounts]) =>
+      toPhcProgrammeRow(`programme-${code}`, code, phcProgrammeName(code), amounts),
+    ),
+  ];
 }
 
 /* -------------------------------------------------------------------------- */

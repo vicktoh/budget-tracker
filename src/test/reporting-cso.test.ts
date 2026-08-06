@@ -24,6 +24,7 @@ function dataset(): ReportingDataset {
     funding: fundingFixtures(),
     expenditure: expenditureFixtures(),
     budgets: budgetFixtures(),
+    approvedBudgetLines: [],
     revenues: revenueFixtures(),
     monthly: monthlyFixtures(),
     aopActivities: aopFixtures(),

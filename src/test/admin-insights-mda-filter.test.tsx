@@ -44,6 +44,7 @@ vi.mock("@/components/reporting/use-reporting-data", () => ({
       funding: fundingFixtures(),
       expenditure: expenditureFixtures(),
       budgets: budgetFixtures(),
+      approvedBudgetLines: [],
       revenues: revenueFixtures(),
       monthly: monthlyFixtures(),
       aopActivities: aopFixtures(),

@@ -75,6 +75,7 @@ export function useReportingData(
           funding: [],
           expenditure: [],
           budgets: [],
+          approvedBudgetLines: [],
           revenues: [],
           monthly: [],
           aopActivities: [],
@@ -146,6 +147,9 @@ export function useReportingData(
             ...data.dataset,
             publications: Array.isArray(data.dataset.publications)
               ? data.dataset.publications
+              : [],
+            approvedBudgetLines: Array.isArray(data.dataset.approvedBudgetLines)
+              ? data.dataset.approvedBudgetLines
               : [],
             // An offline snapshot cached before revenues existed has no
             // `revenues` key; the cache is unversioned, so normalise here

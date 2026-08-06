@@ -24,3 +24,7 @@ Privileged workflows live outside the browser. Use Next.js App Router route hand
 - `src/lib/supabase/client.ts` creates the browser client for interactive UI.
 - `src/lib/supabase/server.ts` creates the cookie-aware server client for SSR and middleware session refresh.
 - `src/lib/server/auth.ts` creates the service-role client for privileged route handlers.
+
+## Assistant chat route
+
+`app/api/chat/route.ts` (the `/assistant` AI chat) is intentionally **not** a privileged route: it authenticates from the session cookie via `src/lib/supabase/server.ts` and never touches the service-role client. Every database query the agent tool makes runs under the caller's own JWT, so row-level security scopes the assistant to exactly what the signed-in user may see. It reads one server-only secret, `AI_GATEWAY_API_KEY`, and responds 503 when it is missing. The agent, tools, and schema reference live in `src/lib/assistant/`.

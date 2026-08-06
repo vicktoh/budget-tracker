@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kano Health Q2 Cross-MDA Synthesis</title>
+<style>
+  :root{
+    --navy:#122340;--navy-2:#1c3660;--paper:#f4f2ea;--ink:#1a1d21;
+    --gold:#c8932a;--red:#b3372c;--green:#2f6b4f;--amber:#a4681b;
+    --gray:#6b7280;--line:#dcd7ca;--card:#ffffff;--slate:#4a4f5c;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--paper);color:var(--ink)}
+  .serif{font-family:Georgia,serif}
+  header{background:var(--navy);color:#fff;padding:13px 26px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  header .eyebrow,.section-kicker{text-transform:uppercase;letter-spacing:.14em;font-size:10px;color:#9fb3d1;margin-bottom:3px}
+  header h1{margin:0;font-size:17px}
+  .source-chip{font-size:11px;color:#dfe6f2;background:rgba(255,255,255,.08);border-radius:16px;padding:6px 10px}
+  .sector-banner{background:#0d1a2e;color:#fff;padding:28px 26px}
+  .sector-inner{max-width:1220px;margin:auto;display:grid;grid-template-columns:190px 1fr;gap:30px;align-items:center}
+  .sector-copy h2{font:700 25px/1.35 Georgia,serif;margin:5px 0 12px;max-width:900px}
+  .sector-copy h2 span{color:var(--gold)}
+  .sector-copy p{margin:0;max-width:940px;color:#dfe6f2;line-height:1.65;font-size:14px}
+  .donut{width:170px;height:170px;position:relative;display:grid;place-items:center}
+  .donut svg{position:absolute;inset:0;transform:rotate(-90deg)}
+  .donut-center{text-align:center;z-index:1}
+  .donut-center b{font:700 30px Georgia,serif;display:block}
+  .donut-center span{font-size:10.5px;color:#9fb3d1}
+  .nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding:10px 26px;display:flex;gap:8px;align-items:center;overflow-x:auto}
+  .nav a{color:var(--navy-2);text-decoration:none;font-size:12px;font-weight:700;padding:8px 11px;border:1px solid var(--line);border-radius:7px;white-space:nowrap}
+  .nav a:hover{background:var(--navy-2);color:#fff}
+  main{max-width:1220px;margin:auto;padding:28px 26px 44px}
+  section{scroll-margin-top:68px;margin-bottom:32px}
+  .section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:16px}
+  .section-head h2{font:700 25px Georgia,serif;color:var(--navy);margin:0}
+  .section-head p{max-width:600px;margin:0;color:var(--gray);font-size:12.5px;line-height:1.5;text-align:right}
+  .hero-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .hero-card{background:var(--navy);color:#fff;border-radius:11px;padding:16px 17px;min-height:118px}
+  .hero-card.gold{background:var(--gold)}.hero-card.green{background:var(--green)}.hero-card.slate{background:var(--slate)}
+  .hero-card .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#d7e0ee;margin-bottom:8px}
+  .hero-card .num{font:700 26px Georgia,serif;line-height:1.15}
+  .hero-card .cap{font-size:11.5px;color:#e3e9f2;margin-top:7px;line-height:1.4}
+  .thesis{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;display:grid;grid-template-columns:1.2fr .8fr;gap:28px}
+  .thesis h3{font:700 20px Georgia,serif;color:var(--navy);margin:0 0 10px}
+  .thesis p{font-size:14px;line-height:1.7;margin:0;color:#30343a}
+  .thesis-aside{border-left:1px solid var(--line);padding-left:24px}
+  .thesis-aside b{display:block;color:var(--navy);margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  .thesis-aside ul{margin:0;padding-left:18px}.thesis-aside li{font-size:13px;line-height:1.5;margin-bottom:7px}
+  .finding-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .finding{background:#fff;border:1px solid var(--line);border-radius:11px;padding:19px 20px;display:grid;grid-template-columns:42px 1fr;gap:14px}
+  .finding .no{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--navy-2);color:#fff;font:700 15px Georgia,serif}
+  .finding h3{margin:0 0 6px;color:var(--navy);font-size:15px}.finding p{margin:0;color:var(--slate);font-size:13px;line-height:1.6}
+  .finding.warn .no{background:var(--amber)}.finding.bad .no{background:var(--red)}.finding.good .no{background:var(--green)}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .panel-head{background:var(--navy-2);color:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .panel-head h3{margin:0;font-size:17px}.panel-head span{font-size:11px;color:#cfe0f7}
+  .panel-body{padding:20px}
+  .component-row{display:grid;grid-template-columns:105px 1fr 94px 94px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
+  .component-row:last-child{border-bottom:0}.component-row strong{color:var(--navy)}
+  .track{height:17px;background:#eee9dd;border-radius:4px;overflow:hidden}.fill{height:100%;border-radius:4px}
+  .metric{text-align:right}.metric b{display:block;font:700 16px Georgia,serif}.metric span{font-size:10px;color:var(--gray)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .quarter-bars{display:flex;align-items:flex-end;justify-content:center;gap:70px;height:210px;padding-top:15px}
+  .qbar-wrap{text-align:center;width:110px}.qbar{width:70px;margin:auto;border-radius:7px 7px 0 0;background:var(--navy-2);min-height:12px}.qbar.q2{background:var(--gold)}
+  .qbar-wrap b{display:block;font:700 17px Georgia,serif;margin-bottom:7px}.qbar-wrap span{font-size:11px;color:var(--gray);display:block;margin-top:7px}
+  .delta-list{margin:0;padding:0;list-style:none}.delta-list li{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:15px;font-size:12.5px}.delta-list li:last-child{border:0}
+  .up{color:var(--green);font-weight:700}.down{color:var(--red);font-weight:700}
+  .concentration{display:grid;grid-template-columns:.8fr 1.2fr;gap:25px;align-items:center}
+  .big-stat{padding:14px 20px 18px;border-right:1px solid var(--line);text-align:center}.big-stat b{font:700 54px Georgia,serif;color:var(--gold);display:block}.big-stat span{font-size:13px;color:var(--slate);line-height:1.5}
+  .rank-row{display:grid;grid-template-columns:28px 1fr 110px;gap:10px;align-items:center;margin:11px 0}.rank-row .rank{font:700 16px Georgia,serif;color:var(--gray)}
+  .rank-row .name{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:5px}.rank-row .amount{text-align:right;font:700 13px Georgia,serif}
+  .pace-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.pace{padding:16px 12px;text-align:center;border-radius:9px;background:#fff;border:1px solid var(--line)}.pace b{display:block;font:700 28px Georgia,serif}.pace span{font-size:11px;color:var(--gray)}
+  .pace.good b{color:var(--green)}.pace.mid b{color:var(--gold)}.pace.warn b{color:var(--amber)}.pace.bad b{color:var(--red)}
+  .priority-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.priority{background:#fff;border:1px solid var(--line);border-left:4px solid var(--navy-2);border-radius:8px;padding:15px 17px}.priority.red{border-left-color:var(--red)}.priority.gold{border-left-color:var(--gold)}
+  .priority h3{margin:0 0 6px;color:var(--navy);font-size:14px}.priority p{margin:0;color:var(--slate);font-size:12.5px;line-height:1.55}
+  .controls{display:flex;gap:8px;flex-wrap:wrap}.controls button{border:1px solid var(--navy-2);background:#fff;color:var(--navy-2);border-radius:7px;padding:8px 11px;font-size:11.5px;font-weight:700;cursor:pointer}.controls button.active,.controls button:hover{background:var(--navy-2);color:#fff}
+  .table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#eee9dd;color:var(--navy);text-align:left;padding:11px 10px;white-space:nowrap;cursor:pointer}td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}tr:last-child td{border:0}.num-cell{text-align:right;white-space:nowrap}.mda-name{font-weight:700;color:var(--navy);min-width:230px}
+  .burn-pill{display:inline-block;min-width:54px;text-align:center;padding:4px 8px;border-radius:12px;font-weight:700}.burn-good{background:#e0efe6;color:var(--green)}.burn-mid{background:#fbf3e6;color:var(--amber)}.burn-bad{background:#fde2df;color:var(--red)}.burn-zero{background:#e6e6e6;color:#555}
+  .note{font-size:11.5px;color:var(--gray);line-height:1.55;margin-top:12px}.disclaimer{max-width:1220px;margin:0 auto 40px;padding:16px 22px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--gray);line-height:1.6}.disclaimer b{color:var(--ink)}
+  @media(max-width:900px){.hero-row{grid-template-columns:repeat(2,1fr)}.two-col,.thesis,.concentration{grid-template-columns:1fr}.thesis-aside{border-left:0;border-top:1px solid var(--line);padding:18px 0 0}.big-stat{border-right:0;border-bottom:1px solid var(--line)}.finding-grid{grid-template-columns:1fr}.component-row{grid-template-columns:85px 1fr 80px}.component-row .metric:last-child{display:none}}
+  @media(max-width:620px){.sector-inner{grid-template-columns:1fr}.donut{margin:auto}.hero-row,.priority-list{grid-template-columns:1fr}.pace-grid{grid-template-columns:repeat(2,1fr)}.section-head{align-items:flex-start;flex-direction:column}.section-head p{text-align:left}.quarter-bars{gap:35px}}
+  @media print{.nav,.controls{display:none}section{break-inside:avoid}body{background:#fff}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="eyebrow">IBP Nigeria · Cross-MDA analytical companion</div><h1>Kano Health Sector, Q2 2026 Synthesis</h1></div>
+  <div class="source-chip">Source boundary: attached HTML only · 21 MDAs</div>
+</header>
+
+<div class="sector-banner">
+  <div class="sector-inner">
+    <div class="donut" aria-label="23.9 percent of approved budget recorded as spent in H1">
+      <svg viewBox="0 0 170 170"><circle cx="85" cy="85" r="67" fill="none" stroke="#1a2942" stroke-width="25"/><circle cx="85" cy="85" r="67" fill="none" stroke="#c8932a" stroke-width="25" stroke-linecap="round" stroke-dasharray="100.4 421"/></svg>
+      <div class="donut-center"><b>23.9%</b><span>of budget, Jan–Jun</span></div>
+    </div>
+    <div class="sector-copy">
+      <div class="section-kicker">Sector-wide synthesis</div>
+      <h2>The aggregate is improving, but execution is <span>concentrated, component-skewed and uneven</span> across MDAs.</h2>
+      <p>₦51.24bn is recorded against a ₦214.84bn approved health budget. Four MDAs generate 97.5% of H1 spending, while four other MDAs record no H1 expenditure. Q2 exceeds Q1 by 34.3%, but this increase comes from personnel; overhead and capital both fall quarter-on-quarter.</p>
+    </div>
+  </div>
+</div>
+
+<nav class="nav" aria-label="Page sections">
+  <a href="#overview">Overview</a><a href="#findings">Common findings</a><a href="#components">Components</a><a href="#quarters">Q1 vs Q2</a><a href="#concentration">Concentration</a><a href="#priorities">Validation priorities</a><a href="#mda-table">All MDAs</a>
+</nav>
+
+<main>
+  <section id="overview">
+    <div class="section-head"><h2>Executive overview</h2><p>Weighted sector totals and cross-MDA distribution, calculated only from the embedded payload in the attached document.</p></div>
+    <div class="hero-row">
+      <div class="hero-card"><div class="lbl">Approved health budget</div><div class="num">₦214.84bn</div><div class="cap">100% of the budget is marked as covered by directly confirmed figures.</div></div>
+      <div class="hero-card gold"><div class="lbl">Recorded H1 expenditure</div><div class="num">₦51.24bn</div><div class="cap">23.9% weighted sector burn by end-June.</div></div>
+      <div class="hero-card green"><div class="lbl">Q2 movement</div><div class="num">+34.3%</div><div class="cap">₦29.37bn in Q2 versus ₦21.87bn in Q1.</div></div>
+      <div class="hero-card slate"><div class="lbl">Typical MDA</div><div class="num">16.0%</div><div class="cap">Median across all 21 MDAs; below the weighted sector rate.</div></div>
+    </div>
+    <div class="thesis">
+      <div><h3>The central interpretation</h3><p>The sector-wide rate should not be read as a typical agency experience. The weighted 23.9% result is shaped by a small number of very large institutions and by centrally paid personnel. At MDA level, results range from 0% to 92.1%; the median rises to 28.1% if the four zero-spend MDAs are excluded. The main management issue is therefore not simply “low” or “high” execution, but a combination of concentration, different component rhythms, abrupt quarter shifts and reporting/reconciliation exceptions.</p></div>
+      <div class="thesis-aside"><b>What the figures say together</b><ul><li>Coverage is complete, but activity is not broad-based.</li><li>Personnel is carrying Q2 growth; non-personnel execution weakened.</li><li>Large budgets and high burn rates are not the same: several small schools have the highest percentages.</li><li>Quarter attribution and blank monthly calendars remain important interpretation risks.</li></ul></div>
+    </div>
+  </section>
+
+  <section id="findings">
+    <div class="section-head"><h2>Cross-MDA findings and common trends</h2><p>Six recurring patterns explain most of the variation in the attached report.</p></div>
+    <div class="finding-grid">
+      <article class="finding"><div class="no">1</div><div><h3>Expenditure is exceptionally concentrated</h3><p>HMB, SMOH, PHCMB and KCHIMA account for 97.5% of all recorded H1 spending and 90.8% of the approved budget. HMB and SMOH alone account for 78.6% of expenditure.</p></div></article>
+      <article class="finding good"><div class="no">2</div><div><h3>Q2 growth is a personnel story</h3><p>Personnel rises 202.7% from Q1 to Q2 and reaches a 39.9% H1 burn. Overhead falls 44.3% and capital falls 34.6%, so the aggregate Q2 improvement does not indicate across-the-board acceleration.</p></div></article>
+      <article class="finding warn"><div class="no">3</div><div><h3>Capital dominates the budget, not the execution mix</h3><p>Capital represents 61.4% of approved resources but 44.9% of H1 spending, with a 17.5% burn. Six of the eleven MDAs carrying capital lines record zero H1 capital expenditure.</p></div></article>
+      <article class="finding bad"><div class="no">4</div><div><h3>Inactivity persists below the aggregate</h3><p>PHIMA, School of Hygiene, School of Health Tech Bebeji and School of Health Tech Kano record zero H1 expenditure. Across all components, 10 of 35 lines are at zero.</p></div></article>
+      <article class="finding warn"><div class="no">5</div><div><h3>Quarter patterns are polarised</h3><p>HMB adds ₦10.90bn in Q2 and KCHIMA adds ₦4.26bn, while SMOH falls ₦5.81bn and PHCMB falls ₦2.55bn. These large counter-movements dominate the sector trajectory.</p></div></article>
+      <article class="finding bad"><div class="no">6</div><div><h3>Reconciliation signals require care</h3><p>Five MDAs contain reattributed figures. Two overhead lines have negative Q2 values, and two agencies have overhead activity in Q1 but nothing in Q2. These should be read as validation signals, not automatically as operational reversals.</p></div></article>
+    </div>
+  </section>
+
+  <section id="components">
+    <div class="section-head"><h2>Component-level pattern</h2><p>Burn rates use H1 expenditure divided by the approved 2026 component budget.</p></div>
+    <div class="panel">
+      <div class="panel-head"><h3>Budget weight versus execution</h3><span>Personnel is centrally paid and appears for three MDAs in the attached payload.</span></div>
+      <div class="panel-body">
+        <div class="component-row"><strong>Personnel</strong><div><div class="track"><div class="fill" style="width:39.9%;background:var(--navy-2)"></div></div></div><div class="metric"><b>39.9%</b><span>H1 burn</span></div><div class="metric"><b>50.4%</b><span>share of spend</span></div></div>
+        <div class="component-row"><strong>Overhead</strong><div><div class="track"><div class="fill" style="width:13.1%;background:var(--gold)"></div></div></div><div class="metric"><b>13.1%</b><span>H1 burn</span></div><div class="metric"><b>4.7%</b><span>share of spend</span></div></div>
+        <div class="component-row"><strong>Capital</strong><div><div class="track"><div class="fill" style="width:17.5%;background:var(--green)"></div></div></div><div class="metric"><b>17.5%</b><span>H1 burn</span></div><div class="metric"><b>44.9%</b><span>share of spend</span></div></div>
+      </div>
+    </div>
+    <div class="pace-grid" style="margin-top:14px">
+      <div class="pace good"><b>4</b><span>MDAs at 50% or more</span></div><div class="pace mid"><b>3</b><span>MDAs at 35–49.9%</span></div><div class="pace warn"><b>4</b><span>MDAs at 15–34.9%</span></div><div class="pace bad"><b>6</b><span>active MDAs below 15%</span></div><div class="pace bad"><b>4</b><span>MDAs at zero</span></div>
+    </div>
+  </section>
+
+  <section id="quarters">
+    <div class="section-head"><h2>Q1 to Q2: growth with a narrow base</h2><p>Net Q2 growth is ₦7.50bn, but the component and MDA movements point in opposing directions.</p></div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-head"><h3>Sector totals</h3><span>Same quarter length</span></div><div class="panel-body"><div class="quarter-bars"><div class="qbar-wrap"><b>₦21.87bn</b><div class="qbar" style="height:119px"></div><span>Q1 · Jan–Mar</span></div><div class="qbar-wrap"><b>₦29.37bn</b><div class="qbar q2" style="height:160px"></div><span>Q2 · Apr–Jun</span></div></div></div></div>
+      <div class="panel"><div class="panel-head"><h3>Largest MDA shifts</h3><span>Q2 minus Q1</span></div><div class="panel-body"><ul class="delta-list"><li><span>Hospitals Management Board</span><span class="up">+₦10.90bn</span></li><li><span>KCHIMA</span><span class="up">+₦4.26bn</span></li><li><span>KHETFUND</span><span class="up">+₦631.9m</span></li><li><span>Ministry of Health</span><span class="down">−₦5.81bn</span></li><li><span>Primary Health Care Mgt. Board</span><span class="down">−₦2.55bn</span></li><li><span>Nursing & Midwifery Board</span><span class="down">−₦30.6m</span></li></ul></div></div>
+    </div>
+    <p class="note"><b>Component bridge:</b> Personnel increases by about ₦13.00bn between quarters, while overhead decreases by ₦682.1m and capital by ₦4.82bn. The personnel increase more than explains the sector’s ₦7.50bn net Q2 rise.</p>
+  </section>
+
+  <section id="concentration">
+    <div class="section-head"><h2>Where the sector total comes from</h2><p>The high concentration means a small number of reporting or timing changes can materially move the sector result.</p></div>
+    <div class="panel"><div class="panel-body concentration"><div class="big-stat"><b>97.5%</b><span>of H1 expenditure is recorded by four MDAs</span></div><div>
+      <div class="rank-row"><div class="rank">1</div><div><div class="name">Hospitals Management Board</div><div class="track"><div class="fill" style="width:100%;background:var(--navy-2)"></div></div></div><div class="amount">₦23.83bn</div></div>
+      <div class="rank-row"><div class="rank">2</div><div><div class="name">Ministry of Health</div><div class="track"><div class="fill" style="width:68.9%;background:var(--navy-2)"></div></div></div><div class="amount">₦16.43bn</div></div>
+      <div class="rank-row"><div class="rank">3</div><div><div class="name">Primary Health Care Mgt. Board</div><div class="track"><div class="fill" style="width:20.5%;background:var(--gold)"></div></div></div><div class="amount">₦4.89bn</div></div>
+      <div class="rank-row"><div class="rank">4</div><div><div class="name">KCHIMA</div><div class="track"><div class="fill" style="width:20.2%;background:var(--gold)"></div></div></div><div class="amount">₦4.80bn</div></div>
+    </div></div></div>
+  </section>
+
+  <section id="priorities">
+    <div class="section-head"><h2>Cross-MDA validation priorities</h2><p>These questions follow directly from exceptions and common patterns visible in the attached HTML.</p></div>
+    <div class="priority-list">
+      <article class="priority red"><h3>1. Separate “zero spending” from “not yet submitted”</h3><p>Confirm the operational status of the four zero-H1 MDAs and the ten zero component lines. A confirmed zero and a missing return imply different follow-up actions.</p></article>
+      <article class="priority gold"><h3>2. Reconcile quarter attribution</h3><p>Confirm the five MDAs with reattributed figures: SMOH, HMB, PHCMB, KCHIMA and KHETFUND, especially where the updated report moves activity between quarters.</p></article>
+      <article class="priority red"><h3>3. Explain negative Q2 component values</h3><p>HMB overhead and School of Basic Midwifery Gwarzo overhead are negative in Q2. Establish whether these are corrections, reversals or presentation effects.</p></article>
+      <article class="priority gold"><h3>4. Test whether non-personnel slowdown is timing or execution</h3><p>Overhead and capital both decline in Q2. Review procurement, cash-release and reporting timing before interpreting the fall as a uniform performance deterioration.</p></article>
+      <article class="priority"><h3>5. Investigate high-burn small institutions</h3><p>Dambatta (92.1%), Madobi (63.8%) and School of Nursing Kano (63.4%) are far above the sector rate. Confirm completeness of the approved denominator and whether the pace is sustainable.</p></article>
+      <article class="priority"><h3>6. Close the monthly evidence gap</h3><p>Of 174 month-status cells across 29 non-personnel component calendars, 90 are blank and seven component calendars have no submissions at all. Use the official quarter totals without assuming every blank means zero.</p></article>
+    </div>
+  </section>
+
+  <section id="mda-table">
+    <div class="section-head"><div><h2>All 21 MDAs</h2><p style="text-align:left;margin-top:6px">Click column headings to sort, or filter by execution band.</p></div><div class="controls" id="filters"><button class="active" data-filter="all">All</button><button data-filter="high">≥35%</button><button data-filter="low">Below 15%</button><button data-filter="zero">Zero</button><button data-filter="updated">Figures updated</button></div></div>
+    <div class="panel table-wrap"><table><thead><tr><th data-key="mda">MDA</th><th class="num-cell" data-key="approved">Approved</th><th class="num-cell" data-key="h1">H1 recorded</th><th class="num-cell" data-key="burn">Burn</th><th class="num-cell" data-key="q1">Q1</th><th class="num-cell" data-key="q2">Q2</th><th data-key="movement">Quarter movement</th></tr></thead><tbody id="mdaRows"></tbody></table></div>
+    <p class="note">The pace bands are descriptive, following the thresholds used in the attached document; they are not a judgement on value for money, service delivery or the quality of expenditure.</p>
+  </section>
+</main>
+
+<div class="disclaimer"><b>Source and interpretation note.</b> This synthesis uses only the figures, labels, verdicts and month-status information embedded in “update Final Kano.html”. It does not use or cross-reference any database or external source. Totals may differ by a naira because of floating-point precision. “Recorded expenditure” describes what appears in the source document and should not be read as an independent audit opinion.</div>
+
+<script>
+const MDAS=[
+ {mda:"Ministry of Health (SMOH)",approved:102557010962.09,q1:11119256874.553,q2:5308981867.4807,h1:16428238742.033699,burn:16.0186403522,updated:true},
+ {mda:"Hospitals Management Board (HMB)",approved:68085505349.37,q1:6466875036.079292,q2:17364329619.031277,h1:23831204655.11057,burn:35.0018767325,updated:true},
+ {mda:"M.A. Wase Specialist Hospital (Zone 7)",approved:2655140488.95,q1:93149461.06,q2:114503373.99,h1:207652835.05,burn:7.8207852245,updated:false},
+ {mda:"Coll. of Nursing & Midwifery Board",approved:246350000,q1:45345780,q2:14779350,h1:60125130,burn:24.4063852243,updated:false},
+ {mda:"School of Nursing Kano",approved:34800000,q1:7378800,q2:14679400,h1:22058200,burn:63.3856321839,updated:false},
+ {mda:"School of Basic Midwifery Kano",approved:32000000,q1:10513480,q2:2579200,h1:13092680,burn:40.914625,updated:false},
+ {mda:"School of Basic Midwifery Dambatta",approved:30800000,q1:15196725,q2:13176200,h1:28372925,burn:92.1198863636,updated:false},
+ {mda:"School of Nursing Madobi",approved:31050000,q1:8291100,q2:11525200,h1:19816300,burn:63.8206119163,updated:false},
+ {mda:"School of Post Basic Anesthesia",approved:16600000,q1:2207000,q2:2462000,h1:4669000,burn:28.1265060241,updated:false},
+ {mda:"School of Basic Midwifery Gwarzo",approved:26900000,q1:11368250,q2:-436350,h1:10931900,burn:40.6390334572,updated:false},
+ {mda:"Primary Health Care Mgt. Board (PHCMB)",approved:15618364748.29,q1:3722486535.4781,q2:1168715392.6638,h1:4891201928.1419,burn:31.3169912918,updated:true},
+ {mda:"Agency for Control of AIDS (KSACA)",approved:1300881920,q1:2000000,q2:7281000,h1:9281000,burn:.7134390799,updated:false},
+ {mda:"Contributory Health Mgt. Agency (KCHIMA)",approved:8761500000,q1:272718638.21,q2:4531097227.26,h1:4803815865.47,burn:54.8286921814,updated:true},
+ {mda:"Kano Health Trust Fund (KHETFUND)",approved:7391594170,q1:36578832.3,q2:668444821,h1:705023653.3,burn:9.5381813055,updated:true},
+ {mda:"Coll. of Science & Tech HQ",approved:17369000,q1:851145.95,q2:1224485.65,h1:2075631.6,burn:11.9502078416,updated:false},
+ {mda:"Private Health Institutions Mgt. Agency (PHIMA)",approved:674500000,q1:0,q2:0,h1:0,burn:0,updated:false},
+ {mda:"Drugs Mgt. & Consumable Supply Agency (DMCSA)",approved:3057727896,q1:52515000,q2:23399000,h1:75914000,burn:2.4826931167,updated:false},
+ {mda:"Centre for Disease Control (KNCDC)",approved:3094608858,q1:4262100,q2:126823620,h1:131085720,burn:4.2359382402,updated:false},
+ {mda:"School of Hygiene",approved:6250000,q1:0,q2:0,h1:0,burn:0,updated:false},
+ {mda:"School of Health Tech Bebeji",approved:42500000,q1:0,q2:0,h1:0,burn:0,updated:false},
+ {mda:"School of Health Tech Kano",approved:1157855871,q1:0,q2:0,h1:0,burn:0,updated:false}
+];
+let currentFilter="all",sortKey="burn",sortDir=-1;
+function money(n){const sign=n<0?"−":"",a=Math.abs(n);if(a>=1e9)return sign+"₦"+(a/1e9).toFixed(2)+"bn";if(a>=1e6)return sign+"₦"+(a/1e6).toFixed(1)+"m";return sign+"₦"+Math.round(a).toLocaleString("en-US")}
+function band(r){if(r.burn===0)return"zero";if(r.burn>=35)return"high";if(r.burn<15)return"low";return"mid"}
+function renderTable(){let data=MDAS.filter(r=>currentFilter==="all"||(currentFilter==="updated"?r.updated:band(r)===currentFilter));data.sort((a,b)=>{const x=a[sortKey],y=b[sortKey];return(typeof x==="string"?x.localeCompare(y):x-y)*sortDir});document.getElementById("mdaRows").innerHTML=data.map(r=>{const b=band(r),cls=b==="high"?"burn-good":b==="mid"?"burn-mid":b==="low"?"burn-bad":"burn-zero";const d=r.q2-r.q1,m=d>0?`<span class="up">↑ ${money(d)}</span>`:d<0?`<span class="down">↓ ${money(Math.abs(d))}</span>`:"No change";return `<tr><td class="mda-name">${r.mda}${r.updated?' <span title="Figure updated" style="color:var(--amber)">†</span>':''}</td><td class="num-cell">${money(r.approved)}</td><td class="num-cell">${money(r.h1)}</td><td class="num-cell"><span class="burn-pill ${cls}">${r.burn.toFixed(1)}%</span></td><td class="num-cell">${money(r.q1)}</td><td class="num-cell">${money(r.q2)}</td><td>${m}</td></tr>`}).join("")}
+document.querySelectorAll("#filters button").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll("#filters button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");currentFilter=btn.dataset.filter;renderTable()}));
+document.querySelectorAll("th[data-key]").forEach(th=>th.addEventListener("click",()=>{if(sortKey===th.dataset.key)sortDir*=-1;else{sortKey=th.dataset.key;sortDir=th.dataset.key==="mda"?1:-1}renderTable()}));
+renderTable();
+</script>
+</body>
+</html>

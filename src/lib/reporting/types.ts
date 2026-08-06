@@ -115,6 +115,16 @@ export type ApprovedBudgetLite = {
   total_budget_amount: number;
 };
 
+/** NCOA budget-line detail used by official programme-classification tables. */
+export type ApprovedBudgetLineLite = {
+  id: string;
+  fiscal_year: number;
+  mda_id: string;
+  budget_class: "personnel" | "overhead" | "capital";
+  programme_code: string | null;
+  approved_amount: number;
+};
+
 /** One quarter's collection against a revenue line. */
 export type BudgetLineRevenueActualLite = {
   quarter: number;
@@ -172,6 +182,7 @@ export type ReportingDataset = {
   funding: FundingEntryLite[];
   expenditure: ExpenditureEntryLite[];
   budgets: ApprovedBudgetLite[];
+  approvedBudgetLines: ApprovedBudgetLineLite[];
   revenues: BudgetLineRevenueLite[];
   monthly: MonthlyTrackingLite[];
   aopActivities: AopActivityLite[];

@@ -23,6 +23,7 @@ export type AppRoute =
   | "/admin/aop-activities"
   | "/reference-requests"
   | "/imports"
+  | "/assistant"
   | "/settings";
 
 const routeRoles: Record<AppRoute, AppRole[]> = {
@@ -43,6 +44,7 @@ const routeRoles: Record<AppRoute, AppRole[]> = {
   "/admin/aop-activities": ["admin"],
   "/reference-requests": ["mda_user", "reviewer", "admin", "facility_user"],
   "/imports": ["admin"],
+  "/assistant": ["mda_user", "reviewer", "admin", "facility_user"],
   "/settings": ["mda_user", "reviewer", "admin", "facility_user"],
 };
 
@@ -209,6 +211,7 @@ export function canAccessRoute(
       // Admins short-circuit above; reviewers (who review every MDA) may generate reports.
       return isReviewer(profile);
     case "/reference-requests":
+    case "/assistant":
     case "/settings":
       return true;
     default:

@@ -15,6 +15,7 @@ import {
   aggregatePhcFacilityLeaderboard,
   aggregatePhcFacilitySummary,
   aggregatePhcLgaSummary,
+  aggregatePhcProgrammeClassification,
   aggregatePhcShare,
   aggregateProgrammeAreaSummary,
   aggregateQuarterlyTrend,
@@ -24,6 +25,10 @@ import {
   filterFunding,
 } from "@/lib/reporting/aggregate";
 import { emptyReportFilters } from "@/lib/reporting/types";
+import type {
+  ApprovedBudgetLineLite,
+  ExpenditureEntryLite,
+} from "@/lib/reporting/types";
 import {
   AOP_1,
   EC_DRUGS,
@@ -350,6 +355,130 @@ describe("aggregateProgrammeAreaSummary", () => {
     const secondary = rows.find((r) => r.programme_area_id === PA_SECONDARY);
     expect(secondary?.total_funding_amount).toBe(250_000);
     expect(secondary?.total_expenditure_amount).toBe(100_000);
+  });
+});
+
+describe("aggregatePhcProgrammeClassification", () => {
+  const approvedLines: ApprovedBudgetLineLite[] = [
+    {
+      id: "phc-personnel",
+      fiscal_year: 2026,
+      mda_id: MDA_PHCMB,
+      budget_class: "personnel",
+      programme_code: "04010110050001",
+      approved_amount: 700_512_000,
+    },
+    {
+      id: "phc-overhead",
+      fiscal_year: 2026,
+      mda_id: MDA_PHCMB,
+      budget_class: "overhead",
+      programme_code: "04010110050001",
+      approved_amount: 2_016_612_000,
+    },
+    {
+      id: "phc-capital",
+      fiscal_year: 2026,
+      mda_id: MDA_PHCMB,
+      budget_class: "capital",
+      programme_code: "04010110050001",
+      approved_amount: 12_901_240_748.29,
+    },
+  ];
+
+  function publishedPhcActuals(): ExpenditureEntryLite[] {
+    const base = expenditureFixtures()[2];
+    return [
+      {
+        ...base,
+        id: "phc-q1-capital",
+        quarter: 1,
+        amount: 3_250_448_900,
+        budget_class: "capital",
+        programme_code: "04010110050001",
+        expenditure_category_name: "Capital Expenditure",
+      },
+      {
+        ...base,
+        id: "phc-q1-personnel",
+        quarter: 1,
+        amount: 99_985_872.48,
+        budget_class: null,
+        programme_code: null,
+        expenditure_category_name: "Personnel Costs",
+      },
+      {
+        ...base,
+        id: "phc-q2-overhead",
+        quarter: 2,
+        amount: 653_329_310.13,
+        budget_class: null,
+        programme_code: null,
+        expenditure_category_name: "Overhead Running Costs",
+      },
+      {
+        ...base,
+        id: "phc-q2-capital",
+        quarter: 2,
+        amount: 1_742_281_296.78,
+        budget_class: null,
+        programme_code: null,
+        expenditure_category_name: "Capital Expenditure",
+      },
+      {
+        ...base,
+        id: "phc-q2-personnel",
+        quarter: 2,
+        amount: 194_166_882.53,
+        budget_class: null,
+        programme_code: null,
+        expenditure_category_name: "Personnel Costs",
+      },
+    ];
+  }
+
+  it("reproduces the published Q2 Table 22 and excludes personnel", () => {
+    const rows = aggregatePhcProgrammeClassification(
+      approvedLines,
+      publishedPhcActuals(),
+      { ...emptyReportFilters(), fiscalYear: 2026, quarter: 2 },
+      MDA_PHCMB,
+    );
+
+    expect(rows.map((row) => row.code)).toEqual([null, "04", "0401"]);
+    for (const row of rows) {
+      expect(row.budget_amount).toBeCloseTo(14_917_852_748.29, 2);
+      expect(row.quarter_actual).toBeCloseTo(2_395_610_606.91, 2);
+      expect(row.ytd_actual).toBeCloseTo(5_646_059_506.91, 2);
+      expect(row.performance_rate).toBeCloseTo(
+        5_646_059_506.91 / 14_917_852_748.29,
+        10,
+      );
+      expect(row.balance_amount).toBeCloseTo(9_271_793_241.38, 2);
+    }
+  });
+
+  it("keeps unlinked actuals unclassified when multiple programmes are eligible", () => {
+    const secondProgramme: ApprovedBudgetLineLite = {
+      ...approvedLines[1],
+      id: "phc-overhead-0405",
+      programme_code: "04050110050001",
+      approved_amount: 500,
+    };
+    const [unlinked] = publishedPhcActuals().filter(
+      (row) => row.id === "phc-q2-overhead",
+    );
+    const rows = aggregatePhcProgrammeClassification(
+      [...approvedLines, secondProgramme],
+      [unlinked],
+      { ...emptyReportFilters(), fiscalYear: 2026, quarter: 2 },
+      MDA_PHCMB,
+    );
+
+    const unclassified = rows.find((row) => row.row_id === "programme-unclassified");
+    expect(unclassified?.quarter_actual).toBe(653_329_310.13);
+    expect(rows.find((row) => row.code === "0401")?.quarter_actual).toBe(0);
+    expect(rows.find((row) => row.code === "0405")?.quarter_actual).toBe(0);
   });
 });
 

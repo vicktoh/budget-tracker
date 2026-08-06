@@ -2,6 +2,7 @@ import type { TypedSupabaseClient } from "@/lib/supabase/client";
 import type {
   AopActivityLite,
   ApprovedBudgetLite,
+  ApprovedBudgetLineLite,
   BudgetLineRevenueLite,
   ExpenditureEntryLite,
   MonthlyTrackingLite,
@@ -41,6 +42,10 @@ const BUDGET_SELECT = `
   personnel_amount, other_recurrent_amount, total_recurrent_amount,
   capital_amount, total_budget_amount,
   mdas!inner(id, name)
+`;
+
+const APPROVED_BUDGET_LINE_SELECT = `
+  id, fiscal_year, mda_id, budget_class, programme_code, approved_amount
 `;
 
 const AOP_SELECT = `
@@ -267,6 +272,42 @@ async function loadBudgets(
   }));
 }
 
+type RawApprovedBudgetLine = {
+  id: string;
+  fiscal_year: number;
+  mda_id: string;
+  budget_class: string;
+  programme_code: string | null;
+  approved_amount: number;
+};
+
+async function loadApprovedBudgetLines(
+  client: Client,
+  scope: ReportScope,
+): Promise<ApprovedBudgetLineLite[]> {
+  const rows = await fetchAllPages<RawApprovedBudgetLine>((from, to) => {
+    let query = client
+      .from("approved_budget_lines")
+      .select(APPROVED_BUDGET_LINE_SELECT)
+      .eq("active", true)
+      .order("id")
+      .range(from, to);
+    if (scope.mdaIds && scope.mdaIds.length > 0) {
+      query = query.in("mda_id", scope.mdaIds);
+    }
+    return query;
+  });
+
+  return rows.map((row) => ({
+    id: row.id,
+    fiscal_year: row.fiscal_year,
+    mda_id: row.mda_id,
+    budget_class: row.budget_class as ApprovedBudgetLineLite["budget_class"],
+    programme_code: row.programme_code,
+    approved_amount: Number(row.approved_amount),
+  }));
+}
+
 type RawRevenue = {
   id: string;
   fiscal_year: number;
@@ -384,10 +425,20 @@ export async function loadReportingDataset(
   client: Client,
   scope: ReportScope = {},
 ): Promise<ReportingDataset> {
-  const [funding, expenditure, budgets, revenues, monthly, aopActivities, publicationResult] = await Promise.all([
+  const [
+    funding,
+    expenditure,
+    budgets,
+    approvedBudgetLines,
+    revenues,
+    monthly,
+    aopActivities,
+    publicationResult,
+  ] = await Promise.all([
     loadFunding(client, scope),
     loadExpenditure(client, scope),
     loadBudgets(client, scope),
+    loadApprovedBudgetLines(client, scope),
     loadRevenues(client, scope),
     loadMonthly(client, scope),
     loadAopActivities(client, scope),
@@ -400,6 +451,7 @@ export async function loadReportingDataset(
     funding,
     expenditure,
     budgets,
+    approvedBudgetLines,
     revenues,
     monthly,
     aopActivities,

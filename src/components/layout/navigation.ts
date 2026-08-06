@@ -4,6 +4,7 @@ import {
   CalendarRangeIcon,
   DatabaseIcon,
   FileInputIcon,
+  SparklesIcon,
   InboxIcon,
   LandmarkIcon,
   LayoutDashboardIcon,
@@ -36,6 +37,13 @@ export const navigationItems: NavigationItem[] = [
     path: "/mda",
     icon: LayoutDashboardIcon,
     roles: ["mda_user", "reviewer", "admin"],
+    section: "operations",
+  },
+  {
+    label: "Assistant",
+    path: "/assistant",
+    icon: SparklesIcon,
+    roles: ["mda_user", "reviewer", "admin", "facility_user"],
     section: "operations",
   },
   {

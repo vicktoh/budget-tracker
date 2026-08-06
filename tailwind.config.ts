@@ -2,7 +2,13 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    // Streamdown (markdown renderer used by the assistant) styles itself with
+    // Tailwind classes that only appear inside its dist bundle.
+    "./node_modules/streamdown/dist/*.js",
+  ],
   theme: {
     extend: {
       fontFamily: {
