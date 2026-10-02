@@ -4,6 +4,7 @@ import type { TypedSupabaseClient } from "@/lib/supabase/client";
 import type { AppProfile } from "@/lib/auth-types";
 import { getRoleLabel } from "@/lib/access";
 import { createAssistantTools } from "@/lib/assistant/tools";
+import { createMetricTools } from "@/lib/assistant/metric-tools";
 import { SCHEMA_REFERENCE } from "@/lib/assistant/schema-reference";
 
 function describeUser(profile: AppProfile): string {
@@ -49,8 +50,16 @@ Today's date: ${today}. All monetary amounts are Nigerian Naira (NGN). Format am
 ## Current user
 ${describeUser(profile)}
 
+## Executive metric tools — use these first
+The Commissioner's dashboard is computed by the same functions behind getOverview, getMdaPerformance, getProgrammePerformance, listExceptions, compareComponents and generateReport. ALWAYS answer budget-performance questions with these tools so your figures match the dashboard exactly; only fall back to queryDatabase for questions they cannot answer.
+Agreed definitions: utilisation = actual spend ÷ full-year approved budget; low utilisation and underfunded = below 25%; "not reporting" = no monthly tracking return for the latest month (a ₦0 return counts as reported); programme budget = AOP planned cost mapped by keyword.
+- Be concise: lead with a one or two sentence answer, then 3–5 key figures or a small table, then a chart via renderChart when comparing things.
+- Each tool result includes in-app links (e.g. /admin/mdas/…, /admin/programmes/…, /admin/reports/mbp?fy=…). Include the most relevant ones as markdown links, e.g. [Open PHCMB](/admin/mdas/…), so the Commissioner can drill in.
+- For report requests, call generateReport and give the report links; say which quarters are missing.
+- Be explicit about data gaps the tools report (missing quarters, MDAs never reporting, programme budgets being AOP-derived, Q2 having no programme detail). Never present a missing figure as zero.
+
 ## How you access data
-You answer questions by querying the live database with the queryDatabase tool. Every query runs with the current user's own credentials, and Postgres row-level security limits results to what this user is allowed to see — you can never leak other users' data, so query freely. If a result comes back empty, it may mean either no data exists or the user lacks access to it; say so neutrally instead of guessing.
+For anything else, you answer questions by querying the live database with the queryDatabase tool. Every query runs with the current user's own credentials, and Postgres row-level security limits results to what this user is allowed to see — you can never leak other users' data, so query freely. If a result comes back empty, it may mean either no data exists or the user lacks access to it; say so neutrally instead of guessing.
 
 ## Query guidance
 - Prefer the reporting views (mda_budget_vs_actual, funding_by_source, expenditure_by_category, expenditure_by_funding_source, programme_area_summary, phc_lga_expenditure_summary, phc_facility_expenditure_summary, aop_planned_vs_actual, unlinked_expenditure) for totals and summaries — they are pre-aggregated.
@@ -88,7 +97,10 @@ export function createAssistantAgent(options: {
   return new ToolLoopAgent({
     model: openai("gpt-5.1"),
     instructions: buildInstructions(options.profile),
-    tools: createAssistantTools(options.supabase),
+    tools: {
+      ...createAssistantTools(options.supabase),
+      ...createMetricTools(options.supabase),
+    },
     stopWhen: isStepCount(15),
   });
 }

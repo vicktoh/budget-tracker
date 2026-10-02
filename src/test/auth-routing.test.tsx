@@ -54,7 +54,7 @@ describe("authenticated routing", () => {
     expect(screen.getByText(/Sign in to manage MDA entries/i)).toBeInTheDocument();
   });
 
-  it("allows admins to access the admin insight surface", () => {
+  it("allows admins to access the executive overview", () => {
     renderWithAuth(
       <AuthenticatedLayout>
         <AdminRoute />
@@ -62,7 +62,9 @@ describe("authenticated routing", () => {
       adminProfile,
     );
 
-    expect(screen.getByRole("heading", { name: "Admin Insights" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Health sector budget performance/ }),
+    ).toBeInTheDocument();
   });
 
   it("redirects MDA users away from admin-only routes", () => {

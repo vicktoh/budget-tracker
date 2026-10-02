@@ -73,6 +73,8 @@ export type ExpenditureEntryLite = {
   id: string;
   public_id: string;
   voucher_ref_no: string;
+  /** Free-text remarks; BPR rows carry the budget-line title here. */
+  remarks?: string | null;
   mda_id: string;
   mda_name: string;
   programme_area_id: string;

@@ -1,1 +1,1 @@
-export { AdminInsightsRoute as AdminRoute } from "@/components/reporting/admin-insights";
+export { ExecutiveOverviewRoute as AdminRoute } from "@/components/executive/overview";

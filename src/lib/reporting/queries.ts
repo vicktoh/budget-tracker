@@ -22,7 +22,7 @@ const FUNDING_SELECT = `
 `;
 
 const EXPENDITURE_SELECT = `
-  id, public_id, voucher_ref_no, mda_id, fiscal_year, quarter, amount, transaction_date,
+  id, public_id, voucher_ref_no, remarks, mda_id, fiscal_year, quarter, amount, transaction_date,
   programme_area_id, expenditure_category_id, aop_activity_id, is_phc, lga_id, facility_id,
   mdas!inner(id, name),
   programme_areas!inner(id, name),
@@ -120,6 +120,7 @@ type RawExpenditure = {
   id: string;
   public_id: string | null;
   voucher_ref_no: string;
+  remarks: string | null;
   mda_id: string;
   fiscal_year: number;
   quarter: number;
@@ -220,6 +221,7 @@ async function loadExpenditure(
       id: row.id,
       public_id: row.public_id ?? "",
       voucher_ref_no: row.voucher_ref_no,
+      remarks: row.remarks ?? null,
       mda_id: row.mda_id,
       mda_name: pickRelatedName(row.mdas),
       programme_area_id: row.programme_area_id,

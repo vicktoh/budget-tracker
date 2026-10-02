@@ -68,7 +68,7 @@ export const navigationItems: NavigationItem[] = [
     section: "entries",
   },
   {
-    label: "Admin Insights",
+    label: "Executive overview",
     path: "/admin",
     icon: BarChart3Icon,
     roles: ["admin"],

@@ -38,7 +38,7 @@ import type { AssistantUIMessage } from "@/lib/assistant/agent";
 import { cn } from "@/lib/utils";
 
 /** Chat transport errors carry the route's JSON body in error.message. */
-function describeChatError(error: Error): string {
+export function describeChatError(error: Error): string {
   try {
     const parsed = JSON.parse(error.message) as { error?: unknown };
     if (parsed && typeof parsed.error === "string") return parsed.error;
@@ -138,7 +138,38 @@ function ChartToolPartView({ part }: { part: ChartToolPart }) {
   return <Shimmer className="text-sm">Preparing chart…</Shimmer>;
 }
 
-function AssistantMessageParts({ message }: { message: AssistantUIMessage }) {
+const METRIC_TOOL_LABEL: Record<string, string> = {
+  "tool-getOverview": "statewide overview",
+  "tool-getMdaPerformance": "MDA performance",
+  "tool-getProgrammePerformance": "programme performance",
+  "tool-listExceptions": "reporting & funding exceptions",
+  "tool-compareComponents": "personnel, overhead & capital",
+  "tool-generateReport": "report",
+};
+
+/** Status line for the shared executive metric tools. */
+function MetricToolStatus({ part }: { part: { type: string; state?: string } }) {
+  const label = METRIC_TOOL_LABEL[part.type] ?? "data";
+  if (part.state === "output-available") {
+    return (
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <CheckCircle2Icon className="size-3.5 text-primary" />
+        Checked {label}
+      </p>
+    );
+  }
+  if (part.state === "output-error") {
+    return (
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <XCircleIcon className="size-3.5 text-destructive" />
+        Could not load {label}
+      </p>
+    );
+  }
+  return <Shimmer className="text-xs">{`Checking ${label}…`}</Shimmer>;
+}
+
+export function AssistantMessageParts({ message }: { message: AssistantUIMessage }) {
   return (
     <>
       {message.parts.map((part, index) => {
@@ -151,6 +182,9 @@ function AssistantMessageParts({ message }: { message: AssistantUIMessage }) {
           case "tool-renderChart":
             return <ChartToolPartView key={part.toolCallId} part={part} />;
           default:
+            if (part.type.startsWith("tool-") && "toolCallId" in part) {
+              return <MetricToolStatus key={part.toolCallId} part={part} />;
+            }
             return null;
         }
       })}
@@ -158,7 +192,7 @@ function AssistantMessageParts({ message }: { message: AssistantUIMessage }) {
   );
 }
 
-function AssistantAvatar({ className }: { className?: string }) {
+export function AssistantAvatar({ className }: { className?: string }) {
   return (
     <div
       className={cn(
@@ -175,6 +209,7 @@ export function AssistantRoute() {
   const { messages, sendMessage, status, stop, error } =
     useChat<AssistantUIMessage>({
       transport: new DefaultChatTransport({ api: "/api/chat" }),
+      throttle: 80,
     });
 
   const isGenerating = status === "submitted" || status === "streaming";
