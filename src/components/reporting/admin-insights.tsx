@@ -222,7 +222,7 @@ function OverviewTab({ loading, dataset, filters, setFilter, summary }: Overview
         fiscalYear={filters.fiscalYear}
       />
 
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Recorded expenditure"
           value={summary ? formatCompactNaira(summary.totalExpenditure) : "—"}
@@ -246,7 +246,7 @@ function OverviewTab({ loading, dataset, filters, setFilter, summary }: Overview
         />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <ChartCard
           title="Approved budget composition"
           description="Personnel, overhead and capital shares of the approved envelope."
@@ -430,7 +430,7 @@ function PhcTab({ loading, dataset, filters, setFilter }: TabProps) {
     : [];
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <ChartCard
         title="PHC expenditure by LGA"
         description="Local government totals for PHC-flagged expenditure. Click to scope facility view to that LGA."

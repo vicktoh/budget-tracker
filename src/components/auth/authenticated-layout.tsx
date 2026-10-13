@@ -23,6 +23,7 @@ const authenticatedRoutes: AppRoute[] = [
   "/admin/reports",
   "/admin",
   "/imports",
+  "/reference-requests",
   "/assistant",
   "/settings",
 ];

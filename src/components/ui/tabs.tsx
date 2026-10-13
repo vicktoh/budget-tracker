@@ -46,7 +46,7 @@ export function TabsList({
   return (
     <div
       className={cn(
-        "inline-flex h-9 items-center gap-1 rounded-md border bg-muted p-1",
+        "inline-flex h-9 max-w-full items-center gap-1 overflow-x-auto rounded-md border bg-muted p-1 [scrollbar-width:none]",
         className,
       )}
       role="tablist"
@@ -66,7 +66,7 @@ export function TabsTrigger({
   return (
     <button
       className={cn(
-        "focus-ring inline-flex h-7 items-center justify-center rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground",
+        "focus-ring inline-flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:bg-card data-[state=active]:text-foreground",
         className,
       )}
       data-state={selected ? "active" : "inactive"}

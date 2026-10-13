@@ -96,7 +96,7 @@ function ComponentCard({
           Approved: {formatNaira(component.approved_amount)}
         </span>
       </div>
-      <div className="grid gap-0 md:grid-cols-[190px_1fr]">
+      <div className="grid grid-cols-1 gap-0 md:grid-cols-[190px_1fr]">
         <div className="flex flex-col items-center justify-center gap-2 border-b border-border p-5 md:border-b-0 md:border-r">
           <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
             Jan–Jun burn rate
@@ -129,7 +129,7 @@ function ComponentCard({
               {note}
             </p>
           ) : null}
-          <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-end">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[auto_1fr] sm:items-end">
             <QuarterCompare
               q1={component.official_q1}
               q2={component.official_q2}
@@ -215,7 +215,7 @@ export function MdaAnalysis({ cards, selectedId, onSelect, benchmarkQuarter }: M
         </span>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-border bg-card p-4" style={{ borderTop: "3px solid hsl(var(--primary))" }}>
           <p className="text-[10.5px] uppercase tracking-wide text-muted-foreground">
             Total approved budget

@@ -160,7 +160,7 @@ export function UserDirectory({
     <>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 md:flex-row md:items-end md:justify-between">
-          <div className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_12rem]">
+          <div className="grid grid-cols-1 flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_12rem]">
             <Field>
               <FieldLabel htmlFor="user-search">Search directory</FieldLabel>
               <div className="relative">
@@ -636,7 +636,7 @@ function ManageUserAccessSheet({
           </span>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="edit-full-name">Full name</FieldLabel>
             <Input

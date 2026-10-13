@@ -128,7 +128,7 @@ export function AdminReportsRoute() {
             {label}
           </span>
         </div>
-        <dl className="grid sm:grid-cols-2 xl:grid-cols-4">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
           <SnapshotMetric
             icon={BanknoteIcon}
             label="Approved budget"
@@ -158,7 +158,7 @@ export function AdminReportsRoute() {
         </dl>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {REPORT_TEMPLATE_ORDER.map((id) => {
           const template = REPORT_TEMPLATES[id];
           const signals = dataset

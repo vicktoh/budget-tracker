@@ -75,7 +75,10 @@ export function Pagination({
         <ChevronLeftIcon aria-hidden="true" />
         Previous
       </Button>
-      <ol className="flex items-center gap-1 text-sm">
+      <span className="text-sm tabular-nums text-muted-foreground sm:hidden">
+        Page {page} of {pageCount}
+      </span>
+      <ol className="hidden items-center gap-1 text-sm sm:flex">
         {pages.map((value, index) => {
           if (value === "ellipsis") {
             return (

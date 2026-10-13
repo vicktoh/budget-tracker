@@ -72,6 +72,12 @@
     @apply border-border;
   }
 
+  /* Long unbroken values (vouchers, hashes, URLs in remarks) wrap instead of
+     pushing the page sideways on phones. Only words that can't fit break. */
+  main {
+    overflow-wrap: break-word;
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;

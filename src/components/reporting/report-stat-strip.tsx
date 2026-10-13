@@ -99,7 +99,7 @@ export function ReportStatStrip({
           ) : null}
         </div>
       </div>
-      <div className="grid overflow-hidden rounded-lg border bg-card sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 overflow-hidden rounded-lg border bg-card sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <ReportStatCard key={stat.label} stat={stat} />
         ))}

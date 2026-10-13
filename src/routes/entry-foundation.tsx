@@ -30,7 +30,7 @@ export function EntryFoundationRoute({ type }: { type: "funding" | "expenditure"
         </CardHeader>
         <CardContent>
           <FieldGroup>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Field>
                 <FieldLabel htmlFor="transaction-date">Transaction date</FieldLabel>
                 <Input id="transaction-date" type="date" />
@@ -48,7 +48,7 @@ export function EntryFoundationRoute({ type }: { type: "funding" | "expenditure"
                 </Select>
               </Field>
             </div>
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <Field>
                 <FieldLabel htmlFor="amount">Money Amount</FieldLabel>
                 <Input id="amount" inputMode="decimal" placeholder="0.00" />

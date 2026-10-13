@@ -257,7 +257,7 @@ export function ApprovedBudgetsManager({
             </Button>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:max-w-2xl">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:max-w-2xl">
             <Field>
               <FieldLabel htmlFor="budget-filter-year">Fiscal year</FieldLabel>
               <Combobox

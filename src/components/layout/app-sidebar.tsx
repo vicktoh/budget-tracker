@@ -27,18 +27,6 @@ export function AppSidebar({
   profile: AppProfile;
   onCollapsedChange: (collapsed: boolean) => void;
 }) {
-  const pathname = usePathname();
-  const visibleItems = navigationItems.filter((item) =>
-    canAccessRoute(profile, item.path),
-  );
-
-  const grouped = sectionOrder
-    .map<{ section: NavigationSection; items: NavigationItem[] }>((section) => ({
-      section,
-      items: visibleItems.filter((item) => item.section === section),
-    }))
-    .filter((group) => group.items.length > 0);
-
   return (
     <aside
       aria-label="Primary navigation"
@@ -89,7 +77,51 @@ export function AppSidebar({
         </Button>
       </div>
       <Separator />
-      <nav className="flex flex-1 flex-col gap-4 overflow-y-auto p-2">
+      <NavigationList collapsed={collapsed} profile={profile} />
+      <div className="border-t p-3">
+        {!collapsed ? (
+          <div className="rounded-md bg-accent px-3 py-2 text-[11px] text-accent-foreground">
+            FY 2026 reporting cycle
+            <p className="mt-0.5 text-[11px] font-normal text-muted-foreground">
+              Quarterly entries close end of each quarter.
+            </p>
+          </div>
+        ) : (
+          <Tooltip label="FY 2026 reporting cycle" side="right">
+            <div className="mx-auto flex size-7 items-center justify-center rounded-md bg-accent text-accent-foreground">
+              <span className="text-[10px] font-semibold">26</span>
+            </div>
+          </Tooltip>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+/** Grouped primary navigation, shared by the desktop sidebar and mobile drawer. */
+export function NavigationList({
+  collapsed = false,
+  profile,
+  onNavigate,
+}: {
+  collapsed?: boolean;
+  profile: AppProfile;
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const visibleItems = navigationItems.filter((item) =>
+    canAccessRoute(profile, item.path),
+  );
+
+  const grouped = sectionOrder
+    .map<{ section: NavigationSection; items: NavigationItem[] }>((section) => ({
+      section,
+      items: visibleItems.filter((item) => item.section === section),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  return (
+    <nav className="flex flex-1 flex-col gap-4 overflow-y-auto p-2">
         {grouped.map((group) => (
           <div key={group.section} className="flex flex-col gap-1">
             {!collapsed ? (
@@ -105,6 +137,7 @@ export function AppSidebar({
                 const link = (
                   <Link
                     href={item.path}
+                    onClick={onNavigate}
                     aria-current={active ? "page" : undefined}
                     className={cn(
                       "focus-ring flex h-9 items-center gap-2 rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -135,23 +168,6 @@ export function AppSidebar({
             </ul>
           </div>
         ))}
-      </nav>
-      <div className="border-t p-3">
-        {!collapsed ? (
-          <div className="rounded-md bg-accent px-3 py-2 text-[11px] text-accent-foreground">
-            FY 2026 reporting cycle
-            <p className="mt-0.5 text-[11px] font-normal text-muted-foreground">
-              Quarterly entries close end of each quarter.
-            </p>
-          </div>
-        ) : (
-          <Tooltip label="FY 2026 reporting cycle" side="right">
-            <div className="mx-auto flex size-7 items-center justify-center rounded-md bg-accent text-accent-foreground">
-              <span className="text-[10px] font-semibold">26</span>
-            </div>
-          </Tooltip>
-        )}
-      </div>
-    </aside>
+    </nav>
   );
 }

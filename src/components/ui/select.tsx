@@ -7,7 +7,7 @@ export const Select = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <select
     className={cn(
-      "focus-ring h-9 rounded-md border bg-card px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50",
+      "focus-ring h-9 min-w-0 max-w-full truncate rounded-md border bg-card px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50",
       className,
     )}
     ref={ref}

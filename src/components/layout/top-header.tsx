@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { getRoleLabel } from "@/lib/access";
 import { supabase } from "@/lib/supabase";
@@ -63,7 +64,8 @@ export function TopHeader({ profile }: { profile: AppProfile }) {
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="flex min-w-0 flex-1 items-center gap-4">
+      <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-4">
+        <MobileNav profile={profile} />
         <Breadcrumb className="hidden md:block" items={getBreadcrumb(pathname)} />
         <Separator className="hidden h-4 md:block" orientation="vertical" />
         <div className="flex min-w-0 items-center gap-2 text-xs">

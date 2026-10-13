@@ -168,7 +168,7 @@ export function MdaDashboardRoute() {
 
       {viewerDashboard ? (
         <>
-          <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               label="MDAs reporting"
               value={loading ? "—" : `${completeReports} / ${coverageRows.length}`}
@@ -301,7 +301,7 @@ export function MdaDashboardRoute() {
         </>
       ) : null}
 
-      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           label="Funding entries"
           value={summary ? formatInteger(summary.fundingCount) : "—"}
@@ -324,7 +324,7 @@ export function MdaDashboardRoute() {
         />
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <StatCard
           label="Funding recorded"
           value={summary ? formatNaira(summary.totalFunding) : "—"}
@@ -347,7 +347,7 @@ export function MdaDashboardRoute() {
         />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard
           title="Funding by source"
           description="Top funding sources for assigned MDAs."
@@ -379,7 +379,7 @@ export function MdaDashboardRoute() {
         </ChartCard>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ChartCard
           title="Expenditure by category"
           description="Top expenditure categories for assigned MDAs."

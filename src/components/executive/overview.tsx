@@ -136,7 +136,7 @@ export function ExecutiveOverviewRoute() {
       <AskHero />
 
       {loading && !overview ? (
-        <div className="grid gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-xl" />
           ))}
@@ -175,7 +175,7 @@ export function ExecutiveOverviewRoute() {
             />
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <AttentionCard
               href="/admin/exceptions#not-reporting"
               icon={AlertTriangleIcon}
@@ -220,7 +220,7 @@ export function ExecutiveOverviewRoute() {
             title="Personnel, overhead and capital"
             description="Actual spend against the annual approved budget for each economic class."
           >
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {overview.components
                 .filter((c) => c.budget > 0)
                 .map((c) => (
@@ -312,7 +312,7 @@ export function ExecutiveOverviewRoute() {
             title="Programmes"
             description="Budget is the AOP planned cost mapped to each programme; actuals are spending recorded against that programme area."
           >
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {programmes
                 .filter((p) => FEATURED_PROGRAMMES.includes(p.name))
                 .map((p) => (
@@ -382,7 +382,7 @@ export function ExecutiveOverviewRoute() {
             </Table>
           </SectionCard>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <SectionCard
               title="What the data does not cover yet"
               description="Figures above are only as complete as the returns received."

@@ -394,7 +394,7 @@ function CreateUserCard({
             </Alert>
           ) : null}
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="full-name">Full name</FieldLabel>
               <Input
@@ -416,7 +416,7 @@ function CreateUserCard({
             </Field>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="role">Role</FieldLabel>
               <Combobox
@@ -445,7 +445,7 @@ function CreateUserCard({
           </div>
 
           {method === "password" ? (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="password">Temporary password</FieldLabel>
                 <div className="flex gap-2">

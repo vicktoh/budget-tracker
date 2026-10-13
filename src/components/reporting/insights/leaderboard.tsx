@@ -87,7 +87,7 @@ export function Leaderboard({ cards, benchmarkQuarter, count = 5, onSelect }: Le
   const top = ranked.slice(0, count);
   const bottom = ranked.slice(-count).reverse();
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Top performing MDAs</CardTitle>

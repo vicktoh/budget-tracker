@@ -72,7 +72,7 @@ export function EntriesRoute() {
     <div className="flex flex-col gap-5">
       <PageHeader title="Entry Register" description="View recorded funding and expenditure, open entry details, and participate in comments." />
       {error ? <Alert variant="destructive"><AlertTitle>Could not load entries</AlertTitle><AlertDescription>{error}</AlertDescription></Alert> : null}
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card><CardHeader><CardDescription>Total entries</CardDescription><CardTitle>{fundingRows.length + expenditureRows.length}</CardTitle></CardHeader></Card>
         <Card><CardHeader><CardDescription>Published-quarter locks</CardDescription><CardTitle>{lockedCount}</CardTitle></CardHeader></Card>
         <Card><CardHeader><CardDescription>Combined financial value</CardDescription><CardTitle>{formatNaira(financialTotal)}</CardTitle></CardHeader></Card>

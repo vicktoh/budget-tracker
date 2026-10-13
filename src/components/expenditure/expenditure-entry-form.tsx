@@ -737,7 +737,7 @@ export function ExpenditureEntryForm({
         title="Period & MDA"
         description="The transaction date drives the fiscal year and quarter automatically — submitters never pick the reporting period by hand."
       >
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="transaction-date">Transaction date</FieldLabel>
             <Input
@@ -837,7 +837,7 @@ export function ExpenditureEntryForm({
         title="Financial traceability"
         description="The voucher reference number must be unique within this MDA and fiscal year so the same voucher can never be counted twice."
       >
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="amount">Money Amount</FieldLabel>
             <div className="relative">
@@ -938,7 +938,7 @@ export function ExpenditureEntryForm({
               return (
                 <div
                   key={`allocation-${index}`}
-                  className="grid gap-4 rounded-md border bg-background p-4 md:grid-cols-[minmax(0,1fr)_12rem_auto]"
+                  className="grid grid-cols-1 gap-4 rounded-md border bg-background p-4 md:grid-cols-[minmax(0,1fr)_12rem_auto]"
                 >
                   <Field>
                     <FieldLabel>Funding source</FieldLabel>
@@ -1108,7 +1108,7 @@ export function ExpenditureEntryForm({
         title="Classification"
         description="Programme area and expenditure category determine how this spend rolls up into sector reporting and budget-vs-actual views. Optional AOP linkage and Expenditure Item add further detail."
       >
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="programme-area">Programme Area</FieldLabel>
             <Combobox
@@ -1163,7 +1163,7 @@ export function ExpenditureEntryForm({
           </Field>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {stateBudgetInUse ? (
             <Field>
               <FieldLabel
@@ -1322,7 +1322,7 @@ export function ExpenditureEntryForm({
                 PHC expenditure — locked on for facility users.
               </span>
             </div>
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <Field>
                 <FieldLabel htmlFor="facility">PHC Facility</FieldLabel>
                 {facilities.length === 1 ? (
@@ -1389,7 +1389,7 @@ export function ExpenditureEntryForm({
         </div>
 
         {draft.is_phc ? (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="lga">LGA</FieldLabel>
               <Combobox
@@ -1544,7 +1544,7 @@ function FormSection({
   return (
     <section
       className={cn(
-        "grid gap-8 px-6 py-10 md:px-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14",
+        "grid grid-cols-1 gap-8 px-6 py-10 md:px-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14",
         !last && "border-b",
       )}
     >

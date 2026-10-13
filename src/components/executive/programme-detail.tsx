@@ -152,7 +152,7 @@ export function ProgrammeDetailRoute({ slug }: { slug: string }) {
         )}
       </SectionCard>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <SectionCard title="Releases and spending recorded" description="Official actuals tagged to this programme area.">
           {spending.length === 0 && releases.length === 0 ? (
             <p className="text-sm text-muted-foreground">

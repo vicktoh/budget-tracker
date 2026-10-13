@@ -66,7 +66,7 @@ export function LedgerEntryFilters({
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border bg-card p-3">
-      <div className="grid gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
         <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground md:col-span-2">
           Search
           <Input

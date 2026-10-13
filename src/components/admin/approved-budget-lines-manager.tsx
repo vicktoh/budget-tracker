@@ -295,7 +295,7 @@ export function ApprovedBudgetLinesManager({
           </Button>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <FilterField
             id="budget-line-year"
             label="Fiscal year"
@@ -565,7 +565,7 @@ function BudgetLineEditDialog({
         ) : null}
 
         <FieldGroup>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <SelectDraftField
               error={editing.errors.fiscal_year}
               id="line-fiscal-year"
@@ -603,7 +603,7 @@ function BudgetLineEditDialog({
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
             <DraftInput
               error={editing.errors.economic_code}
               id="line-economic-code"
@@ -631,14 +631,14 @@ function BudgetLineEditDialog({
             />
           </Field>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <DraftInput id="line-function-code" label="Function code" value={editing.draft.function_code} onChange={(value) => setField("function_code", value)} />
             <DraftInput id="line-programme-code" label="Programme code" value={editing.draft.programme_code} onChange={(value) => setField("programme_code", value)} />
             <DraftInput id="line-location-code" label="Location code" value={editing.draft.location_code} onChange={(value) => setField("location_code", value)} />
             <DraftInput id="line-fund-code" label="Fund code" value={editing.draft.fund_code} onChange={(value) => setField("fund_code", value)} />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <DraftInput
               error={editing.errors.approved_amount}
               id="line-approved-amount"

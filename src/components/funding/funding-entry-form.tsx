@@ -156,7 +156,7 @@ export function FundingEntryForm({
         title="Period & MDA"
         description="The transaction date drives the fiscal year and quarter automatically — submitters never pick the reporting period by hand."
       >
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="transaction-date">Transaction date</FieldLabel>
             <Input
@@ -247,7 +247,7 @@ export function FundingEntryForm({
         title="Classification"
         description="Programme area and funding source determine how this receipt rolls up into sector reporting and budget-vs-actual views."
       >
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="programme-area">Programme Area</FieldLabel>
             <Combobox
@@ -308,7 +308,7 @@ export function FundingEntryForm({
         title="Financial traceability"
         description="The reference number must be unique within this MDA and fiscal year so the same receipt can never be counted twice."
       >
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Field>
             <FieldLabel htmlFor="amount">Money Amount</FieldLabel>
             <div className="relative">
@@ -458,7 +458,7 @@ function FormSection({
   return (
     <section
       className={cn(
-        "grid gap-8 px-6 py-10 md:px-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14",
+        "grid grid-cols-1 gap-8 px-6 py-10 md:px-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14",
         !last && "border-b",
       )}
     >

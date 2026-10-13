@@ -65,7 +65,7 @@ export function ReportCard({
         </div>
         <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{template.description}</p>
 
-        <ul className="mt-3 grid gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground sm:grid-cols-2">
+        <ul className="mt-3 grid grid-cols-1 gap-x-3 gap-y-1.5 text-[11px] text-muted-foreground sm:grid-cols-2">
           {template.contents.map((item) => (
             <li key={item} className="flex min-w-0 items-center gap-1.5">
               <CheckIcon aria-hidden className="size-3 shrink-0 text-primary" />

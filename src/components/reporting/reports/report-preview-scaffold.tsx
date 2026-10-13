@@ -139,7 +139,7 @@ export function ReportPreviewScaffold({
             <p className="text-xs text-muted-foreground">{template.audience} · {label}</p>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
           {toolbarExtras}
           {renderToolbarExtras?.({ fiscalYear, quarter, loading })}
           {hideDownload ? null : (

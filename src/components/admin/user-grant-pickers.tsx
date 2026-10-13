@@ -284,7 +284,7 @@ export function MdaScopedAccessGrants({
         Mix funding and expenditure grants independently. A user can submit
         entries for some MDAs and not others.
       </p>
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <MdaGrantPicker
           description="Add and edit pending funding entries for selected MDAs."
           icon={GRANT_PICKER_ICONS.funding}

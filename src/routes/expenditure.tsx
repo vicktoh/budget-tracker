@@ -322,7 +322,7 @@ function ExpenditureSummaryCards({
   }, [entries, publishedPeriods]);
 
   return (
-    <section className="grid gap-4 md:grid-cols-4">
+    <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
       <Card>
         <CardHeader>
           <CardDescription>Total entries</CardDescription>

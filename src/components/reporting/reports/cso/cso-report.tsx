@@ -243,7 +243,7 @@ function CsoReportBody({
       {/* Where the money went */}
       <section className="flex flex-col gap-3">
         <SectionHeading>Where the money went — {periodLabel}</SectionHeading>
-        <div className="grid gap-5 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
           <div className="lg:col-span-3">
             <ChartCard
               title="Funding vs spending by programme"
@@ -457,7 +457,7 @@ function NarrativeEditor({
           {narratives.loading ? "Loading…" : "Auto-drafts regenerate when data changes"}
         </span>
       </div>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {sections.map((section) => {
           const edited = narratives.isEdited(section.sectionKey);
           const dirty = narratives.isDirty(section.sectionKey);

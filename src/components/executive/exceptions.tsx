@@ -142,7 +142,7 @@ export function ExceptionsRoute() {
         </SectionCard>
       </section>
 
-      <section id="no-funding" className="grid scroll-mt-20 gap-4 xl:grid-cols-2">
+      <section id="no-funding" className="grid grid-cols-1 scroll-mt-20 gap-4 xl:grid-cols-2">
         <SectionCard
           title={`MDAs receiving no funding (${exceptions.noFundingMdas.length})`}
           description="Approved budget above zero, ₦0 released year to date."
@@ -225,7 +225,7 @@ export function ExceptionsRoute() {
         </SectionCard>
       </section>
 
-      <section id="low-utilisation" className="grid scroll-mt-20 gap-4 xl:grid-cols-2">
+      <section id="low-utilisation" className="grid grid-cols-1 scroll-mt-20 gap-4 xl:grid-cols-2">
         <SectionCard
           title={`MDAs with low utilisation (${exceptions.lowUtilisationMdas.length})`}
           description={`Less than ${formatPercent(LOW_UTILISATION)} of the annual budget spent.`}

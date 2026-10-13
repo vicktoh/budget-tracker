@@ -506,7 +506,7 @@ function FormSkeleton() {
       {[0, 1, 2, 3].map((index) => (
         <section
           key={index}
-          className="grid gap-8 border-b px-6 py-10 last:border-b-0 md:px-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14"
+          className="grid grid-cols-1 gap-8 border-b px-6 py-10 last:border-b-0 md:px-10 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-14"
         >
           <div className="flex flex-col gap-3">
             <Skeleton className="size-9 rounded-md" />

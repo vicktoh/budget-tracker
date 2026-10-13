@@ -166,7 +166,7 @@ export function ReferenceRequestForm({
             </Alert>
           ) : null}
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <Field>
               <FieldLabel htmlFor="ref-req-type">What needs adding?</FieldLabel>
               <Combobox

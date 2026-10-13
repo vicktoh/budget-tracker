@@ -321,7 +321,7 @@ function BirReportBody({
 
       {/* Section 1.F — Summary graphs */}
       <Section code="1.F" title="Summary Budget Implementation Graphs">
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           <ChartCard
             title="Execution by economic classification"
             description="Actual spend against the approved budget per economic class. The tick marks the pro-rata benchmark for this period."
@@ -432,7 +432,7 @@ function BirReportBody({
           <EmptyNote>No revenue budget is recorded for this period.</EmptyNote>
         ) : (
           <div className="flex flex-col gap-4">
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <ChartCard
                 title="Collection against budget"
                 description="Revenue collected against the approved figure. The tick marks the pro-rata benchmark for this period."
