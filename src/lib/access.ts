@@ -43,7 +43,7 @@ const routeRoles: Record<AppRoute, AppRole[]> = {
   "/admin/budgets": ["admin"],
   "/admin/aop-activities": ["admin"],
   "/reference-requests": ["mda_user", "reviewer", "admin", "facility_user"],
-  "/imports": ["admin"],
+  "/imports": ["mda_user", "admin"],
   "/assistant": ["mda_user", "reviewer", "admin", "facility_user"],
   "/settings": ["mda_user", "reviewer", "admin", "facility_user"],
 };
@@ -196,6 +196,10 @@ export function canAccessRoute(
       );
     case "/entries":
       return true;
+    case "/imports":
+      // Same granular grants as the manual forms; facility users and Viewers
+      // have no import path.
+      return isMdaUser(profile) && hasMdaScopedGrants(profile);
     case "/mda":
       // Viewers have statewide oversight by role and intentionally carry no
       // per-MDA memberships. MDA users still need at least one scoped grant.

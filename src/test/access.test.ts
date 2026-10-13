@@ -132,6 +132,7 @@ describe("canAccessRoute", () => {
     expect(canAccessRoute(submitter, "/funding")).toBe(true);
     expect(canAccessRoute(submitter, "/expenditure")).toBe(true);
     expect(canAccessRoute(submitter, "/entries")).toBe(true);
+    expect(canAccessRoute(submitter, "/imports")).toBe(true);
   });
 
   it("mda users reach submit routes from grants and the shared register", () => {

@@ -61,6 +61,13 @@ export const navigationItems: NavigationItem[] = [
     section: "entries",
   },
   {
+    label: "Import entries",
+    path: "/imports",
+    icon: UploadIcon,
+    roles: ["mda_user", "admin"],
+    section: "entries",
+  },
+  {
     label: "Entry Register",
     path: "/entries",
     icon: ListIcon,
@@ -124,13 +131,6 @@ export const navigationItems: NavigationItem[] = [
     section: "entries",
   },
   {
-    label: "Imports",
-    path: "/imports",
-    icon: UploadIcon,
-    roles: ["admin"],
-    section: "admin",
-  },
-  {
     label: "Settings",
     path: "/settings",
     icon: SettingsIcon,
@@ -165,8 +165,8 @@ export const coreWorkflowItems = [
     icon: ReceiptTextIcon,
   },
   {
-    title: "Admin Import",
-    description: "Validate reference, budget, AOP, and historical ledger imports before writes.",
+    title: "Import Entries",
+    description: "Upload CSV or Excel ledgers, resolve every blocked row, and confirm an exact insert plan.",
     icon: FileInputIcon,
   },
 ];

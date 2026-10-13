@@ -1,10 +1,5 @@
-import { SimplePageRoute } from "@/routes/simple-page";
+import { ImportsRoute } from "@/routes/imports";
 
 export default function ImportsPage() {
-  return (
-    <SimplePageRoute
-      description="Admin import validation and write workflow foundation."
-      title="Imports"
-    />
-  );
+  return <ImportsRoute />;
 }
