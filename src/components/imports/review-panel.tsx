@@ -257,11 +257,11 @@ export function ReviewPanel({ batch, rows, labels, busy, committing, online, isO
                     {columns.map((field) => {
                       const { text, edited } = cellText(row, field);
                       const value = resolved(row, field);
-                      const fallbackMda = field === "mda" && !batch.mapping.mda && batch.options.default_mda_id;
+                      const fallbackMda = field === "mda" && !text && batch.options.default_mda_id;
                       return (
                         <TableCell key={field} className={cn("max-w-56", field === "amount" && "text-right tabular-nums")}>
                           <div className="truncate">
-                            {fallbackMda ? <span className="text-muted-foreground">(chosen for all rows)</span> : text || <span className="text-muted-foreground">—</span>}
+                            {fallbackMda ? <span className="text-muted-foreground">(default MDA)</span> : text || <span className="text-muted-foreground">—</span>}
                             {edited ? <span className="ml-1 text-xs text-status-pending">edited</span> : null}
                           </div>
                           {value && value !== text ? <div className="truncate text-xs text-muted-foreground">→ {value}</div> : null}

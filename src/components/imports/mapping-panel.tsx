@@ -41,6 +41,8 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply }: Prop
     setDefaultMdaId(batch.options.default_mda_id ?? "");
   }, [batch.revision, batch.mapping, batch.options.date_convention, batch.options.default_mda_id]);
 
+  // MDA users registered under one MDA are defaulted to it by the server.
+  const singleMda = permittedMdas.length === 1 ? permittedMdas[0] : null;
   const used = useMemo(() => new Set(Object.values(mapping).filter(Boolean)), [mapping]);
   const needsDateConvention = rows.some((row) => row.issues.some((issue) => issue.code === "date_convention_required"));
   const definitions = FIELD_DEFINITIONS[batch.ledger_type];
@@ -56,7 +58,6 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply }: Prop
       else delete next[field];
       return next;
     });
-    if (field === "mda" && header) setDefaultMdaId("");
   }
 
   return (
@@ -101,28 +102,32 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply }: Prop
           })}
         </div>
 
-        {!mapping.mda ? (
-          <Field className="max-w-lg">
-            <FieldLabel htmlFor="default-mda">No MDA column — which MDA does every row belong to?</FieldLabel>
-            <Select
-              id="default-mda"
-              value={defaultMdaId}
-              onChange={(event) => setDefaultMdaId(event.target.value)}
-              disabled={busy}
-            >
-              <option value="">Choose an MDA…</option>
-              {permittedMdas.map((mda) => (
-                <option key={mda.id} value={mda.id}>
-                  {mda.name}
-                </option>
-              ))}
-            </Select>
-            <FieldDescription>
-              This applies to all {rows.length} rows. Only choose it if
-              the whole file is for this one MDA.
-            </FieldDescription>
-          </Field>
-        ) : null}
+        <Field className="max-w-lg">
+          <FieldLabel htmlFor="default-mda">
+            {mapping.mda ? "MDA for rows with a blank MDA cell" : "Which MDA do these rows belong to?"}
+          </FieldLabel>
+          <Select
+            id="default-mda"
+            value={defaultMdaId}
+            onChange={(event) => setDefaultMdaId(event.target.value)}
+            disabled={busy}
+          >
+            <option value="">{mapping.mda ? "None — keep blank-MDA rows blocked" : "Choose an MDA…"}</option>
+            {permittedMdas.map((mda) => (
+              <option key={mda.id} value={mda.id}>
+                {mda.name}
+              </option>
+            ))}
+          </Select>
+          <FieldDescription>
+            {singleMda && defaultMdaId === singleMda.id
+              ? `Defaulted to ${singleMda.name}, the MDA you're registered under. `
+              : null}
+            {mapping.mda
+              ? "Rows that name an MDA in the mapped column keep that MDA; rows naming an MDA you can't submit for stay blocked."
+              : `Applies to all ${rows.length} rows. Map an MDA column instead if the file covers several MDAs.`}
+          </FieldDescription>
+        </Field>
 
         <Field className="max-w-lg">
           <FieldLabel htmlFor="date-convention">Numeric dates such as 04/05/2026 mean</FieldLabel>
@@ -150,7 +155,7 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply }: Prop
             onClick={() =>
               onApply(mapping, {
                 date_convention: dateConvention || null,
-                default_mda_id: !mapping.mda && defaultMdaId ? defaultMdaId : null,
+                default_mda_id: defaultMdaId || null,
               })
             }
           >

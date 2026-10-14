@@ -156,6 +156,17 @@ function permittedMdaIds(profile: AppProfile, ledger: LedgerType): Set<string> |
   return new Set(ledger === "funding" ? fundingSubmittableMdaIds(profile) : expenditureSubmittableMdaIds(profile));
 }
 
+/**
+ * The MDA an import defaults to: an MDA user registered under exactly one MDA
+ * (for this ledger) gets that MDA. Admins and users with several MDAs choose,
+ * from their own MDAs only.
+ */
+export function defaultMdaFor(profile: AppProfile, ledger: LedgerType): string | null {
+  const permitted = permittedMdaIds(profile, ledger);
+  if (permitted === "all" || permitted.size !== 1) return null;
+  return [...permitted][0];
+}
+
 function sanitizeFileName(name: string): string {
   const cleaned = name.replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+/, "");
   return (cleaned || "upload").slice(-120);
@@ -347,7 +358,7 @@ async function stageGrid(
       header_row_number: table.headerRowNumber,
       headers: table.headers,
       mapping: suggestMapping(batch.ledger_type, table.headers),
-      options: { date_convention: null, default_mda_id: null },
+      options: { date_convention: null, default_mda_id: defaultMdaFor(profile, batch.ledger_type) },
       extraction: {
         data_rows: table.rows.length,
         blank_rows_skipped: table.blankRowsSkipped,
@@ -383,7 +394,6 @@ export async function updateMapping(
     cleanMapping[field as ImportField] = header;
   }
   if (options.default_mda_id) {
-    if (cleanMapping.mda) throw new ImportError("Choose either an MDA column or one MDA for every row, not both.");
     const permitted = permittedMdaIds(profile, batch.ledger_type);
     if (permitted !== "all" && !permitted.has(options.default_mda_id)) {
       throw new ImportError("You can only choose an MDA you hold a submit grant for.", 403, "forbidden");

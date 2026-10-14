@@ -36,6 +36,7 @@ export type Disposition = "eligible" | "blocked" | "duplicate" | "excluded";
 
 export type ImportOptions = {
   date_convention: DateConvention | null;
+  /** MDA for rows without one: no MDA column mapped, or a blank MDA cell. */
   default_mda_id: string | null;
 };
 
@@ -351,7 +352,8 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
   // Required fields that are unmapped or empty.
   for (const def of FIELD_DEFINITIONS[ctx.ledger]) {
     if (!def.required) continue;
-    if (def.field === "mda" && !header("mda") && ctx.options.default_mda_id) continue;
+    // The default MDA stands in for an unmapped MDA column or a blank MDA cell.
+    if (def.field === "mda" && ctx.options.default_mda_id) continue;
     if (!header(def.field)) {
       block("field_unmapped", `${def.label} is required but no column is mapped to it.`, def.field);
     } else if (!cell(def.field)) {
@@ -414,16 +416,16 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
   }
 
   // MDA and scope.
+  // An MDA named in the row always wins, so a mixed file can't be booked to
+  // the default; rows naming an MDA outside the user's grants stay blocked.
   let mda: MdaRef | null = null;
-  if (header("mda")) {
-    if (cell("mda")) {
-      const resolved = resolveMda(cell("mda"), ctx.reference.mdas);
-      if (resolved.ok) mda = resolved.value;
-      else issues.push(resolved.issue);
-    }
+  if (cell("mda")) {
+    const resolved = resolveMda(cell("mda"), ctx.reference.mdas);
+    if (resolved.ok) mda = resolved.value;
+    else issues.push(resolved.issue);
   } else if (ctx.options.default_mda_id) {
     mda = ctx.reference.mdas.find((m) => m.id === ctx.options.default_mda_id && m.active) ?? null;
-    if (!mda) block("reference_unknown", "The MDA you chose for every row is not an active MDA.", "mda");
+    if (!mda) block("reference_unknown", "The default MDA is not an active MDA.", "mda");
   }
   if (mda && ctx.permittedMdaIds !== "all" && !ctx.permittedMdaIds.has(mda.id)) {
     block(
