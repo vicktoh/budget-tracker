@@ -199,7 +199,7 @@ export type ValueQuestion = {
   rows: number;
 };
 
-export type ReferenceOption = { id: string; name: string; aliases?: string[] };
+export type ReferenceOption = { id: string; name: string; aliases?: string[]; note?: string };
 
 const valueSchema = z.object({
   matches: z.array(

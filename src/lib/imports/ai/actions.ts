@@ -180,15 +180,23 @@ export async function suggestMappingWithAi(client: Db, profile: AppProfile, batc
   }
 }
 
-/** Reference options a user may answer with; MDA users only see their MDAs. */
+/**
+ * Reference options a user may answer with. MDA questions list every active
+ * MDA, with the user's own marked, so a row naming another MDA can be answered
+ * truthfully (and then stays blocked by the grant check) rather than forced
+ * onto the user's MDA.
+ */
 async function answerOptions(client: Db, profile: AppProfile, batch: ImportBatchRow): Promise<Partial<Record<ImportField, ReferenceOption[]>>> {
   const ref = await loadReference(client);
   const permitted = permittedMdaIds(profile, batch.ledger_type);
   const active = <T extends { active: boolean }>(values: T[]) => values.filter((v) => v.active);
   return {
-    mda: active(ref.mdas)
-      .filter((m) => permitted === "all" || permitted.has(m.id))
-      .map((m) => ({ id: m.id, name: m.name, aliases: [m.code, ...(m.abbreviation ? [m.abbreviation] : [])] })),
+    mda: active(ref.mdas).map((m) => ({
+      id: m.id,
+      name: m.name,
+      aliases: [m.code, ...(m.abbreviation ? [m.abbreviation] : [])],
+      ...(permitted === "all" || permitted.has(m.id) ? {} : { note: "not your MDA — rows will stay blocked" }),
+    })),
     programme_area: active(ref.programmeAreas).map(({ id, name }) => ({ id, name })),
     funding_source: active(ref.fundingSources).map(({ id, name }) => ({ id, name })),
     expenditure_category: active(ref.expenditureCategories).map(({ id, name }) => ({ id, name })),

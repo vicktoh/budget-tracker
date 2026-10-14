@@ -1,0 +1,8 @@
+Date,MDA,Programme Area,Funding Source,Amount (₦),Reference No.,Remarks
+2026-10-01,052100300100,Disease Control,BHCPF Allocation,10.00,TEST-IMP-F-001,TEST - delete after
+02/10/2026,052100300100,Disease Control,BHCPF Allocation,20.00,TEST-IMP-F-002,TEST - delete after
+2026-10-01,052100300100,Disease Control,BHCPF Allocation,10.00,TEST-IMP-F-001,TEST - delete after
+2026-10-03,052100300100,Disease Control,BHCPF Allocation,(5.00),TEST-IMP-F-003,TEST - negative
+2026-10-04,052100300100,Disease Control,Mystery Fund,4.00,TEST-IMP-F-004,TEST - unknown source
+2026-02-31,052100300100,Disease Control,BHCPF Allocation,3.00,TEST-IMP-F-005,TEST - impossible date
+Total,,,,42.00,,

@@ -131,7 +131,7 @@ export function QuestionsPanel({ ledger, questions, aiConfigured, aiCallsLeft, b
                   <option value="">Choose what this means…</option>
                   {q.options.map((option) => (
                     <option key={option.id} value={option.id}>
-                      {option.name}
+                      {option.note ? `${option.name} (${option.note})` : option.name}
                     </option>
                   ))}
                   <option value={DECLINE}>None of these — keep rows blocked</option>
