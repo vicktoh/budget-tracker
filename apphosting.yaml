@@ -15,14 +15,19 @@ env:
     value: "Kano Health Finance Tracker <notifications@kano-budget-tracker.app>"
     availability:
       - RUNTIME
-  # Origin used in invite and password-reset email links. Switch to
-  # https://kano-budget-tracker.app once the custom domain serves the app.
+  # Origin used in invite and password-reset email links.
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://budget-tracker--budget-tracker-2fb26.us-east4.hosted.app
+    value: https://kano-budget-tracker.app
     availability:
       - BUILD
       - RUNTIME
   - variable: SUPABASE_SERVICE_ROLE_KEY
     secret: SUPABASE_SERVICE_ROLE_KEY
+    availability:
+      - RUNTIME
+  # Shared with Supabase Vault (notifications_cron_secret) so pg_cron can call
+  # /api/notifications/*. See docs/notifications.md.
+  - variable: NOTIFICATIONS_CRON_SECRET
+    secret: NOTIFICATIONS_CRON_SECRET
     availability:
       - RUNTIME

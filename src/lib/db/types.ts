@@ -42,6 +42,7 @@ export type BirAmendment = {
 
 type ISODate = string;
 type ISOTimestamp = string;
+export type EmailDeliveryStatus = "queued" | "sending" | "sent" | "delivered" | "failed" | "skipped";
 
 type Numeric = number;
 
@@ -636,6 +637,25 @@ export type Database = {
         };
         Update: Partial<{ read_at: ISOTimestamp | null }>;
       };
+      notification_preferences: {
+        Row: {
+          user_id: string;
+          entry_comment_emails: boolean;
+          monthly_reminder_emails: boolean;
+          executive_summary_emails: boolean;
+          updated_at: ISOTimestamp;
+        };
+        Insert: {
+          user_id: string;
+          entry_comment_emails?: boolean;
+          monthly_reminder_emails?: boolean;
+          executive_summary_emails?: boolean;
+          updated_at?: ISOTimestamp;
+        };
+        Update: Partial<
+          Omit<Database["public"]["Tables"]["notification_preferences"]["Row"], "user_id">
+        >;
+      };
       email_delivery_events: {
         Row: {
           id: string;
@@ -647,19 +667,25 @@ export type Database = {
           payload: Record<string, unknown>;
           provider: string;
           provider_message_id: string | null;
-          status: "queued" | "sent" | "delivered" | "failed";
+          status: EmailDeliveryStatus;
           error_message: string | null;
           created_at: ISOTimestamp;
           sent_at: ISOTimestamp | null;
+          dedupe_key: string | null;
+          attempts: number;
+          last_attempt_at: ISOTimestamp | null;
         };
         Insert: Omit<
           Database["public"]["Tables"]["email_delivery_events"]["Row"],
-          "id" | "created_at" | "sent_at" | "provider" | "payload" | "status"
+          "id" | "created_at" | "sent_at" | "provider" | "payload" | "status" | "dedupe_key" | "attempts" | "last_attempt_at"
         > & {
           id?: string;
           payload?: Record<string, unknown>;
           provider?: string;
-          status?: "queued" | "sent" | "delivered" | "failed";
+          status?: EmailDeliveryStatus;
+          dedupe_key?: string | null;
+          attempts?: number;
+          last_attempt_at?: ISOTimestamp | null;
           created_at?: ISOTimestamp;
           sent_at?: ISOTimestamp | null;
         };

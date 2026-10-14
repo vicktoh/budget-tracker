@@ -51,6 +51,54 @@ function renderActionEmail({
   </div>`;
 }
 
+export function isEmailConfigured(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
+export type SendEmailResult =
+  | { sent: true; messageId: string | null }
+  | { sent: false; error: string };
+
+/**
+ * Sends one notification email. `idempotencyKey` makes a retried send (after a
+ * crash between sending and recording the result) a no-op at Resend.
+ */
+export async function sendEmail({
+  to,
+  subject,
+  html,
+  text,
+  attachments,
+  idempotencyKey,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  text: string;
+  attachments?: Array<{ filename: string; content: Buffer }>;
+  idempotencyKey?: string;
+}): Promise<SendEmailResult> {
+  const resend = getResendClient();
+  if (!resend) {
+    return { sent: false, error: "RESEND_API_KEY is not configured, so no email was sent." };
+  }
+
+  const { data, error } = await resend.emails.send(
+    {
+      from: process.env.EMAIL_FROM ?? DEFAULT_FROM,
+      to,
+      subject,
+      html,
+      text,
+      attachments,
+    },
+    idempotencyKey ? { idempotencyKey } : undefined,
+  );
+
+  if (error) return { sent: false, error: error.message };
+  return { sent: true, messageId: data?.id ?? null };
+}
+
 export async function sendAccountActionEmail({
   to,
   fullName,

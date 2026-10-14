@@ -254,6 +254,7 @@ _Avoid_: Reviewer in user-facing language, Admin when the user only views and co
 - **Reference Number** and **Voucher Reference Number** are required in v1.
 - **Reference Number** and **Voucher Reference Number** must be unique per fiscal year and MDA within their entry type.
 - **Admin Imports** must reject duplicate ledger rows that collide with reference/voucher uniqueness rules before writing data.
+- A month with no **Funding Entries** or **Expenditure Entries** is treated as outstanding in monthly reminders, so an MDA with genuinely no activity cannot clear the reminder. Open (parked 2026-10-14): whether to add a nil return that counts as reported. See `docs/notifications.md`.
 - **Money Amounts** should be stored as fixed-precision `numeric(18,2)` values and displayed as Nigerian naira.
 - **Funding Entry** and **Expenditure Entry** amounts must be positive in v1; pre-publication corrections use audited edits and post-publication corrections use **Budget Implementation Report Amendments** rather than negative entries.
 - Core dropdown taxonomies should be global across MDAs in v1 to preserve cross-MDA insight quality.
