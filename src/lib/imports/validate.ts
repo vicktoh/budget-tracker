@@ -38,7 +38,31 @@ export type ImportOptions = {
   date_convention: DateConvention | null;
   /** MDA for rows without one: no MDA column mapped, or a blank MDA cell. */
   default_mda_id: string | null;
+  /**
+   * User-confirmed answers to "what does this value mean?" questions, keyed by
+   * field then by normalizeKey(source text). A reference id resolves the value;
+   * null records that the user declined, leaving matching rows blocked.
+   */
+  value_aliases?: Partial<Record<ImportField, Record<string, string | null>>>;
 };
+
+/** Fields whose unmatched values can be answered once for the whole batch. */
+export const ALIASABLE_FIELDS = [
+  "mda",
+  "programme_area",
+  "funding_source",
+  "expenditure_category",
+  "payment_method",
+  "lga",
+] as const satisfies readonly ImportField[];
+
+export function aliasFor(
+  options: ImportOptions,
+  field: ImportField,
+  text: string,
+): string | null | undefined {
+  return options.value_aliases?.[field]?.[normalizeKey(text)];
+}
 
 export type RefValue = {
   id: string;
@@ -416,13 +440,38 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
   }
 
   // MDA and scope.
+  // A value that didn't match exactly can still resolve through the user's
+  // confirmed answer for that exact text. Declined or stale answers keep the
+  // original blocker.
+  function viaAlias<T extends RefValue>(field: ImportField, label: string, values: T[], unresolved: RowIssue): T | null {
+    const text = cell(field);
+    const answer = aliasFor(ctx.options, field, text);
+    const target = answer ? values.find((v) => v.id === answer) : undefined;
+    if (target && target.active) {
+      issues.push({
+        code: "matched_by_answer",
+        field,
+        severity: "info",
+        message: `"${text}" matched to ${label} ${target.name} by your answer.`,
+      });
+      return target;
+    }
+    if (target && !target.active) {
+      issues.push({ code: "reference_inactive", field, severity: "blocker", message: `${label} "${target.name}" (your answer for "${text}") is inactive.` });
+      return null;
+    }
+    if (answer === null) unresolved.message += " You chose to leave these rows blocked.";
+    issues.push(unresolved);
+    return null;
+  }
+
   // An MDA named in the row always wins, so a mixed file can't be booked to
   // the default; rows naming an MDA outside the user's grants stay blocked.
   let mda: MdaRef | null = null;
   if (cell("mda")) {
     const resolved = resolveMda(cell("mda"), ctx.reference.mdas);
     if (resolved.ok) mda = resolved.value;
-    else issues.push(resolved.issue);
+    else mda = viaAlias("mda", "MDA", ctx.reference.mdas, resolved.issue) as MdaRef | null;
   } else if (ctx.options.default_mda_id) {
     mda = ctx.reference.mdas.find((m) => m.id === ctx.options.default_mda_id && m.active) ?? null;
     if (!mda) block("reference_unknown", "The default MDA is not an active MDA.", "mda");
@@ -440,8 +489,7 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
     if (!text) return null;
     const resolved = resolveByKeys(field, label, text, values, simpleKeys);
     if (resolved.ok) return resolved.value;
-    issues.push(resolved.issue);
-    return null;
+    return viaAlias(field, label, values, resolved.issue);
   };
 
   const programme = resolveSimple("programme_area", "programme area", ctx.reference.programmeAreas);

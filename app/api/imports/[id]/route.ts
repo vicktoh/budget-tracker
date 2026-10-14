@@ -12,9 +12,18 @@ import {
   updateRow,
 } from "@/lib/imports/server";
 import { importErrorResponse, importRouteContext } from "@/lib/imports/route-context";
+import {
+  analyzeWorkbook,
+  answerValueQuestions,
+  batchAiView,
+  questionsForBatch,
+  suggestMappingWithAi,
+  suggestValuesWithAi,
+} from "@/lib/imports/ai/actions";
 
 export const runtime = "nodejs";
-export const maxDuration = 120;
+// AI requests on large workbooks can take a while.
+export const maxDuration = 180;
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -37,6 +46,16 @@ const actionSchema = z.discriminatedUnion("action", [
     user_excluded: z.boolean().optional(),
   }),
   z.object({ action: z.literal("commit"), plan_hash: z.string().regex(/^[0-9a-f]{64}$/) }),
+  z.object({ action: z.literal("analyze_workbook") }),
+  z.object({ action: z.literal("suggest_mapping") }),
+  z.object({ action: z.literal("suggest_values") }),
+  z.object({
+    action: z.literal("answer_values"),
+    answers: z
+      .array(z.object({ field: z.string().max(40), source_text: z.string().min(1).max(500), ref_id: uuid.nullable() }))
+      .min(1)
+      .max(100),
+  }),
   z.object({ action: z.literal("cancel") }),
 ]);
 
@@ -51,12 +70,15 @@ async function detail(id: string) {
       permittedMdaOptions(client, profile, "expenditure"),
     ]),
   ]);
+  const open = batch.status !== "completed" && batch.status !== "cancelled";
   return {
     batch,
     rows,
     labels,
     permitted_mdas: permittedByLedger[batch.ledger_type === "funding" ? 0 : 1],
     is_owner: batch.created_by === profile.id,
+    ai: batchAiView(batch),
+    questions: open ? await questionsForBatch(client, profile, batch, rows) : [],
   };
 }
 
@@ -99,6 +121,18 @@ export async function POST(request: Request, { params }: Params) {
       }
       case "cancel":
         await cancelBatch(client, profile, id);
+        break;
+      case "analyze_workbook":
+        await analyzeWorkbook(client, profile, id);
+        break;
+      case "suggest_mapping":
+        await suggestMappingWithAi(client, profile, id);
+        break;
+      case "suggest_values":
+        await suggestValuesWithAi(client, profile, id);
+        break;
+      case "answer_values":
+        await answerValueQuestions(client, profile, id, body.answers);
         break;
     }
     return NextResponse.json(await detail(id));

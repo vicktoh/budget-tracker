@@ -9,6 +9,8 @@ import { FIELD_DEFINITIONS, type ImportField, type ImportMapping } from "@/lib/i
 import type { DateConvention } from "@/lib/imports/normalize";
 import type { ImportBatchRow, ImportRowRecord } from "@/lib/imports/server";
 import type { ImportOptions } from "@/lib/imports/validate";
+import type { MappingSuggestion } from "@/lib/imports/ai/assist";
+import { SparklesIcon } from "lucide-react";
 
 type Props = {
   batch: ImportBatchRow;
@@ -16,6 +18,10 @@ type Props = {
   permittedMdas: Array<{ id: string; name: string }>;
   busy: boolean;
   onApply: (mapping: ImportMapping, options: ImportOptions) => void;
+  aiSuggestions: MappingSuggestion[] | null;
+  aiConfigured: boolean;
+  aiCallsLeft: number;
+  onSuggest: () => void;
 };
 
 function samples(rows: ImportRowRecord[], header: string | undefined): string {
@@ -29,7 +35,7 @@ function samples(rows: ImportRowRecord[], header: string | undefined): string {
   return values.join(" · ");
 }
 
-export function MappingPanel({ batch, rows, permittedMdas, busy, onApply }: Props) {
+export function MappingPanel({ batch, rows, permittedMdas, busy, onApply, aiSuggestions, aiConfigured, aiCallsLeft, onSuggest }: Props) {
   const [mapping, setMapping] = useState<ImportMapping>(batch.mapping);
   const [dateConvention, setDateConvention] = useState<DateConvention | "">(batch.options.date_convention ?? "");
   const [defaultMdaId, setDefaultMdaId] = useState<string>(batch.options.default_mda_id ?? "");
@@ -71,6 +77,40 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply }: Prop
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
+        {aiConfigured ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" disabled={busy || aiCallsLeft <= 0} onClick={onSuggest}>
+              <SparklesIcon aria-hidden="true" />
+              {aiSuggestions ? "Ask AI again" : "Suggest mapping with AI"}
+            </Button>
+            {aiSuggestions?.some((s) => s.header && s.header !== mapping[s.field]) ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() =>
+                  setMapping((current) => {
+                    const next = { ...current };
+                    const taken = new Set(Object.values(next));
+                    for (const s of aiSuggestions ?? []) {
+                      if (!s.header || next[s.field] || taken.has(s.header)) continue;
+                      next[s.field] = s.header;
+                      taken.add(s.header);
+                    }
+                    return next;
+                  })
+                }
+              >
+                Use AI suggestions for empty fields
+              </Button>
+            ) : null}
+            <span className="text-xs text-muted-foreground">
+              Sends this sheet&apos;s column names and {8} sample rows to OpenAI. Suggestions are not applied until you click
+              Apply.
+            </span>
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {definitions.map((def) => {
             const header = mapping[def.field];
@@ -97,6 +137,34 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply }: Prop
                 <FieldDescription className="truncate">
                   {example ? `e.g. ${example}` : def.description ?? (def.required ? "Required." : "Optional.")}
                 </FieldDescription>
+                {(() => {
+                  const suggestion = aiSuggestions?.find((s) => s.field === def.field);
+                  if (!suggestion || (suggestion.header ?? "") === (header ?? "")) return null;
+                  return (
+                    <p className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+                      <SparklesIcon aria-hidden="true" className="size-3 text-primary" />
+                      {suggestion.header ? (
+                        <>
+                          AI suggests <span className="font-medium text-foreground">{suggestion.header}</span> ·{" "}
+                          {Math.round(suggestion.confidence * 100)}%
+                          <button
+                            type="button"
+                            className="font-medium text-primary underline-offset-2 hover:underline"
+                            disabled={busy || (used.has(suggestion.header) && suggestion.header !== header)}
+                            onClick={() => setField(def.field, suggestion.header!)}
+                          >
+                            Use
+                          </button>
+                        </>
+                      ) : (
+                        <>AI: no column clearly holds this</>
+                      )}
+                      <span className="w-full truncate" title={suggestion.reason}>
+                        {suggestion.reason}
+                      </span>
+                    </p>
+                  );
+                })()}
               </Field>
             );
           })}

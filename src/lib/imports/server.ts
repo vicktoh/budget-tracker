@@ -52,7 +52,7 @@ type Db = SupabaseClient;
 
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 export const MAX_DATA_ROWS = 5000;
-const SOURCE_BUCKET = "import-sources";
+export const SOURCE_BUCKET = "import-sources";
 const WRITE_CHUNK = 500;
 const PAGE = 1000;
 
@@ -121,7 +121,7 @@ export class ImportError extends Error {
   }
 }
 
-function throwIf(error: { message: string; code?: string } | null, context: string): void {
+export function throwIf(error: { message: string; code?: string } | null, context: string): void {
   if (error) throw new ImportError(`${context}: ${error.message}`, 500, error.code ?? "db_error");
 }
 
@@ -151,7 +151,7 @@ export function importableLedgers(profile: AppProfile): LedgerType[] {
   return ledgers;
 }
 
-function permittedMdaIds(profile: AppProfile, ledger: LedgerType): Set<string> | "all" {
+export function permittedMdaIds(profile: AppProfile, ledger: LedgerType): Set<string> | "all" {
   if (isAdmin(profile)) return "all";
   return new Set(ledger === "funding" ? fundingSubmittableMdaIds(profile) : expenditureSubmittableMdaIds(profile));
 }
@@ -186,7 +186,7 @@ function detectFormat(fileName: string): "csv" | "xlsx" {
   throw new ImportError("Upload a .csv file or an .xlsx workbook.");
 }
 
-async function inspectSource(fileName: string, buffer: Buffer): Promise<ParsedSource> {
+export async function inspectSource(fileName: string, buffer: Buffer): Promise<ParsedSource> {
   const format = detectFormat(fileName);
   if (format === "csv") {
     if (buffer.includes(0)) {
@@ -286,7 +286,7 @@ export async function loadRows(client: Db, batchId: string): Promise<ImportRowRe
   );
 }
 
-function assertOpen(batch: ImportBatchRow, profile: AppProfile): void {
+export function assertOpen(batch: ImportBatchRow, profile: AppProfile): void {
   if (batch.created_by !== profile.id) {
     throw new ImportError("Only the user who uploaded this batch can change it.", 403, "forbidden");
   }
@@ -360,6 +360,11 @@ async function stageGrid(
       mapping: suggestMapping(batch.ledger_type, table.headers),
       options: { date_convention: null, default_mda_id: defaultMdaFor(profile, batch.ledger_type) },
       extraction: {
+        // Workbook-level AI classification survives a sheet change; mapping and
+        // value suggestions belong to the previous sheet and are dropped.
+        ...(batch.extraction?.ai
+          ? { ai: { ...(batch.extraction.ai as Record<string, unknown>), mapping_suggestions: undefined, value_matches: undefined } }
+          : {}),
         data_rows: table.rows.length,
         blank_rows_skipped: table.blankRowsSkipped,
         formula_only_rows_skipped: table.formulaOnlyRowsSkipped,
@@ -401,7 +406,7 @@ export async function updateMapping(
   }
   const { error } = await client
     .from("import_batches")
-    .update({ mapping: cleanMapping, options, plan_hash: null })
+    .update({ mapping: cleanMapping, options: { ...batch.options, ...options }, plan_hash: null })
     .eq("id", batchId);
   throwIf(error, "Saving the mapping");
   await revalidateBatch(client, profile, batchId);
@@ -445,13 +450,13 @@ export async function cancelBatch(client: Db, profile: AppProfile, batchId: stri
   throwIf(error, "Cancelling the batch");
 }
 
-type BaseReference = Omit<ImportReference, "facilities" | "aopActivities">;
+export type BaseReference = Omit<ImportReference, "facilities" | "aopActivities">;
 
 // One request makes one client, so caching per client reuses reference data
 // between validation and the response's label map without going stale.
 const referenceCache = new WeakMap<Db, Promise<BaseReference>>();
 
-function loadReference(client: Db): Promise<BaseReference> {
+export function loadReference(client: Db): Promise<BaseReference> {
   let cached = referenceCache.get(client);
   if (!cached) {
     cached = fetchReference(client);
@@ -493,6 +498,7 @@ async function buildContext(
   const options: ImportOptions = {
     date_convention: batch.options.date_convention ?? null,
     default_mda_id: batch.options.default_mda_id ?? null,
+    value_aliases: batch.options.value_aliases ?? {},
   };
   const cellValues = (field: ImportField): string[] => {
     const header = batch.mapping[field];
@@ -509,7 +515,12 @@ async function buildContext(
   // Which LGAs, MDAs and years the batch can touch, read straight from the
   // mapped cells, so the dependent lookups below can run in parallel.
   const lgaKeys = new Set(cellValues("lga").map((v) => v.toLowerCase()));
-  const lgaIds = base.lgas.filter((lga) => lgaKeys.has(lga.name.toLowerCase())).map((lga) => lga.id);
+  const lgaIds = [
+    ...new Set([
+      ...base.lgas.filter((lga) => lgaKeys.has(lga.name.toLowerCase())).map((lga) => lga.id),
+      ...Object.values(options.value_aliases?.lga ?? {}).filter((id): id is string => Boolean(id)),
+    ]),
+  ];
   const mdaIds = new Set<string>(options.default_mda_id ? [options.default_mda_id] : []);
   const mdaValues = cellValues("mda").map((v) => v.toLowerCase());
   for (const mda of base.mdas) {
@@ -517,6 +528,7 @@ async function buildContext(
       mdaIds.add(mda.id);
     }
   }
+  for (const id of Object.values(options.value_aliases?.mda ?? {})) if (id) mdaIds.add(id);
   const years = new Set<number>();
   for (const value of cellValues("transaction_date")) {
     const year = /(\d{4})/.exec(value)?.[1];

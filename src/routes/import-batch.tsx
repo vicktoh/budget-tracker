@@ -6,16 +6,18 @@ import { ArrowLeftIcon, DownloadIcon } from "lucide-react";
 import { ImportStatusBadge, ledgerLabel } from "@/components/imports/import-status";
 import { MappingPanel } from "@/components/imports/mapping-panel";
 import { ReceiptPanel } from "@/components/imports/receipt-panel";
+import { QuestionsPanel } from "@/components/imports/questions-panel";
 import { ReviewPanel } from "@/components/imports/review-panel";
+import { SheetsPanel, type BatchAiView } from "@/components/imports/sheets-panel";
 import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ImportMapping } from "@/lib/imports/fields";
 import type { ImportBatchRow, ImportReceipt, ImportRowRecord } from "@/lib/imports/server";
 import type { ImportOptions } from "@/lib/imports/validate";
+import type { MappingSuggestion } from "@/lib/imports/ai/assist";
+import type { ValueQuestionView } from "@/lib/imports/ai/actions";
 import { useOnlineStatus } from "@/lib/offline/use-online-status";
 
 type Detail = {
@@ -25,6 +27,8 @@ type Detail = {
   permitted_mdas: Array<{ id: string; name: string }>;
   is_owner: boolean;
   receipt?: ImportReceipt;
+  ai: BatchAiView;
+  questions: ValueQuestionView[];
 };
 
 export function ImportBatchRoute({ id }: { id: string }) {
@@ -152,51 +156,14 @@ export function ImportBatchRoute({ id }: { id: string }) {
       {receipt && batch.status === "completed" ? <ReceiptPanel receipt={receipt} /> : null}
 
       {open && batch.source_format === "xlsx" ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{batch.status === "needs_sheet" ? "Choose the sheet to import" : "Workbook sheets"}</CardTitle>
-            <CardDescription>
-              Each batch imports one sheet of individual transactions. Dashboards, summaries, totals and lookup sheets are
-              not transactions.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sheet</TableHead>
-                  <TableHead>Visibility</TableHead>
-                  <TableHead className="text-right">Rows</TableHead>
-                  <TableHead />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {batch.sheets.map((sheet) => (
-                  <TableRow key={sheet.name}>
-                    <TableCell className="font-medium">{sheet.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{sheet.state === "visible" ? "Visible" : "Hidden"}</TableCell>
-                    <TableCell className="text-right tabular-nums">{sheet.rowCount}</TableCell>
-                    <TableCell className="text-right">
-                      {sheet.name === batch.sheet_name ? (
-                        <span className="text-xs text-muted-foreground">Selected</span>
-                      ) : detail.is_owner ? (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          disabled={busy || sheet.rowCount < 2}
-                          onClick={() => act({ action: "select_sheet", sheet_name: sheet.name })}
-                        >
-                          Use this sheet
-                        </Button>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <SheetsPanel
+          batch={batch}
+          ai={detail.ai}
+          isOwner={detail.is_owner}
+          busy={busy}
+          onAnalyze={() => act({ action: "analyze_workbook" })}
+          onSelect={(sheetName) => act({ action: "select_sheet", sheet_name: sheetName })}
+        />
       ) : null}
 
       {open && detail.is_owner && batch.status !== "needs_sheet" ? (
@@ -206,6 +173,26 @@ export function ImportBatchRoute({ id }: { id: string }) {
           permittedMdas={detail.permitted_mdas}
           busy={busy}
           onApply={(mapping: ImportMapping, options: ImportOptions) => act({ action: "set_mapping", mapping, options })}
+          aiSuggestions={
+            detail.ai.mapping_suggestions?.sheet === batch.sheet_name
+              ? (detail.ai.mapping_suggestions.suggestions as MappingSuggestion[])
+              : null
+          }
+          aiConfigured={detail.ai.configured}
+          aiCallsLeft={detail.ai.calls_limit - detail.ai.calls_used}
+          onSuggest={() => act({ action: "suggest_mapping" })}
+        />
+      ) : null}
+
+      {open && detail.is_owner && detail.questions.length ? (
+        <QuestionsPanel
+          ledger={batch.ledger_type}
+          questions={detail.questions}
+          aiConfigured={detail.ai.configured}
+          aiCallsLeft={detail.ai.calls_limit - detail.ai.calls_used}
+          busy={busy}
+          onAnswer={(answers) => act({ action: "answer_values", answers })}
+          onSuggest={() => act({ action: "suggest_values" })}
         />
       ) : null}
 

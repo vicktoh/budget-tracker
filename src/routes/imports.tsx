@@ -97,7 +97,7 @@ export function ImportsRoute() {
           <CardTitle>New import</CardTitle>
           <CardDescription>
             One table per file: a header row, then one transaction per row. Accepted: .csv (UTF-8) and .xlsx, up to 10 MB
-            and 5,000 rows. Files are stored privately and are not processed by AI.
+            and 5,000 rows. Files are stored privately. AI help is optional: nothing is sent to an AI service unless you press an AI button on the batch, and then only column names, sample rows or unmatched values.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
