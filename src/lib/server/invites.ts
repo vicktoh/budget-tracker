@@ -63,5 +63,14 @@ export async function sendAccountActionLink({
 export function requestOrigin(request: Request) {
   const configured = process.env.NEXT_PUBLIC_APP_URL;
   if (configured) return configured.replace(/\/$/, "");
+
+  // Behind App Hosting's proxy, request.url is the container's bind address
+  // (e.g. http://0.0.0.0:8080), so prefer the host the browser actually used.
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  if (forwardedHost) {
+    const forwardedProto =
+      request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || "https";
+    return `${forwardedProto}://${forwardedHost}`;
+  }
   return new URL(request.url).origin;
 }

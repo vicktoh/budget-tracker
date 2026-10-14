@@ -15,6 +15,13 @@ env:
     value: "Kano Health Finance Tracker <notifications@kano-budget-tracker.app>"
     availability:
       - RUNTIME
+  # Origin used in invite and password-reset email links. Switch to
+  # https://kano-budget-tracker.app once the custom domain serves the app.
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://budget-tracker--budget-tracker-2fb26.us-east4.hosted.app
+    availability:
+      - BUILD
+      - RUNTIME
   - variable: SUPABASE_SERVICE_ROLE_KEY
     secret: SUPABASE_SERVICE_ROLE_KEY
     availability:
