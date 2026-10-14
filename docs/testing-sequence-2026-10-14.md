@@ -1,6 +1,6 @@
 # End-to-end testing sequence
 
-Prepared 14 October 2026 for the deployed build (`main` at `1426ce6`, production: https://budget-tracker--budget-tracker-2fb26.us-east4.hosted.app). It covers onboarding, funding and expenditure entry, comments and notifications, reference requests, offline capture, and the import flows, including the AI-assisted import.
+Prepared 14 October 2026 for the deployed build (`main` at `1426ce6`, production: https://kano-budget-tracker.app). It covers onboarding, funding and expenditure entry, comments and notifications, reference requests, offline capture, and the import flows, including the AI-assisted import.
 
 Work through the sections in order: later sections reuse the accounts and records created earlier. Each step has an expected result. Tick it or note the actual result and an entry ID or screenshot.
 

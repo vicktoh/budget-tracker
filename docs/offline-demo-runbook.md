@@ -2,9 +2,11 @@
 
 Updated 14 October 2026. Onboarding uses the live database and real Q3 2026 records, dated **1 July to 30 September 2026 inclusive**. The offline segment captures one genuine, previously unrecorded transaction under its responsible MDA submitter. It remains a live submission when synchronized. Use its actual reference and amount; do not create a dummy entry for this demonstration.
 
+This is Activity 9 of the two-day handbook. Reserve the genuine source transaction on Day 1 and recheck it is still outstanding before the Day 2 demonstration.
+
 The supported target is a user who has signed in online and keeps an already loaded app open while connectivity is lost. Offline first-time sign-in and reliable cold restart have not been established. CSV/XLSX Imports requires connectivity throughout upload, review and confirmation; it does not use the manual-entry offline queue.
 
-## Prepare the day before
+## Prepare before Day 1
 
 1. Confirm the approved live application URL and database project with the Admin. Prefer the deployed production app over HTTPS. All saved records affect live reports; opening localhost does not change this when it uses the live Supabase configuration.
 2. Validate each named submitter's MDA and ledger grants, plus separate Viewer/Admin accounts. Use distinct browser profiles rather than tabs sharing login storage.
@@ -21,7 +23,7 @@ npm run start -- --port 3000
 7. Keep the MDA browser profile signed in and the form loaded. Review any existing pending/failed entries before proceeding. Do not clear storage to obtain an empty demonstration screen.
 8. Check disconnect/reconnect behaviour before the session without submitting dummy records. Keep this handbook available locally. If a full rehearsal saves the selected real transaction, mark it completed and choose a different genuine outstanding record for the session; never submit it twice.
 
-## Eight-minute demonstration
+## Day 2 - Eight-minute demonstration
 
 | Step | Action | Expected result and narration |
 | --- | --- | --- |
@@ -41,7 +43,7 @@ Expected change is the verified amount of the selected source record in its own 
 - Do not log out, switch users, close the browser or clear site data with pending entries. The current outbox is device/browser storage and is not scoped to the active account in its display/drain code.
 - Do not promise a fresh offline start. Profiles and MDA memberships are fetched online and lack a durable offline recovery path; a reload may remove access even when references are cached.
 - Do not rely on unsaved form text surviving a refresh. The durable offline path begins when submission is successfully queued.
-- Do not demonstrate voucher uploads, AI calls, comments, new reference requests, account management, BIR publication or Admin corrections as offline operations. Their writes are not included in the ledger outbox.
+- The offline queue covers manual entries only. Voucher uploads, AI, comments, requests, account management, BIR publication and Admin corrections require connectivity.
 - Do not open an uncached edit page after disconnecting. New-entry reference fallback is explicit; loading an existing entry still depends on fetching that entry. A previously loaded routine edit may queue, but Admin corrections/amendments require connectivity.
 - Do not publish Q3 merely to demonstrate the button. A quarter published before a queued change syncs will cause a permanent failure. Complete reconciliation and the authorized publication process separately.
 - Do not call cached reports current. Cached list filters may not reflect the selected live filter, and not every screen is cached.
@@ -73,4 +75,4 @@ Record live URL/project, browser/version, responsible account/MDA, source regist
 - Pending/failed records resolved or assigned for follow-up before switching accounts; no storage cleanup discards live data.
 - Saved real records retained and included once in the MDA's Q3 reconciliation.
 
-Repository validation on 13 October: production build passed and nine focused test files passed (127 tests). The current live Q3 state and session results must be recorded during onboarding. Updating this runbook did not create financial entries, change publication state or clean up any live records.
+Record the current live Q3 state and actual demonstration result during onboarding; earlier software checks do not establish what happened in this session.
