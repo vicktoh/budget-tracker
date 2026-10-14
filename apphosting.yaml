@@ -7,3 +7,11 @@ env:
     secret: OPENAI_API_KEY
     availability:
       - RUNTIME
+  - variable: RESEND_API_KEY
+    secret: RESEND_API_KEY
+    availability:
+      - RUNTIME
+  - variable: EMAIL_FROM
+    value: "Kano Health Finance Tracker <notifications@kano-budget-tracker.app>"
+    availability:
+      - RUNTIME
