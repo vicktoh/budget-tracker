@@ -1,6 +1,8 @@
 # AI assisted data ingestion
 
-Status: proposed implementation specification, prepared 13 October 2026. The current Imports page is a placeholder and the current AI assistant is read-only. This specification prepares the feature for implementation; it does not claim a working importer exists.
+Status updated 14 October 2026: Phase 1 CSV/XLSX transaction ingestion is implemented at `/imports`; see **Phase 1 as built** below. It provides upload, sheet selection, exact column/reference mapping, clarification controls, row corrections/exclusions, validation, preview, confirmation and receipts. This phase does not invoke AI and does not accept PDFs. The broader AI, OCR, dataset-classification and planning-import capabilities described below remain the target design. The separate chat assistant remains read-only.
+
+Onboarding this week uses the live database for real **Q3 2026 transactions (1 July-30 September)**. Operational instructions are in `docs/training-2026-10-13.md` and `docs/offline-demo-runbook.md`. Participants must verify actual dates/references, avoid overlap with existing records or aggregate data, and reconcile each committed batch. Do not use the illustrative counts/amounts in this design as live input.
 
 ## User outcome
 
@@ -102,9 +104,9 @@ Default to insert-only for routine MDA transactions. An existing reference with 
 
 Use private uploads, signed source previews, malware/file checks, configurable retention and per-user cost/size limits. Disclose online AI processing in the upload UI. Never include credentials or unrelated workbook sheets in model input or logs. Record extractor/model version, user answers, repairs and confirmation for reproducibility.
 
-## Preview example for the training
+## Illustrative preview for the future design
 
-This is an illustrative storyboard, not a result from one of the real workbooks:
+This is a design illustration only, not a live training dataset or a result from one of the real workbooks. Live Q3 onboarding uses the actual source rows and the implemented preview/receipt screens:
 
 “100 candidate expenditure rows for your MDA, Q4 2026. 82 are ready, totalling NGN 8,500,000. Ten need voucher references. Five are probable duplicates. Three are outside your assigned MDA. Zero records have been inserted.”
 
@@ -162,3 +164,22 @@ Verification so far:
 - **Live project (13 Oct 2026):** applied to `znvcxidepemlmqdhavpl` as migrations `ledger_imports` and `ledger_imports_pin_search_path`. Remote version numbers differ from the local file name, the same history drift noted above. The security advisor reports no new findings for the import objects.
 - **Browser check as an Admin:** upload, mapping, the day-first date choice, the in-page cell fix, exclusion, the issue report (formula cells neutralised, corrections listed), confirm, receipt, idempotent re-confirm, and re-upload (unchanged row skipped as already recorded, changed row blocked). The test inserted **FL-2026-0127 (NGN 1.00)** and **FL-2026-0128 (NGN 2.00)** for Hospital Management Board, references `IMPTEST-20261013-01/02`, remarks "Import feature test - safe to delete". Delete them from the register if they shouldn't stay in reporting.
 - **Latency:** each Supabase round trip from the development machine took about 350 ms, so a re-check takes 4–7 s in dev. Production depends on how close the host is to Supabase.
+
+## Phase 2, slice 1 as built (14 October 2026)
+
+AI assistance on the existing `/imports` flow. Every AI output is a suggestion validated against the real batch (sheet names, headers, reference IDs) and applied only when the user confirms it. Confirmed answers still pass the deterministic validator and the commit RPC's database checks. No schema migration: results and answers live in `import_batches.extraction.ai` and `import_batches.options.value_aliases`.
+
+- **Sheet analysis** (`analyze_workbook`): a keyword classifier always runs. When `OPENAI_API_KEY` is set, `gpt-5.1` (override with `IMPORT_AI_MODEL`) classifies each sheet into a fixed set of kinds: funding/expenditure ledger, monthly return, annual budget, AOP plan, quarterly aggregate, summary, lookup or other. It returns confidence, quoted evidence, period and MDA hints, and `overlaps_with` warnings for sheets that repeat or total others. Non-transaction sheets show where they belong and can only be selected with "Use anyway".
+- **Column-mapping suggestions** (`suggest_mapping`): shown beside each field as "AI suggests X · %" with a reason. "Use" or "Use AI suggestions for empty fields" fills the form; nothing applies until Apply.
+- **Value questions** (`answer_values`, `suggest_values`): an unmatched MDA, programme area, funding source, category, payment method or LGA becomes one question per distinct value, with a row count. Users answer from a dropdown (MDA users see only their own MDAs) or decline. AI can pre-select candidates, but only from the offered options. Answers resolve rows with an info issue ("matched … by your answer").
+- **Inputs and safeguards:** the model sees only this batch's sheet profiles (headers plus up to 8 truncated sample rows) or the unmatched values plus valid reference names. Prompts treat cell text as untrusted data. Output is schema-checked and invented sheets, columns and IDs are dropped. Requests are capped at 12 per batch. Each call is logged on the batch with model, prompt version, user and a summary of what was sent. The upload page discloses that AI is opt-in.
+- **Verified:**
+  - unit tests with a mock model, including a planted prompt-injection cell
+  - the keyword classifier against the real corpus, run locally only: Finance Tracker, Template-8, Q2 Health Component, SPHCMB AOP, Resource Mapping, approved budget
+  - an end-to-end run with live `gpt-5.1` on a synthetic workbook. It classified 3 sheets correctly, flagged the summary/monthly overlap and ignored the injected instruction. Mapping and value suggestions brought 4 blocked rows to ready. No ledger rows were written.
+
+**Not yet built:**
+- admin destinations for monthly returns, budgets, AOP and quarterly aggregates
+- Template-7/8 summary-versus-detail reconciliation
+- answers for expenditure items, facilities and AOP codes, which still need per-row fixes
+- PDFs and OCR (phase 3)
