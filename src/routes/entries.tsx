@@ -17,7 +17,9 @@ import { isAdmin, isReviewer, viewableMdaIds } from "@/lib/access";
 import { listBirPublications } from "@/lib/db/bir-publications";
 import { listExpenditureEntries, type ExpenditureEntryRow } from "@/lib/db/expenditure-entries";
 import { listFundingEntries, type FundingEntryRow } from "@/lib/db/funding-entries";
+import type { LedgerOrigin } from "@/lib/db/types";
 import { filterExpenditureBySearch, filterFundingBySearch } from "@/lib/ledger/entry-list-filters";
+import { BPR_FUNDING_SOURCE_NOTE, LEDGER_ORIGIN_BADGES, ledgerOrigin } from "@/lib/ledger/origin";
 import { formatNaira } from "@/lib/format";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 
@@ -84,14 +86,14 @@ export function EntriesRoute() {
       </section>
       <Tabs defaultValue="funding">
         <TabsList><TabsTrigger value="funding">Funding ({fundingRows.length})</TabsTrigger><TabsTrigger value="expenditure">Expenditure ({expenditureRows.length})</TabsTrigger></TabsList>
-        <TabsContent value="funding"><EntryTable loading={loading} rows={fundingRows.map((row) => ({ id: row.id, kind: "funding", publicId: row.public_id, reference: row.reference_no, date: row.transaction_date, mda: row.mdas?.name ?? "—", amount: Number(row.amount), locked: published.has(`${row.fiscal_year}:${row.quarter}`) }))} /></TabsContent>
-        <TabsContent value="expenditure"><EntryTable loading={loading} rows={expenditureRows.map((row) => ({ id: row.id, kind: "expenditure", publicId: row.public_id, reference: row.voucher_ref_no, date: row.transaction_date, mda: row.mdas?.name ?? "—", amount: Number(row.amount), locked: published.has(`${row.fiscal_year}:${row.quarter}`) }))} /></TabsContent>
+        <TabsContent value="funding"><EntryTable loading={loading} rows={fundingRows.map((row) => ({ id: row.id, kind: "funding", publicId: row.public_id, reference: row.reference_no, date: row.transaction_date, mda: row.mdas?.name ?? "—", amount: Number(row.amount), locked: published.has(`${row.fiscal_year}:${row.quarter}`), origin: ledgerOrigin(row) }))} /></TabsContent>
+        <TabsContent value="expenditure"><EntryTable loading={loading} rows={expenditureRows.map((row) => ({ id: row.id, kind: "expenditure", publicId: row.public_id, reference: row.voucher_ref_no, date: row.transaction_date, mda: row.mdas?.name ?? "—", amount: Number(row.amount), locked: published.has(`${row.fiscal_year}:${row.quarter}`), origin: ledgerOrigin(row) }))} /></TabsContent>
       </Tabs>
     </div>
   );
 }
 
-type RegisterRow = { id: string; kind: "funding" | "expenditure"; publicId: string | null; reference: string; date: string; mda: string; amount: number; locked: boolean };
+type RegisterRow = { id: string; kind: "funding" | "expenditure"; publicId: string | null; reference: string; date: string; mda: string; amount: number; locked: boolean; origin: LedgerOrigin };
 function EntryTable({ rows, loading }: { rows: RegisterRow[]; loading: boolean }) {
-  return <Table><TableHeader><TableRow><TableHead>Entry</TableHead><TableHead>Date</TableHead><TableHead>MDA</TableHead><TableHead>Reference</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Publication</TableHead><TableHead /></TableRow></TableHeader><TableBody>{rows.map((row) => <TableRow key={row.id}><TableCell className="font-mono text-xs">{row.publicId ?? row.id.slice(0, 8)}</TableCell><TableCell>{row.date}</TableCell><TableCell>{row.mda}</TableCell><TableCell>{row.reference}</TableCell><TableCell className="text-right tabular-nums">{formatNaira(row.amount)}</TableCell><TableCell>{row.locked ? <Badge variant="outline"><LockIcon className="size-3" /> Locked</Badge> : <span className="text-sm text-muted-foreground">Open</span>}</TableCell><TableCell className="text-right"><Link className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline" href={`/entries/${row.kind}/${row.id}`}><MessageSquareIcon className="size-3" /> Details</Link></TableCell></TableRow>)}{!loading && rows.length === 0 ? <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">No entries match these filters.</TableCell></TableRow> : null}</TableBody></Table>;
+  return <Table><TableHeader><TableRow><TableHead>Entry</TableHead><TableHead>Date</TableHead><TableHead>MDA</TableHead><TableHead>Reference</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Publication</TableHead><TableHead /></TableRow></TableHeader><TableBody>{rows.map((row) => <TableRow key={row.id}><TableCell><span className="font-mono text-xs">{row.publicId ?? row.id.slice(0, 8)}</span>{row.origin !== "manual" ? <Badge variant="outline" className="ml-2" title={row.origin === "bpr" ? BPR_FUNDING_SOURCE_NOTE : undefined}>{LEDGER_ORIGIN_BADGES[row.origin]}</Badge> : null}</TableCell><TableCell>{row.date}</TableCell><TableCell>{row.mda}</TableCell><TableCell>{row.reference}</TableCell><TableCell className="text-right tabular-nums">{formatNaira(row.amount)}</TableCell><TableCell>{row.locked ? <Badge variant="outline"><LockIcon className="size-3" /> Locked</Badge> : <span className="text-sm text-muted-foreground">Open</span>}</TableCell><TableCell className="text-right"><Link className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline" href={`/entries/${row.kind}/${row.id}`}><MessageSquareIcon className="size-3" /> Details</Link></TableCell></TableRow>)}{!loading && rows.length === 0 ? <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">No entries match these filters.</TableCell></TableRow> : null}</TableBody></Table>;
 }

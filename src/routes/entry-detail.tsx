@@ -16,6 +16,7 @@ import { listEntryDataQualityWarnings } from "@/lib/db/data-quality-warnings";
 import type { BirAmendment, EntryType, FiscalQuarter } from "@/lib/db/types";
 import { formatFundingSourceSummary } from "@/lib/expenditure/funding-allocations";
 import { formatNaira } from "@/lib/format";
+import { BPR_FUNDING_SOURCE_NOTE, LEDGER_ORIGIN_LABELS, ledgerOrigin } from "@/lib/ledger/origin";
 import { hasSupabaseConfig, supabase } from "@/lib/supabase";
 
 type Mode = { kind: "funding" | "expenditure"; entryId: string };
@@ -72,6 +73,7 @@ export function EntryDetailRoute({ mode }: { mode: Mode }) {
 function fundingSections(row: FundingEntryRow): EntryDetailSection[] { return [
   { label: "MDA", value: row.mdas?.name }, { label: "Programme area", value: row.programme_areas?.name },
   { label: "Funding source", value: row.funding_sources?.name }, { label: "Reference", value: row.reference_no },
+  originSection(row),
 ]; }
 function expenditureSections(row: ExpenditureEntryRow): EntryDetailSection[] { return [
   { label: "MDA", value: row.mdas?.name }, { label: "Programme area", value: row.programme_areas?.name },
@@ -79,4 +81,9 @@ function expenditureSections(row: ExpenditureEntryRow): EntryDetailSection[] { r
   { label: "Payment method", value: row.payment_methods?.name }, { label: "Voucher reference", value: row.voucher_ref_no },
   { label: "PHC", value: row.is_phc ? `${row.facilities?.name ?? "Facility"} · ${row.lgas?.name ?? "LGA"}` : "Non-PHC" },
   { label: "Funding sources", value: (row.expenditure_funding_allocations ?? []).length ? (row.expenditure_funding_allocations ?? []).map((a) => `${a.funding_sources?.name ?? "Source"} · ${formatNaira(Number(a.amount))}`).join("; ") : formatFundingSourceSummary([]), full: true },
+  originSection(row),
 ]; }
+function originSection(row: FundingEntryRow | ExpenditureEntryRow): EntryDetailSection {
+  const origin = ledgerOrigin(row);
+  return { label: "Source of this entry", full: true, value: origin === "bpr" ? <>{LEDGER_ORIGIN_LABELS.bpr}. <span className="text-muted-foreground">{BPR_FUNDING_SOURCE_NOTE}</span></> : LEDGER_ORIGIN_LABELS[origin] };
+}

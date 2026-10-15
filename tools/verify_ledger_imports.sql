@@ -5,7 +5,8 @@
 -- commit_import_batch as real authenticated users with RLS in force:
 -- atomic commit, idempotent replay, stale-plan rejection, cross-MDA tampering,
 -- publication locks, inactive references, allocation totals, cross-user
--- isolation, completed-batch immutability and source-file storage scope.
+-- isolation, completed-batch immutability, source-file storage scope and
+-- ledger entry origin tagging.
 -- Everything runs in one transaction and is rolled back.
 
 \set ON_ERROR_STOP on
@@ -248,6 +249,35 @@ begin
   raise notice 'H ok: expenditure with allocation committed atomically';
 end $$;
 
+-- K. Origin: imports are tagged 'import'; users can't set or change origin.
+select set_config('request.jwt.claim.sub', '11000000-0000-0000-0000-000000000001', true);
+select set_config('app.ledger_origin', '', true);
+do $$
+declare v text;
+begin
+  if exists (select 1 from public.funding_entries where reference_no in ('IMP-1', 'IMP-2') and origin <> 'import')
+     or exists (select 1 from public.expenditure_entries where voucher_ref_no = 'PV-H2' and origin <> 'import') then
+    raise exception 'K: imported entries not tagged import';
+  end if;
+
+  insert into public.funding_entries (transaction_date, mda_id, programme_area_id, funding_source_id, amount, reference_no, entered_by, origin)
+  values ('2026-07-09', '21000000-0000-0000-0000-000000000001', '31000000-0000-0000-0000-000000000001',
+          '31000000-0000-0000-0000-000000000002', 10, 'MAN-I1', auth.uid(), 'bpr')
+  returning origin into v;
+  if v <> 'manual' then raise exception 'K: user insert kept origin %', v; end if;
+
+  update public.funding_entries set origin = 'bpr', remarks = 'edited' where reference_no = 'IMP-1' returning origin into v;
+  if v <> 'import' then raise exception 'K: user update changed origin to %', v; end if;
+  raise notice 'K ok: origin derived on insert and preserved on update';
+end $$;
+
 reset role;
+
+do $$
+declare v text;
+begin
+  update public.funding_entries set origin = 'bpr' where reference_no = 'MAN-I1' returning origin into v;
+  if v <> 'bpr' then raise exception 'K: admin script could not set origin'; end if;
+end $$;
 select 'ledger import verification passed' as result;
 rollback;

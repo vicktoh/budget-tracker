@@ -46,6 +46,13 @@ export type EmailDeliveryStatus = "queued" | "sending" | "sent" | "delivered" | 
 
 type Numeric = number;
 
+/**
+ * Where a ledger row came from. "bpr" rows were loaded from the official
+ * Budget Performance Report, which doesn't report funding sources, so their
+ * funding source is assumed (the state appropriation).
+ */
+export type LedgerOrigin = "manual" | "import" | "bpr";
+
 type FundingOverAllocationWarningJson = {
   funding_source_id: string;
   funding_source_name: string;
@@ -206,6 +213,8 @@ export type Database = {
           reference_no: string;
           remarks: string | null;
           entered_by: string;
+          /** Set by the database; users can't write it. */
+          origin: LedgerOrigin;
           created_at: ISOTimestamp;
           updated_at: ISOTimestamp;
         };
@@ -254,6 +263,8 @@ export type Database = {
           payment_method_id: string;
           remarks: string | null;
           entered_by: string;
+          /** Set by the database; users can't write it. */
+          origin: LedgerOrigin;
           created_at: ISOTimestamp;
           updated_at: ISOTimestamp;
         };
