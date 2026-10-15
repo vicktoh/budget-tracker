@@ -9,6 +9,11 @@
  * permissions, locks, constraints and reference activeness independently.
  */
 import {
+  STATE_BUDGET_FUNDING_SOURCE_SLUG,
+  UNSPECIFIED_FUNDING_SOURCE_SLUG,
+} from "@/lib/expenditure/funding-allocations";
+import {
+  DEFAULTABLE_FIELDS,
   FIELD_DEFINITIONS,
   type ImportField,
   type ImportMapping,
@@ -38,6 +43,11 @@ export type ImportOptions = {
   date_convention: DateConvention | null;
   /** MDA for rows without one: no MDA column mapped, or a blank MDA cell. */
   default_mda_id: string | null;
+  /**
+   * One reference id per DEFAULTABLE_FIELDS entry, used for rows without a
+   * value: no column mapped, or a blank cell. A value in the row always wins.
+   */
+  field_defaults?: Partial<Record<ImportField, string>>;
   /**
    * User-confirmed answers to "what does this value mean?" questions, keyed by
    * field then by normalizeKey(source text). A reference id resolves the value;
@@ -356,6 +366,8 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
     issues.push({ code, field, message, severity: "blocker" });
   const warn = (code: string, message: string, field?: ImportField) =>
     issues.push({ code, field, message, severity: "warning" });
+  const fieldDefault = (field: ImportField): string | undefined =>
+    DEFAULTABLE_FIELDS[ctx.ledger].includes(field) ? ctx.options.field_defaults?.[field] || undefined : undefined;
 
   if (row.userExcluded) {
     issues.push({ code: "user_excluded", severity: "info", message: "Excluded by you. It will not be inserted." });
@@ -378,6 +390,7 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
     if (!def.required) continue;
     // The default MDA stands in for an unmapped MDA column or a blank MDA cell.
     if (def.field === "mda" && ctx.options.default_mda_id) continue;
+    if (fieldDefault(def.field)) continue;
     if (!header(def.field)) {
       block("field_unmapped", `${def.label} is required but no column is mapped to it.`, def.field);
     } else if (!cell(def.field)) {
@@ -486,7 +499,13 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
 
   const resolveSimple = (field: ImportField, label: string, values: RefValue[]): RefValue | null => {
     const text = cell(field);
-    if (!text) return null;
+    if (!text) {
+      const defaultId = fieldDefault(field);
+      if (!defaultId) return null;
+      const chosen = values.find((v) => v.id === defaultId && v.active);
+      if (!chosen) block("reference_unknown", `The ${label} chosen for all rows is not an active ${label}.`, field);
+      return chosen ?? null;
+    }
     const resolved = resolveByKeys(field, label, text, values, simpleKeys);
     if (resolved.ok) return resolved.value;
     return viaAlias(field, label, values, resolved.issue);
@@ -534,8 +553,27 @@ function validateRow(row: StagedRowInput, ctx: ValidationContext): RowResult {
   const category = resolveSimple("expenditure_category", "expenditure category", ctx.reference.expenditureCategories);
   const paymentMethod = resolveSimple("payment_method", "payment method", ctx.reference.paymentMethods);
 
+  // Rules the manual expenditure form applies to funding allocations.
+  if (fundingSource?.slug === UNSPECIFIED_FUNDING_SOURCE_SLUG) {
+    block(
+      "funding_source_unspecified",
+      `"${fundingSource.name}" can't be used for new expenditure. Pick the actual funding source for this expenditure.`,
+      "funding_source",
+    );
+  }
+  // State-budget spending is classified by approved budget line, not by
+  // expenditure item; the form clears the item, so the import drops it too.
+  const stateBudget = fundingSource?.slug === STATE_BUDGET_FUNDING_SOURCE_SLUG;
+  if (stateBudget && cell("expenditure_item")) {
+    warn(
+      "item_ignored_state_budget",
+      `Expenditure item "${cell("expenditure_item")}" will not be saved: spending from ${fundingSource!.name} is classified by approved budget line, which can be linked in the Entry Register.`,
+      "expenditure_item",
+    );
+  }
+
   let itemId: string | null = null;
-  if (cell("expenditure_item") && category) {
+  if (cell("expenditure_item") && category && !stateBudget) {
     const items = ctx.reference.expenditureItems.filter(
       (item) => item.expenditure_category_id === null || item.expenditure_category_id === category.id,
     );

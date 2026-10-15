@@ -7,6 +7,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AppProfile } from "@/lib/auth-types";
+import { UNSPECIFIED_FUNDING_SOURCE_SLUG } from "@/lib/expenditure/funding-allocations";
 import { parseCsv } from "@/lib/imports/csv";
 import { normalizeKey } from "@/lib/imports/normalize";
 import { gridFromCsv, type SourceGridRow } from "@/lib/imports/table";
@@ -198,7 +199,10 @@ async function answerOptions(client: Db, profile: AppProfile, batch: ImportBatch
       ...(permitted === "all" || permitted.has(m.id) ? {} : { note: "not your MDA — rows will stay blocked" }),
     })),
     programme_area: active(ref.programmeAreas).map(({ id, name }) => ({ id, name })),
-    funding_source: active(ref.fundingSources).map(({ id, name }) => ({ id, name })),
+    // Manual expenditure entry never offers the Unspecified source.
+    funding_source: active(ref.fundingSources)
+      .filter((s) => batch.ledger_type !== "expenditure" || s.slug !== UNSPECIFIED_FUNDING_SOURCE_SLUG)
+      .map(({ id, name }) => ({ id, name })),
     expenditure_category: active(ref.expenditureCategories).map(({ id, name }) => ({ id, name })),
     payment_method: active(ref.paymentMethods).map(({ id, name }) => ({ id, name })),
     lga: active(ref.lgas).map(({ id, name }) => ({ id, name })),

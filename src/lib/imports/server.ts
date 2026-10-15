@@ -14,6 +14,7 @@ import {
 import type { AppProfile } from "@/lib/auth-types";
 import { parseCsv } from "@/lib/imports/csv";
 import {
+  DEFAULTABLE_FIELDS,
   FIELD_DEFINITIONS,
   suggestMapping,
   type ImportField,
@@ -404,9 +405,26 @@ export async function updateMapping(
       throw new ImportError("You can only choose an MDA you hold a submit grant for.", 403, "forbidden");
     }
   }
+  const fieldDefaults: Partial<Record<ImportField, string>> = {};
+  if (options.field_defaults) {
+    const choices = await defaultValueOptions(client, batch.ledger_type);
+    for (const [field, id] of Object.entries(options.field_defaults)) {
+      if (!id) continue;
+      const allowed = choices[field as ImportField];
+      if (!allowed) throw new ImportError(`"${field}" can't take one value for all rows.`);
+      if (!allowed.some((option) => option.id === id)) {
+        throw new ImportError("That value for all rows isn't an active option.", 403, "forbidden");
+      }
+      fieldDefaults[field as ImportField] = id;
+    }
+  }
   const { error } = await client
     .from("import_batches")
-    .update({ mapping: cleanMapping, options: { ...batch.options, ...options }, plan_hash: null })
+    .update({
+      mapping: cleanMapping,
+      options: { ...batch.options, ...options, field_defaults: options.field_defaults ? fieldDefaults : batch.options.field_defaults ?? {} },
+      plan_hash: null,
+    })
     .eq("id", batchId);
   throwIf(error, "Saving the mapping");
   await revalidateBatch(client, profile, batchId);
@@ -498,6 +516,7 @@ async function buildContext(
   const options: ImportOptions = {
     date_convention: batch.options.date_convention ?? null,
     default_mda_id: batch.options.default_mda_id ?? null,
+    field_defaults: batch.options.field_defaults ?? {},
     value_aliases: batch.options.value_aliases ?? {},
   };
   const cellValues = (field: ImportField): string[] => {
@@ -616,7 +635,8 @@ function mappingComplete(batch: ImportBatchRow): boolean {
     (def) =>
       !def.required ||
       Boolean(batch.mapping[def.field]) ||
-      (def.field === "mda" && Boolean(batch.options.default_mda_id)),
+      (def.field === "mda" && Boolean(batch.options.default_mda_id)) ||
+      (DEFAULTABLE_FIELDS[batch.ledger_type].includes(def.field) && Boolean(batch.options.field_defaults?.[def.field])),
   );
 }
 
@@ -779,6 +799,24 @@ export async function permittedMdaOptions(
   return mdas
     .filter((mda) => mda.active && (permitted === "all" || permitted.has(mda.id)))
     .map((mda) => ({ id: mda.id, name: mda.abbreviation ? `${mda.name} (${mda.abbreviation})` : mda.name }));
+}
+
+/** Active values the user may choose as the one value for every row, per DEFAULTABLE_FIELDS. */
+export async function defaultValueOptions(
+  client: Db,
+  ledger: LedgerType,
+): Promise<Partial<Record<ImportField, Array<{ id: string; name: string }>>>> {
+  const base = await loadReference(client);
+  const lists: Partial<Record<ImportField, RefValue[]>> = {
+    programme_area: base.programmeAreas,
+    expenditure_category: base.expenditureCategories,
+    payment_method: base.paymentMethods,
+  };
+  const out: Partial<Record<ImportField, Array<{ id: string; name: string }>>> = {};
+  for (const field of DEFAULTABLE_FIELDS[ledger]) {
+    out[field] = (lists[field] ?? []).filter((v) => v.active).map(({ id, name }) => ({ id, name }));
+  }
+  return out;
 }
 
 export async function listBatches(client: Db, profile: AppProfile): Promise<ImportBatchRow[]> {

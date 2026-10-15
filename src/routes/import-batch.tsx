@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ImportMapping } from "@/lib/imports/fields";
+import type { ImportField, ImportMapping } from "@/lib/imports/fields";
 import type { ImportBatchRow, ImportReceipt, ImportRowRecord } from "@/lib/imports/server";
 import type { ImportOptions } from "@/lib/imports/validate";
 import type { MappingSuggestion } from "@/lib/imports/ai/assist";
@@ -25,6 +25,7 @@ type Detail = {
   rows: ImportRowRecord[];
   labels: Record<string, string>;
   permitted_mdas: Array<{ id: string; name: string }>;
+  default_choices: Partial<Record<ImportField, Array<{ id: string; name: string }>>>;
   is_owner: boolean;
   receipt?: ImportReceipt;
   ai: BatchAiView;
@@ -171,6 +172,7 @@ export function ImportBatchRoute({ id }: { id: string }) {
           batch={batch}
           rows={rows}
           permittedMdas={detail.permitted_mdas}
+          defaultChoices={detail.default_choices}
           busy={busy}
           onApply={(mapping: ImportMapping, options: ImportOptions) => act({ action: "set_mapping", mapping, options })}
           aiSuggestions={

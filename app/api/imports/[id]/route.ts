@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   cancelBatch,
   commitBatch,
+  defaultValueOptions,
   loadBatch,
   loadRows,
   permittedMdaOptions,
@@ -37,6 +38,7 @@ const actionSchema = z.discriminatedUnion("action", [
     options: z.object({
       date_convention: z.enum(["dmy", "mdy"]).nullable(),
       default_mda_id: uuid.nullable(),
+      field_defaults: z.record(z.string().max(40), uuid).optional(),
     }),
   }),
   z.object({
@@ -61,7 +63,7 @@ const actionSchema = z.discriminatedUnion("action", [
 
 async function detail(id: string) {
   const { client, profile } = await importRouteContext();
-  const [batch, rows, labels, permittedByLedger] = await Promise.all([
+  const [batch, rows, labels, permittedByLedger, choicesByLedger] = await Promise.all([
     loadBatch(client, id),
     loadRows(client, id),
     referenceLabels(client),
@@ -69,6 +71,7 @@ async function detail(id: string) {
       permittedMdaOptions(client, profile, "funding"),
       permittedMdaOptions(client, profile, "expenditure"),
     ]),
+    Promise.all([defaultValueOptions(client, "funding"), defaultValueOptions(client, "expenditure")]),
   ]);
   const open = batch.status !== "completed" && batch.status !== "cancelled";
   return {
@@ -76,6 +79,7 @@ async function detail(id: string) {
     rows,
     labels,
     permitted_mdas: permittedByLedger[batch.ledger_type === "funding" ? 0 : 1],
+    default_choices: choicesByLedger[batch.ledger_type === "funding" ? 0 : 1],
     is_owner: batch.created_by === profile.id,
     ai: batchAiView(batch),
     questions: open ? await questionsForBatch(client, profile, batch, rows) : [],

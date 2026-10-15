@@ -136,6 +136,16 @@ export const FIELD_DEFINITIONS: Record<LedgerType, FieldDefinition[]> = {
   ],
 };
 
+/**
+ * Dropdown fields that can take one value for every row instead of a mapped
+ * column, as the MDA can. A value in a mapped cell always wins; the batch
+ * value fills an unmapped column or a blank cell.
+ */
+export const DEFAULTABLE_FIELDS: Record<LedgerType, readonly ImportField[]> = {
+  funding: ["programme_area"],
+  expenditure: ["programme_area", "expenditure_category", "payment_method"],
+};
+
 export function fieldDefinition(ledger: LedgerType, field: ImportField): FieldDefinition | undefined {
   return FIELD_DEFINITIONS[ledger].find((def) => def.field === field);
 }

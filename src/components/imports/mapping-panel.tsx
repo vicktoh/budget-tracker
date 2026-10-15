@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/form";
 import { Select } from "@/components/ui/select";
-import { FIELD_DEFINITIONS, type ImportField, type ImportMapping } from "@/lib/imports/fields";
+import { DEFAULTABLE_FIELDS, FIELD_DEFINITIONS, type ImportField, type ImportMapping } from "@/lib/imports/fields";
 import type { DateConvention } from "@/lib/imports/normalize";
 import type { ImportBatchRow, ImportRowRecord } from "@/lib/imports/server";
 import type { ImportOptions } from "@/lib/imports/validate";
@@ -16,6 +16,8 @@ type Props = {
   batch: ImportBatchRow;
   rows: ImportRowRecord[];
   permittedMdas: Array<{ id: string; name: string }>;
+  /** Active values for fields that can take one value for all rows. */
+  defaultChoices: Partial<Record<ImportField, Array<{ id: string; name: string }>>>;
   busy: boolean;
   onApply: (mapping: ImportMapping, options: ImportOptions) => void;
   aiSuggestions: MappingSuggestion[] | null;
@@ -35,24 +37,28 @@ function samples(rows: ImportRowRecord[], header: string | undefined): string {
   return values.join(" · ");
 }
 
-export function MappingPanel({ batch, rows, permittedMdas, busy, onApply, aiSuggestions, aiConfigured, aiCallsLeft, onSuggest }: Props) {
+export function MappingPanel({ batch, rows, permittedMdas, defaultChoices, busy, onApply, aiSuggestions, aiConfigured, aiCallsLeft, onSuggest }: Props) {
   const [mapping, setMapping] = useState<ImportMapping>(batch.mapping);
   const [dateConvention, setDateConvention] = useState<DateConvention | "">(batch.options.date_convention ?? "");
   const [defaultMdaId, setDefaultMdaId] = useState<string>(batch.options.default_mda_id ?? "");
+  const [fieldDefaults, setFieldDefaults] = useState<Partial<Record<ImportField, string>>>(batch.options.field_defaults ?? {});
 
   // A server-side revision (another tab, or a sheet change) resets the form.
   useEffect(() => {
     setMapping(batch.mapping);
     setDateConvention(batch.options.date_convention ?? "");
     setDefaultMdaId(batch.options.default_mda_id ?? "");
-  }, [batch.revision, batch.mapping, batch.options.date_convention, batch.options.default_mda_id]);
+    setFieldDefaults(batch.options.field_defaults ?? {});
+  }, [batch.revision, batch.mapping, batch.options.date_convention, batch.options.default_mda_id, batch.options.field_defaults]);
 
   // MDA users registered under one MDA are defaulted to it by the server.
   const singleMda = permittedMdas.length === 1 ? permittedMdas[0] : null;
   const used = useMemo(() => new Set(Object.values(mapping).filter(Boolean)), [mapping]);
   const needsDateConvention = rows.some((row) => row.issues.some((issue) => issue.code === "date_convention_required"));
   const definitions = FIELD_DEFINITIONS[batch.ledger_type];
+  const defaultable = new Set<ImportField>(DEFAULTABLE_FIELDS[batch.ledger_type]);
   const dirty =
+    JSON.stringify(fieldDefaults) !== JSON.stringify(batch.options.field_defaults ?? {}) ||
     JSON.stringify(mapping) !== JSON.stringify(batch.mapping) ||
     (dateConvention || null) !== (batch.options.date_convention ?? null) ||
     (defaultMdaId || null) !== (batch.options.default_mda_id ?? null);
@@ -61,6 +67,15 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply, aiSugg
     setMapping((current) => {
       const next = { ...current };
       if (header) next[field] = header;
+      else delete next[field];
+      return next;
+    });
+  }
+
+  function setFieldDefault(field: ImportField, id: string) {
+    setFieldDefaults((current) => {
+      const next = { ...current };
+      if (id) next[field] = id;
       else delete next[field];
       return next;
     });
@@ -137,6 +152,24 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply, aiSugg
                 <FieldDescription className="truncate">
                   {example ? `e.g. ${example}` : def.description ?? (def.required ? "Required." : "Optional.")}
                 </FieldDescription>
+                {defaultable.has(def.field) ? (
+                  <Select
+                    id={`default-${def.field}`}
+                    aria-label={header ? `${def.label} for rows with a blank cell` : `${def.label} for all rows`}
+                    value={fieldDefaults[def.field] ?? ""}
+                    onChange={(event) => setFieldDefault(def.field, event.target.value)}
+                    disabled={busy}
+                  >
+                    <option value="">
+                      {header ? "Blank cells: keep those rows blocked" : "Or choose one value for all rows…"}
+                    </option>
+                    {(defaultChoices[def.field] ?? []).map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {header ? `Blank cells: ${option.name}` : `All rows: ${option.name}`}
+                      </option>
+                    ))}
+                  </Select>
+                ) : null}
                 {(() => {
                   const suggestion = aiSuggestions?.find((s) => s.field === def.field);
                   if (!suggestion || (suggestion.header ?? "") === (header ?? "")) return null;
@@ -224,6 +257,7 @@ export function MappingPanel({ batch, rows, permittedMdas, busy, onApply, aiSugg
               onApply(mapping, {
                 date_convention: dateConvention || null,
                 default_mda_id: defaultMdaId || null,
+                field_defaults: fieldDefaults,
               })
             }
           >
