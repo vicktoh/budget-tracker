@@ -22,6 +22,10 @@ type DonutShareChartProps = {
   height?: number;
   /** Hide the slice legend below the chart. */
   hideLegend?: boolean;
+  /** Tooltip value formatter. Defaults to naira. */
+  formatValue?: (value: number) => string;
+  /** Shown instead of the chart when every slice is zero. */
+  emptyMessage?: string;
 };
 
 /**
@@ -35,12 +39,14 @@ export function DonutShareChart({
   centerLabel,
   height = 240,
   hideLegend,
+  formatValue = formatNaira,
+  emptyMessage = "No data for the current filters.",
 }: DonutShareChartProps) {
   const visible = data.filter((datum) => datum.value > 0);
   if (visible.length === 0) {
     return (
       <p className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-        No data for the current filters.
+        {emptyMessage}
       </p>
     );
   }
@@ -59,7 +65,7 @@ export function DonutShareChart({
                 backgroundColor: "hsl(var(--card))",
                 boxShadow: "0 12px 30px hsl(var(--foreground) / 0.12)",
               }}
-              formatter={(value, name) => [formatNaira(Number(value)), String(name)]}
+              formatter={(value, name) => [formatValue(Number(value)), String(name)]}
             />
             <Pie
               data={visible}

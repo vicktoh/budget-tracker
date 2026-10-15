@@ -10,6 +10,9 @@
  *    (presence of a row, even ₦0, counts as reported).
  *  - Programme budgets are AOP planned costs mapped to programme areas by
  *    keyword — an approximation, labelled as such wherever it is shown.
+ *  - A quarter view measures that quarter's releases and actuals against a
+ *    quarterly allocation of ¼ the annual budget (and ¼ the AOP plan), so the
+ *    25% thresholds keep their meaning. See `scopeToQuarter`.
  */
 import {
   aggregateMdaScorecards,
@@ -17,7 +20,11 @@ import {
   type TrackingVerdict,
 } from "@/lib/reporting/aggregate";
 import { ECONOMIC_CLASS_LABEL, type EconomicClass } from "@/lib/reporting/economic-class";
-import { emptyReportFilters, type ReportingDataset } from "@/lib/reporting/types";
+import {
+  emptyReportFilters,
+  type ReportingDataset,
+  type ReportQuarter,
+} from "@/lib/reporting/types";
 
 export const LOW_UTILISATION = 0.25;
 export const LOW_RELEASE = 0.25;
@@ -96,6 +103,8 @@ export type DataCoverage = {
 
 export type ExecutiveOverview = {
   fiscal_year: number;
+  /** null = full year; otherwise every figure is scoped to this quarter. */
+  quarter: ReportQuarter | null;
   totals: {
     budget: number;
     released: number;
@@ -126,6 +135,50 @@ export function latestFiscalYear(dataset: ReportingDataset): number {
 
 const ratio = (num: number, den: number): number | null => (den > 0 ? num / den : null);
 
+/** Share of the annual budget allocated to one quarter. */
+export const QUARTER_BUDGET_SHARE = 0.25;
+
+export const quarterMonths = (quarter: ReportQuarter): number[] => [
+  quarter * 3 - 2,
+  quarter * 3 - 1,
+  quarter * 3,
+];
+
+/**
+ * The dataset narrowed to one quarter of a fiscal year: that quarter's
+ * releases, actuals and monthly returns, with annual budgets and AOP plans
+ * scaled to a quarterly allocation. Every executive metric can then run on it
+ * unchanged.
+ */
+export function scopeToQuarter(
+  dataset: ReportingDataset,
+  fiscalYear: number,
+  quarter: ReportQuarter,
+): ReportingDataset {
+  const months = new Set(quarterMonths(quarter));
+  const share = QUARTER_BUDGET_SHARE;
+  return {
+    ...dataset,
+    funding: dataset.funding.filter((f) => f.fiscal_year === fiscalYear && f.quarter === quarter),
+    expenditure: dataset.expenditure.filter(
+      (e) => e.fiscal_year === fiscalYear && e.quarter === quarter,
+    ),
+    monthly: dataset.monthly.filter((m) => m.fiscal_year === fiscalYear && months.has(m.month)),
+    budgets: dataset.budgets.map((b) => ({
+      ...b,
+      personnel_amount: b.personnel_amount * share,
+      other_recurrent_amount: b.other_recurrent_amount * share,
+      total_recurrent_amount: b.total_recurrent_amount * share,
+      capital_amount: b.capital_amount * share,
+      total_budget_amount: b.total_budget_amount * share,
+    })),
+    aopActivities: dataset.aopActivities.map((a) => ({
+      ...a,
+      budgeted_cost: a.budgeted_cost * share,
+    })),
+  };
+}
+
 function toComponent(c: MdaScorecard["components"][number]): ComponentPerformance {
   return {
     budget_class: c.budget_class,
@@ -142,9 +195,12 @@ function toComponent(c: MdaScorecard["components"][number]): ComponentPerformanc
 }
 
 export function computeMdaPerformance(
-  dataset: ReportingDataset,
+  fullDataset: ReportingDataset,
   fiscalYear: number,
+  quarter: ReportQuarter | null = null,
 ): { mdas: MdaPerformance[]; trackingHorizon: number | null } {
+  const dataset = quarter ? scopeToQuarter(fullDataset, fiscalYear, quarter) : fullDataset;
+  const firstMonth = quarter ? quarterMonths(quarter)[0] : 1;
   const filters = { ...emptyReportFilters(), fiscalYear };
   const cards = aggregateMdaScorecards(
     dataset.budgets,
@@ -171,7 +227,7 @@ export function computeMdaPerformance(
     const months = new Set(card.months_reported);
     const missing: number[] = [];
     if (trackingHorizon) {
-      for (let m = 1; m <= trackingHorizon; m += 1) if (!months.has(m)) missing.push(m);
+      for (let m = firstMonth; m <= trackingHorizon; m += 1) if (!months.has(m)) missing.push(m);
     }
     const reporting_status: ReportingStatus =
       months.size === 0
@@ -244,8 +300,9 @@ export function sourceMismatches(components: ComponentPerformance[]): ComponentP
 export function computeExecutiveOverview(
   dataset: ReportingDataset,
   fiscalYear: number = latestFiscalYear(dataset),
+  quarter: ReportQuarter | null = null,
 ): ExecutiveOverview {
-  const { mdas, trackingHorizon } = computeMdaPerformance(dataset, fiscalYear);
+  const { mdas, trackingHorizon } = computeMdaPerformance(dataset, fiscalYear, quarter);
 
   const totals = mdas.reduce(
     (acc, m) => {
@@ -281,6 +338,7 @@ export function computeExecutiveOverview(
 
   return {
     fiscal_year: fiscalYear,
+    quarter,
     totals: {
       ...totals,
       balance: totals.budget - totals.spent,
@@ -289,7 +347,7 @@ export function computeExecutiveOverview(
     },
     components,
     mdas,
-    coverage: computeCoverage(dataset, fiscalYear, mdas, trackingHorizon),
+    coverage: computeCoverage(dataset, fiscalYear, mdas, trackingHorizon, quarter),
   };
 }
 
@@ -300,6 +358,7 @@ function computeCoverage(
   fiscalYear: number,
   mdas: MdaPerformance[],
   trackingHorizon: number | null,
+  quarter: ReportQuarter | null,
 ): DataCoverage {
   const expenditure = dataset.expenditure.filter((e) => e.fiscal_year === fiscalYear);
   const dataThrough = expenditure.reduce<string | null>(
@@ -312,7 +371,14 @@ function computeCoverage(
 
   const gaps: string[] = [];
   const lastQuarter = quarters.length ? Math.max(...quarters) : 0;
-  if (lastQuarter < 4) {
+  if (quarter) {
+    gaps.push(
+      `Q${quarter} figures are measured against a quarterly allocation of one quarter of the annual budget.`,
+    );
+    if (!quarters.includes(quarter)) {
+      gaps.push(`No Q${quarter} ${fiscalYear} actuals have been received yet.`);
+    }
+  } else if (lastQuarter < 4) {
     const missingQ = [];
     for (let q = lastQuarter + 1; q <= 4; q += 1) missingQ.push(`Q${q}`);
     gaps.push(
@@ -322,10 +388,13 @@ function computeCoverage(
   const notTracked = mdas.length - inTracking;
   if (notTracked > 0) {
     gaps.push(
-      `${notTracked} of ${mdas.length} MDAs have never submitted monthly expenditure tracking.`,
+      quarter
+        ? `${notTracked} of ${mdas.length} MDAs submitted no monthly expenditure tracking for Q${quarter}.`
+        : `${notTracked} of ${mdas.length} MDAs have never submitted monthly expenditure tracking.`,
     );
   }
   for (const q of quarters) {
+    if (quarter && q !== quarter) continue;
     const rows = expenditure.filter((e) => e.quarter === q);
     const specific = rows.filter((e) => !GENERIC_PROGRAMMES.has(e.programme_area_name));
     const share = rows.length ? specific.reduce((s, e) => s + e.amount, 0) / rows.reduce((s, e) => s + e.amount, 0) : 0;
@@ -422,9 +491,11 @@ export type ProgrammePerformance = {
 export const FEATURED_PROGRAMMES = ["Immunisation & Vaccines", "Human Resource for Health"];
 
 export function computeProgrammePerformance(
-  dataset: ReportingDataset,
-  fiscalYear: number = latestFiscalYear(dataset),
+  fullDataset: ReportingDataset,
+  fiscalYear: number = latestFiscalYear(fullDataset),
+  quarter: ReportQuarter | null = null,
 ): ProgrammePerformance[] {
+  const dataset = quarter ? scopeToQuarter(fullDataset, fiscalYear, quarter) : fullDataset;
   type Acc = {
     planned: number;
     activities: number;

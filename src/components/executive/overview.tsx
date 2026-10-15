@@ -24,6 +24,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AskHero } from "@/components/executive/ask-panel";
+import { DonutShareChart } from "@/components/reporting/charts/donut-share-chart";
+import { STATUS_COLORS } from "@/components/reporting/charts/palette";
+import { CLASS_COLORS } from "@/components/reporting/insights/primitives";
 import {
   AvailabilityTag,
   DrillLink,
@@ -40,13 +43,15 @@ import {
 import { useOnlineStatus } from "@/lib/offline/use-online-status";
 import { useSyncQueue } from "@/lib/offline/use-sync-queue";
 import { hasSupabaseConfig } from "@/lib/supabase";
-import { formatCompactNaira, formatPercent } from "@/lib/format";
+import { formatCompactNaira, formatInteger, formatPercent } from "@/lib/format";
 import {
   FEATURED_PROGRAMMES,
   MONTH_LABELS,
   UNMAPPED_PROGRAMME,
+  type ExecutiveOverview,
   type MdaPerformance,
 } from "@/lib/reporting/executive";
+import type { ReportQuarter } from "@/lib/reporting/types";
 import { cn } from "@/lib/utils";
 
 /** Online / offline / syncing pill shown in every executive page header. */
@@ -79,8 +84,10 @@ export function ConnectionStatus({ cachedAt }: { cachedAt: string | null }) {
   );
 }
 
-function reportingLabel(mda: MdaPerformance, horizon: number | null) {
-  if (mda.reporting_status === "never") return <MissingData>Never submitted</MissingData>;
+function reportingLabel(mda: MdaPerformance, horizon: number | null, quarter: ReportQuarter | null) {
+  if (mda.reporting_status === "never") {
+    return <MissingData>{quarter ? `No Q${quarter} returns` : "Never submitted"}</MissingData>;
+  }
   if (mda.reporting_status === "missed_latest" && horizon) {
     return (
       <span className="text-xs text-status-rejected">
@@ -91,8 +98,60 @@ function reportingLabel(mda: MdaPerformance, horizon: number | null) {
   return <span className="text-xs text-status-approved">Up to date</span>;
 }
 
+const QUARTER_OPTIONS: Array<{ value: ReportQuarter | null; label: string }> = [
+  { value: null, label: "Full year" },
+  { value: 1, label: "Q1" },
+  { value: 2, label: "Q2" },
+  { value: 3, label: "Q3" },
+  { value: 4, label: "Q4" },
+];
+
+/** Segmented Full year / Q1–Q4 switch. Quarters without actuals stay selectable. */
+function QuarterPicker({
+  value,
+  onChange,
+  quartersWithActuals,
+}: {
+  value: ReportQuarter | null;
+  onChange: (next: ReportQuarter | null) => void;
+  quartersWithActuals: number[];
+}) {
+  return (
+    <div
+      role="radiogroup"
+      aria-label="Period"
+      className="inline-flex h-9 items-center gap-1 rounded-md border bg-muted p-1"
+    >
+      {QUARTER_OPTIONS.map((option) => {
+        const selected = option.value === value;
+        const noActuals = option.value !== null && !quartersWithActuals.includes(option.value);
+        return (
+          <button
+            key={option.label}
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            title={noActuals ? `No ${option.label} actuals received yet` : undefined}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "focus-ring inline-flex h-7 items-center rounded px-3 text-sm font-medium transition-colors",
+              selected
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+              noActuals && !selected && "text-muted-foreground/60",
+            )}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ExecutiveOverviewRoute() {
-  const { overview, programmes, exceptions, loading, error, cachedAt } = useExecutiveData();
+  const [quarter, setQuarter] = React.useState<ReportQuarter | null>(null);
+  const { overview, programmes, exceptions, loading, error, cachedAt } = useExecutiveData(quarter);
 
   if (!hasSupabaseConfig) {
     return (
@@ -108,13 +167,16 @@ export function ExecutiveOverviewRoute() {
 
   const coverage = overview?.coverage;
   const horizon = coverage?.tracking_horizon ?? null;
+  const period = quarter ? `Q${quarter}` : null;
+  const budgetLabel = period ? `${period} allocation` : "Approved budget";
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-normal">
-            Health sector budget performance{overview ? ` · FY ${overview.fiscal_year}` : ""}
+            Health sector budget performance
+            {overview ? ` · FY ${overview.fiscal_year}${period ? ` · ${period}` : ""}` : ""}
           </h1>
           <p className="text-sm text-muted-foreground">
             Every health MDA in one view.{" "}
@@ -123,7 +185,14 @@ export function ExecutiveOverviewRoute() {
               : null}
           </p>
         </div>
-        <ConnectionStatus cachedAt={cachedAt} />
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
+          <QuarterPicker
+            value={quarter}
+            onChange={setQuarter}
+            quartersWithActuals={coverage?.quarters_with_actuals ?? []}
+          />
+          <ConnectionStatus cachedAt={cachedAt} />
+        </div>
       </div>
 
       {error ? (
@@ -147,9 +216,13 @@ export function ExecutiveOverviewRoute() {
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             <Kpi
-              label="Approved budget"
+              label={budgetLabel}
               value={formatCompactNaira(overview.totals.budget)}
-              helper={`FY ${overview.fiscal_year} · ${coverage.mdas_total} MDAs`}
+              helper={
+                period
+                  ? `¼ of ${formatCompactNaira(overview.totals.budget * 4)} annual budget`
+                  : `FY ${overview.fiscal_year} · ${coverage.mdas_total} MDAs`
+              }
             />
             <Kpi
               label="Released"
@@ -159,7 +232,15 @@ export function ExecutiveOverviewRoute() {
             <Kpi
               label="Actual spend"
               value={formatCompactNaira(overview.totals.spent)}
-              helper={`Q${coverage.quarters_with_actuals.join(" + Q")} actuals`}
+              helper={
+                quarter
+                  ? coverage.quarters_with_actuals.includes(quarter)
+                    ? `${period} actuals`
+                    : `No ${period} actuals yet`
+                  : coverage.quarters_with_actuals.length
+                    ? `Q${coverage.quarters_with_actuals.join(" + Q")} actuals`
+                    : "No actuals yet"
+              }
             />
             <Kpi
               label="Utilisation"
@@ -168,12 +249,20 @@ export function ExecutiveOverviewRoute() {
               helper={`Balance ${formatCompactNaira(overview.totals.balance)} unspent`}
             />
             <Kpi
-              label={horizon ? `Reported for ${MONTH_LABELS[horizon - 1]}` : "Reporting"}
+              label={
+                horizon
+                  ? `Reported for ${MONTH_LABELS[horizon - 1]}`
+                  : period
+                    ? `Reported in ${period}`
+                    : "Reporting"
+              }
               value={`${coverage.mdas_reported_latest} / ${coverage.mdas_total}`}
               tone={coverage.mdas_reported_latest < coverage.mdas_total ? "warn" : "good"}
               helper="MDAs with monthly returns"
             />
           </div>
+
+          <AtAGlance overview={overview} period={period} />
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <AttentionCard
@@ -182,7 +271,11 @@ export function ExecutiveOverviewRoute() {
               count={exceptions.notReporting.length}
               title="Not reporting"
               names={exceptions.notReporting.map((m) => m.mda_name)}
-              helper={horizon ? `No return for ${MONTH_LABELS[horizon - 1]} or never submitted` : "No monthly returns"}
+              helper={
+                horizon
+                  ? `No return for ${MONTH_LABELS[horizon - 1]} or ${period ? `none in ${period}` : "never submitted"}`
+                  : "No monthly returns"
+              }
             />
             <AttentionCard
               href="/admin/exceptions#no-funding"
@@ -201,7 +294,7 @@ export function ExecutiveOverviewRoute() {
               count={exceptions.lowUtilisationMdas.length}
               title="Low utilisation (<25%)"
               names={exceptions.lowUtilisationMdas.map((m) => `${m.mda_name} · ${formatPercent(m.utilisation)}`)}
-              helper="Share of annual budget spent"
+              helper={period ? `Share of ${period} allocation spent` : "Share of annual budget spent"}
             />
             <AttentionCard
               href="/admin/exceptions#variances"
@@ -218,7 +311,11 @@ export function ExecutiveOverviewRoute() {
 
           <SectionCard
             title="Personnel, overhead and capital"
-            description="Actual spend against the annual approved budget for each economic class."
+            description={
+              period
+                ? `${period} actual spend against the ${period} allocation (¼ of the annual budget) for each economic class.`
+                : "Actual spend against the annual approved budget for each economic class."
+            }
           >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {overview.components
@@ -256,7 +353,7 @@ export function ExecutiveOverviewRoute() {
               <TableHeader>
                 <TableRow>
                   <TableHead>MDA</TableHead>
-                  <TableHead className="text-right">Budget</TableHead>
+                  <TableHead className="text-right">{period ? `${period} allocation` : "Budget"}</TableHead>
                   <TableHead className="text-right">Released</TableHead>
                   <TableHead className="text-right">Spent</TableHead>
                   <TableHead className="w-[18%]">Utilisation</TableHead>
@@ -292,7 +389,7 @@ export function ExecutiveOverviewRoute() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>{reportingLabel(mda, horizon)}</TableCell>
+                    <TableCell>{reportingLabel(mda, horizon, quarter)}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {mda.flags
@@ -310,7 +407,9 @@ export function ExecutiveOverviewRoute() {
 
           <SectionCard
             title="Programmes"
-            description="Budget is the AOP planned cost mapped to each programme; actuals are spending recorded against that programme area."
+            description={`Budget is the AOP planned cost mapped to each programme${
+              period ? ` (¼ of the annual plan for ${period})` : ""
+            }; actuals are spending recorded against that programme area.`}
           >
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {programmes
@@ -429,6 +528,138 @@ export function ExecutiveOverviewRoute() {
           </div>
         </>
       ) : null}
+    </div>
+  );
+}
+
+const formatMdaCount = (value: number) => `${formatInteger(value)} MDA${value === 1 ? "" : "s"}`;
+
+/** Four donuts: budget absorbed, funds released, spend mix and reporting compliance. */
+function AtAGlance({
+  overview,
+  period,
+}: {
+  overview: ExecutiveOverview;
+  period: string | null;
+}) {
+  const { totals, coverage } = overview;
+  const budgetBase = period ? `${period} allocation` : "approved budget";
+  const noActuals = period ? `No ${period} actuals yet` : "No actuals yet";
+  const reporting = {
+    up_to_date: overview.mdas.filter((m) => m.reporting_status === "up_to_date").length,
+    missed_latest: overview.mdas.filter((m) => m.reporting_status === "missed_latest").length,
+    never: overview.mdas.filter((m) => m.reporting_status === "never").length,
+  };
+
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <GlanceCard title="Budget absorbed" description={`Actual spend as a share of the ${budgetBase}.`}>
+        <DonutShareChart
+          height={180}
+          centerValue={formatPercent(totals.utilisation)}
+          centerLabel="spent"
+          emptyMessage="No approved budget"
+          data={[
+            {
+              id: "spent",
+              label: totals.spent > totals.budget ? "Spent (over budget)" : "Spent",
+              value: Math.min(totals.spent, totals.budget),
+              color: totals.spent > totals.budget ? STATUS_COLORS.rejected : "hsl(var(--primary))",
+            },
+            {
+              id: "unspent",
+              label: "Unspent",
+              value: Math.max(0, totals.budget - totals.spent),
+              color: "hsl(var(--muted-foreground) / 0.2)",
+            },
+          ]}
+        />
+      </GlanceCard>
+      <GlanceCard title="Funds released" description={`Releases as a share of the ${budgetBase}.`}>
+        <DonutShareChart
+          height={180}
+          centerValue={formatPercent(totals.release_rate)}
+          centerLabel="released"
+          emptyMessage="No approved budget"
+          data={[
+            {
+              id: "released",
+              label: "Released",
+              value: Math.min(totals.released, totals.budget),
+              color: "hsl(var(--chart-2))",
+            },
+            {
+              id: "not-released",
+              label: "Not released",
+              value: Math.max(0, totals.budget - totals.released),
+              color: "hsl(var(--muted-foreground) / 0.2)",
+            },
+          ]}
+        />
+      </GlanceCard>
+      <GlanceCard
+        title="Where the money went"
+        description={`${period ?? "Year-to-date"} actual spend by economic class.`}
+      >
+        <DonutShareChart
+          height={180}
+          centerValue={formatCompactNaira(totals.spent)}
+          centerLabel="spent"
+          emptyMessage={noActuals}
+          data={overview.components.map((c) => ({
+            id: c.budget_class,
+            label: c.label,
+            value: c.spent,
+            color: CLASS_COLORS[c.budget_class],
+          }))}
+        />
+      </GlanceCard>
+      <GlanceCard
+        title="Monthly returns"
+        description={
+          coverage.tracking_horizon
+            ? `MDAs that returned ${MONTH_LABELS[coverage.tracking_horizon - 1]} tracking.`
+            : `No monthly returns${period ? ` in ${period}` : ""} yet.`
+        }
+      >
+        <DonutShareChart
+          height={180}
+          centerValue={`${reporting.up_to_date} / ${coverage.mdas_total}`}
+          centerLabel="up to date"
+          formatValue={formatMdaCount}
+          emptyMessage="No MDAs"
+          data={[
+            { id: "up_to_date", label: "Up to date", value: reporting.up_to_date, color: STATUS_COLORS.approved },
+            { id: "missed_latest", label: "Missed latest", value: reporting.missed_latest, color: STATUS_COLORS.pending },
+            {
+              id: "never",
+              label: period ? `None in ${period}` : "Never submitted",
+              value: reporting.never,
+              color: STATUS_COLORS.rejected,
+            },
+          ]}
+        />
+      </GlanceCard>
+    </div>
+  );
+}
+
+function GlanceCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border bg-card p-4">
+      <div className="flex flex-col gap-0.5">
+        <span className="text-sm font-semibold">{title}</span>
+        <span className="text-xs text-muted-foreground">{description}</span>
+      </div>
+      {children}
     </div>
   );
 }

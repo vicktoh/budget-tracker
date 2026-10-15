@@ -12,22 +12,28 @@ import {
   computeExceptions,
   computeExecutiveOverview,
   computeProgrammePerformance,
+  latestFiscalYear,
   LOW_UTILISATION,
   MDA_FLAG_LABEL,
   type MdaFlag,
 } from "@/lib/reporting/executive";
+import type { ReportQuarter } from "@/lib/reporting/types";
 import { cn } from "@/lib/utils";
 
-/** Loads the reporting dataset once and derives every executive view from it. */
-export function useExecutiveData() {
+/**
+ * Loads the reporting dataset once and derives every executive view from it.
+ * `quarter` scopes the derived figures to one quarter; null is the full year.
+ */
+export function useExecutiveData(quarter: ReportQuarter | null = null) {
   const state = useReportingData(supabase, {});
   const derived = React.useMemo(() => {
     if (!state.dataset) return null;
-    const overview = computeExecutiveOverview(state.dataset);
-    const programmes = computeProgrammePerformance(state.dataset, overview.fiscal_year);
+    const fiscalYear = latestFiscalYear(state.dataset);
+    const overview = computeExecutiveOverview(state.dataset, fiscalYear, quarter);
+    const programmes = computeProgrammePerformance(state.dataset, fiscalYear, quarter);
     const exceptions = computeExceptions(overview, programmes);
     return { overview, programmes, exceptions };
-  }, [state.dataset]);
+  }, [state.dataset, quarter]);
   return { ...state, ...derived };
 }
 
