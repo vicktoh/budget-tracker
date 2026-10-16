@@ -14,6 +14,9 @@
  *    received", never "No spending".
  *  - Release flags apply only when some release was recorded for the period;
  *    otherwise releases are unknown, not zero.
+ *  - Revenue & grants collected (IGR and capital receipts) is income against
+ *    the approved revenue budget. It is reported beside releases, never
+ *    added to them.
  *  - Programme budgets are AOP planned costs mapped to programme areas by
  *    keyword — an approximation, labelled as such wherever it is shown.
  *  - A quarter view measures that quarter's releases and actuals against a
@@ -130,9 +133,38 @@ export type ExecutiveOverview = {
     spent: number;
     utilisation: number | null;
   }>;
+  /** Revenue and grants collected in the period (budget_line_revenue_actuals). */
+  revenue: {
+    collected: number;
+    recurrent: number;
+    capital_receipt: number;
+    /** MDAs with any collection recorded for the period. */
+    mdas: number;
+  };
   mdas: MdaPerformance[];
   coverage: DataCoverage;
 };
+
+/** Collections for the fiscal year, or for one quarter of it. */
+export function computeRevenueCollected(
+  dataset: ReportingDataset,
+  fiscalYear: number,
+  quarter: ReportQuarter | null = null,
+): ExecutiveOverview["revenue"] {
+  const result = { collected: 0, recurrent: 0, capital_receipt: 0, mdas: 0 };
+  const mdas = new Set<string>();
+  for (const line of dataset.revenues) {
+    if (line.fiscal_year !== fiscalYear) continue;
+    for (const actual of line.actuals) {
+      if (quarter && actual.quarter !== quarter) continue;
+      result.collected += actual.amount;
+      result[line.stream] += actual.amount;
+      if (actual.amount !== 0) mdas.add(line.mda_id);
+    }
+  }
+  result.mdas = mdas.size;
+  return result;
+}
 
 /** Most recent fiscal year with an approved budget (falls back to actuals). */
 export function latestFiscalYear(dataset: ReportingDataset): number {
@@ -363,6 +395,7 @@ export function computeExecutiveOverview(
       release_rate: ratio(totals.released, totals.budget),
     },
     components,
+    revenue: computeRevenueCollected(dataset, fiscalYear, quarter),
     mdas,
     coverage: computeCoverage(dataset, fiscalYear, mdas, trackingHorizon, quarter),
   };

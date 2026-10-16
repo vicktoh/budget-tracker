@@ -97,4 +97,15 @@ describe("executive metrics", () => {
     expect(full.coverage.releases_recorded).toBe(true);
     expect(full.coverage.gaps.some((g) => g.startsWith("No Q3 2026 releases have been recorded yet"))).toBe(true);
   });
+
+  it("reports revenue and grants collected per period, apart from releases", () => {
+    const ds = dataset() as any;
+    const full = computeExecutiveOverview(ds, 2026);
+    expect(full.revenue).toEqual({ collected: 5_500_000, recurrent: 500_000, capital_receipt: 5_000_000, mdas: 2 });
+    expect(computeExecutiveOverview(ds, 2026, 2).revenue.collected).toBe(5_300_000);
+    expect(computeExecutiveOverview(ds, 2026, 1).revenue).toEqual({ collected: 200_000, recurrent: 200_000, capital_receipt: 0, mdas: 1 });
+    expect(computeExecutiveOverview(ds, 2026, 3).revenue.collected).toBe(0);
+    // Collections never change the release figures.
+    expect(full.totals.released).toBe(ds.funding.filter((f: any) => f.fiscal_year === 2026).reduce((s: number, f: any) => s + f.amount, 0));
+  });
 });

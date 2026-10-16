@@ -77,7 +77,10 @@ begin
 
   -- Sheet lines, matched to the MDA's existing tracking line (same class and
   -- economic code, and the same description unless the code is unique) and
-  -- to its approved budget line.
+  -- to its approved budget line. Matching is one-to-one: when several sheet
+  -- rows claim the same line (repeated codes, repeated descriptions), the
+  -- closest keeps it and the others stay separate lines keyed by their own
+  -- sheet row.
   drop table if exists pg_temp._mr_lines;
   create temp table _mr_lines on commit drop as
   with src as (
@@ -94,16 +97,16 @@ begin
     select id, budget_class, economic_code, coalesce(project_description, economic_description) as descr
     from public.approved_budget_lines
     where mda_id = v_mda.id and fiscal_year = p_fiscal_year and active
-  )
-  select
-    s.*,
-    coalesce(t.matched, false) as tracked,
-    case when t.matched then coalesce(t.source_row_number, -1) else s.row_no end as k_row,
-    coalesce(t.approved_budget_line_id, b.id) as line_id,
-    coalesce(bl.project_description, bl.economic_description, b.descr, s.descr) as title
-  from src s
+  ),
+  candidates as (
+    select s.*,
+           coalesce(t.matched, false) as t_matched, t.source_row_number as t_row,
+           t.approved_budget_line_id as t_line, coalesce(t.desc_eq, false) as t_desc_eq,
+           b.id as b_id, coalesce(b.desc_eq, false) as b_desc_eq
+    from src s
   left join lateral (
-    select true as matched, e.source_row_number, e.approved_budget_line_id
+    select true as matched, e.source_row_number, e.approved_budget_line_id,
+           app_private.mr_norm(e.description) = app_private.mr_norm(s.descr) as desc_eq
     from tracked e
     where e.budget_class = s.budget_class and e.economic_code = s.economic_code
       and (
@@ -116,7 +119,7 @@ begin
     limit 1
   ) t on true
   left join lateral (
-    select a.id, a.descr
+    select a.id, app_private.mr_norm(a.descr) = app_private.mr_norm(s.descr) as desc_eq
     from budgeted a
     where a.budget_class = s.budget_class and a.economic_code = s.economic_code
       and (
@@ -127,7 +130,39 @@ begin
     order by (app_private.mr_norm(a.descr) = app_private.mr_norm(s.descr)) desc
     limit 1
   ) b on true
-  left join public.approved_budget_lines bl on bl.id = coalesce(t.approved_budget_line_id, b.id);
+  ),
+  ranked as (
+    select c.*,
+      case when c.t_matched then row_number() over (
+        partition by c.t_matched, c.budget_class, c.economic_code, c.t_row
+        order by c.t_desc_eq desc, abs(coalesce(c.t_row, 0) - c.row_no), c.row_no) end as t_rank,
+      case when c.b_id is not null then row_number() over (
+        partition by c.b_id order by c.b_desc_eq desc, c.row_no) end as b_rank
+    from candidates c
+  ),
+  resolved as (
+    select r.*,
+      r.t_rank = 1 as won,
+      case when r.t_rank = 1 then r.t_line end as kept_line
+    from ranked r
+  )
+  select
+    r.row_no, r.budget_class, r.economic_code, r.descr, r.budget, r.months,
+    coalesce(r.won, false) as tracked,
+    case
+      when r.won then coalesce(r.t_row, -1)
+      -- A separate line keeps its own sheet row as key, moved clear of any
+      -- platform line that already uses that row number for the same code.
+      when exists (select 1 from tracked e
+                   where e.budget_class = r.budget_class and e.economic_code = r.economic_code
+                     and e.source_row_number = r.row_no) then 100000 + r.row_no
+      else r.row_no
+    end as k_row,
+    coalesce(r.kept_line, case when r.b_rank = 1 then r.b_id end) as line_id,
+    coalesce(bl.project_description, bl.economic_description, r.descr) as title
+  from resolved r
+  left join public.approved_budget_lines bl
+    on bl.id = coalesce(r.kept_line, case when r.b_rank = 1 then r.b_id end);
 
   select coalesce(jsonb_agg(jsonb_build_object(
            'economic_code', economic_code, 'budget_class', budget_class, 'row', k_row, 'sheet_rows', n)), '[]')

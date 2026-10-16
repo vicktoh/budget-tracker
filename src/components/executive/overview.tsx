@@ -214,7 +214,7 @@ export function ExecutiveOverviewRoute() {
 
       {overview && exceptions && programmes && coverage ? (
         <>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <Kpi
               label={budgetLabel}
               value={formatCompactNaira(overview.totals.budget)}
@@ -231,6 +231,15 @@ export function ExecutiveOverviewRoute() {
                 coverage.releases_recorded
                   ? `${formatPercent(overview.totals.release_rate)} of budget`
                   : `No ${period ? `${period} ` : ""}releases recorded yet`
+              }
+            />
+            <Kpi
+              label="Revenue & grants collected"
+              value={overview.revenue.collected > 0 ? formatCompactNaira(overview.revenue.collected) : "Not recorded"}
+              helper={
+                overview.revenue.collected > 0
+                  ? `IGR ${formatCompactNaira(overview.revenue.recurrent)} · receipts ${formatCompactNaira(overview.revenue.capital_receipt)} · not releases`
+                  : `No ${period ? `${period} ` : ""}collections recorded`
               }
             />
             <Kpi
