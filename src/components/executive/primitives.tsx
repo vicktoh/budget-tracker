@@ -143,6 +143,7 @@ export function FlowLegend() {
 }
 
 const FLAG_VARIANT: Record<MdaFlag, "rejected" | "pending" | "processed"> = {
+  no_data: "processed",
   no_spend: "rejected",
   low_utilisation: "pending",
   no_release: "rejected",

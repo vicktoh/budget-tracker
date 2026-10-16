@@ -226,8 +226,12 @@ export function ExecutiveOverviewRoute() {
             />
             <Kpi
               label="Released"
-              value={formatCompactNaira(overview.totals.released)}
-              helper={`${formatPercent(overview.totals.release_rate)} of budget`}
+              value={coverage.releases_recorded ? formatCompactNaira(overview.totals.released) : "Not recorded"}
+              helper={
+                coverage.releases_recorded
+                  ? `${formatPercent(overview.totals.release_rate)} of budget`
+                  : `No ${period ? `${period} ` : ""}releases recorded yet`
+              }
             />
             <Kpi
               label="Actual spend"
@@ -281,6 +285,9 @@ export function ExecutiveOverviewRoute() {
               href="/admin/exceptions#no-funding"
               icon={CircleSlashIcon}
               count={exceptions.noFundingMdas.length + exceptions.noFundingProgrammes.length}
+              unavailable={
+                coverage.releases_recorded ? undefined : `No ${period ? `${period} ` : ""}releases recorded yet`
+              }
               title="Receiving no funding"
               names={[
                 ...exceptions.noFundingMdas.map((m) => m.mda_name),
@@ -376,7 +383,11 @@ export function ExecutiveOverviewRoute() {
                       {formatCompactNaira(mda.budget)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {mda.released > 0 ? formatCompactNaira(mda.released) : <MissingData>None</MissingData>}
+                      {mda.released > 0 ? (
+                        formatCompactNaira(mda.released)
+                      ) : (
+                        <MissingData>{coverage.releases_recorded ? "None" : "Not recorded"}</MissingData>
+                      )}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatCompactNaira(mda.spent)}
@@ -580,8 +591,10 @@ function AtAGlance({
           height={180}
           centerValue={formatPercent(totals.release_rate)}
           centerLabel="released"
-          emptyMessage="No approved budget"
-          data={[
+          emptyMessage={
+            coverage.releases_recorded ? "No approved budget" : `No ${period ? `${period} ` : ""}releases recorded yet`
+          }
+          data={!coverage.releases_recorded ? [] : [
             {
               id: "released",
               label: "Released",
@@ -630,7 +643,12 @@ function AtAGlance({
           emptyMessage="No MDAs"
           data={[
             { id: "up_to_date", label: "Up to date", value: reporting.up_to_date, color: STATUS_COLORS.approved },
-            { id: "missed_latest", label: "Missed latest", value: reporting.missed_latest, color: STATUS_COLORS.pending },
+            {
+              id: "missed_latest",
+              label: period ? "Missing months" : "Missed latest",
+              value: reporting.missed_latest,
+              color: STATUS_COLORS.pending,
+            },
             {
               id: "never",
               label: period ? `None in ${period}` : "Never submitted",
@@ -671,6 +689,7 @@ function AttentionCard({
   title,
   names,
   helper,
+  unavailable,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -678,7 +697,24 @@ function AttentionCard({
   title: string;
   names: string[];
   helper: string;
+  /** Why this check can't be made for the period; replaces the count. */
+  unavailable?: string;
 }) {
+  if (unavailable) {
+    return (
+      <div className="flex flex-col gap-2 rounded-xl border bg-card p-4">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            <Icon className="size-4 text-muted-foreground" />
+            {title}
+          </span>
+          <span className="text-2xl font-semibold text-muted-foreground">—</span>
+        </div>
+        <span className="text-xs text-muted-foreground">{helper}</span>
+        <MissingData>{unavailable}</MissingData>
+      </div>
+    );
+  }
   return (
     <Link
       href={href}

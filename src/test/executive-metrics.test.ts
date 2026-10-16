@@ -49,4 +49,52 @@ describe("executive metrics", () => {
     const planned = (rows: typeof fullAop) => rows.reduce((s, p) => s + p.planned, 0);
     expect(planned(q1Aop)).toBeCloseTo(planned(fullAop) / 4);
   });
+
+  it("keeps missing data apart from zero spend and unknown releases in a partly reported quarter", () => {
+    const ds = dataset() as any;
+    // One MDA returns July and September for Q3 and has Q3 actuals; nobody has Q3 releases.
+    const tracking = ds.monthly[0];
+    ds.monthly.push(
+      { ...tracking, id: "q3-jul", month: 7, amount: 50_000 },
+      { ...tracking, id: "q3-sep", month: 9, amount: 10_000 },
+    );
+    const template = ds.expenditure.find((e: any) => e.mda_id === tracking.mda_id) ?? ds.expenditure[0];
+    ds.expenditure.push({
+      ...template,
+      id: "q3-e",
+      mda_id: tracking.mda_id,
+      mda_name: tracking.mda_name,
+      quarter: 3,
+      transaction_date: "2026-09-30",
+      amount: 60_000,
+    });
+
+    const q3 = computeExecutiveOverview(ds, 2026, 3);
+    const reporter = q3.mdas.find((m) => m.mda_id === tracking.mda_id)!;
+    expect(reporter.missing_months).toEqual([8]);
+    expect(reporter.reporting_status).toBe("missed_latest");
+    expect(reporter.flags).not.toContain("no_data");
+
+    const silent = q3.mdas.filter((m) => m.mda_id !== tracking.mda_id);
+    expect(silent.length).toBeGreaterThan(0);
+    for (const m of silent) {
+      expect(m.flags).toContain("no_data");
+      expect(m.flags).not.toContain("no_spend");
+      expect(m.flags).not.toContain("no_release");
+      expect(m.reporting_status).toBe("never");
+    }
+
+    expect(q3.coverage.releases_recorded).toBe(false);
+    expect(q3.coverage.gaps).toContain("No Q3 2026 releases have been recorded, so release figures are not available.");
+    expect(q3.coverage.gaps).toContain(`Q3 2026 actuals cover 1 of ${q3.mdas.length} MDAs so far; the rest have not reported.`);
+
+    const exceptions = computeExceptions(q3, computeProgrammePerformance(ds, 2026, 3));
+    expect(exceptions.noFundingMdas).toHaveLength(0);
+    expect(exceptions.lowUtilisationMdas.every((m) => m.mda_id === tracking.mda_id)).toBe(true);
+    expect(exceptions.notReporting).toHaveLength(q3.mdas.length);
+
+    const full = computeExecutiveOverview(ds, 2026);
+    expect(full.coverage.releases_recorded).toBe(true);
+    expect(full.coverage.gaps.some((g) => g.startsWith("No Q3 2026 releases have been recorded yet"))).toBe(true);
+  });
 });

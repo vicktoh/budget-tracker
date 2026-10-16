@@ -7,7 +7,13 @@
  *  - Utilisation = actual ÷ full-year approved budget (no pro-rata).
  *  - Low utilisation / underfunded = below 25% of the annual budget.
  *  - Not reporting = monthly tracking has no submission for the latest month
- *    (presence of a row, even ₦0, counts as reported).
+ *    (presence of a row, even ₦0, counts as reported). In a quarter view, a
+ *    missing month anywhere in the quarter also counts.
+ *  - An MDA with neither actuals nor monthly returns for the period has no
+ *    data, which is not the same as spending nothing: it is flagged "No data
+ *    received", never "No spending".
+ *  - Release flags apply only when some release was recorded for the period;
+ *    otherwise releases are unknown, not zero.
  *  - Programme budgets are AOP planned costs mapped to programme areas by
  *    keyword — an approximation, labelled as such wherever it is shown.
  *  - A quarter view measures that quarter's releases and actuals against a
@@ -52,6 +58,7 @@ export type ComponentPerformance = {
 export type ReportingStatus = "up_to_date" | "missed_latest" | "never";
 
 export type MdaFlag =
+  | "no_data"
   | "no_spend"
   | "low_utilisation"
   | "no_release"
@@ -62,6 +69,7 @@ export type MdaFlag =
   | "source_mismatch";
 
 export const MDA_FLAG_LABEL: Record<MdaFlag, string> = {
+  no_data: "No data received",
   no_spend: "No spending",
   low_utilisation: "Low utilisation",
   no_release: "No funds released",
@@ -98,6 +106,8 @@ export type DataCoverage = {
   mdas_total: number;
   mdas_in_tracking: number;
   mdas_reported_latest: number;
+  /** False when no release at all was recorded for the period. */
+  releases_recorded: boolean;
   gaps: string[];
 };
 
@@ -213,6 +223,10 @@ export function computeMdaPerformance(
     ? Math.max(...yearMonthly.map((row) => row.month))
     : null;
 
+  const withActuals = new Set(
+    dataset.expenditure.filter((e) => e.fiscal_year === fiscalYear).map((e) => e.mda_id),
+  );
+  const releasesRecorded = dataset.funding.some((f) => f.fiscal_year === fiscalYear);
   const releasedByMda = new Map<string, number>();
   for (const row of dataset.funding) {
     if (row.fiscal_year !== fiscalYear) continue;
@@ -232,17 +246,20 @@ export function computeMdaPerformance(
     const reporting_status: ReportingStatus =
       months.size === 0
         ? "never"
-        : trackingHorizon && !months.has(trackingHorizon)
+        : (trackingHorizon && !months.has(trackingHorizon)) || (quarter && missing.length > 0)
           ? "missed_latest"
           : "up_to_date";
 
     const utilisation = ratio(spent, budget);
     const release_rate = ratio(released, budget);
     const flags: MdaFlag[] = [];
-    if (budget > 0 && spent === 0) flags.push("no_spend");
+    if (!withActuals.has(card.mda_id) && months.size === 0) flags.push("no_data");
+    else if (budget > 0 && spent === 0) flags.push("no_spend");
     else if (utilisation !== null && utilisation < LOW_UTILISATION) flags.push("low_utilisation");
-    if (budget > 0 && released === 0) flags.push("no_release");
-    else if (release_rate !== null && release_rate < LOW_RELEASE) flags.push("low_release");
+    if (releasesRecorded) {
+      if (budget > 0 && released === 0) flags.push("no_release");
+      else if (release_rate !== null && release_rate < LOW_RELEASE) flags.push("low_release");
+    }
     if (reporting_status !== "up_to_date") flags.push("not_reporting");
     if (components.some((c) => c.spent > c.budget && c.spent > 0)) flags.push("overspend");
     if (lopsidedGap(components) !== null) flags.push("lopsided");
@@ -371,6 +388,9 @@ function computeCoverage(
 
   const gaps: string[] = [];
   const lastQuarter = quarters.length ? Math.max(...quarters) : 0;
+  const releasesRecorded = dataset.funding.some(
+    (f) => f.fiscal_year === fiscalYear && (!quarter || f.quarter === quarter),
+  );
   if (quarter) {
     gaps.push(
       `Q${quarter} figures are measured against a quarterly allocation of one quarter of the annual budget.`,
@@ -384,6 +404,24 @@ function computeCoverage(
     gaps.push(
       `${missingQ.join(", ")} ${fiscalYear} actuals have not been received; utilisation is measured against the full-year budget.`,
     );
+  }
+  // The newest quarter with actuals (or the selected one) may cover only the
+  // MDAs that have reported so far; say so instead of implying a full picture.
+  const coverageQuarter = quarter ?? (lastQuarter || null);
+  if (coverageQuarter && quarters.includes(coverageQuarter)) {
+    const reported = new Set(
+      expenditure.filter((e) => e.quarter === coverageQuarter).map((e) => e.mda_id),
+    ).size;
+    if (reported < mdas.length) {
+      gaps.push(
+        `Q${coverageQuarter} ${fiscalYear} actuals cover ${reported} of ${mdas.length} MDAs so far; the rest have not reported.`,
+      );
+    }
+  }
+  if (quarter && !releasesRecorded) {
+    gaps.push(`No Q${quarter} ${fiscalYear} releases have been recorded, so release figures are not available.`);
+  } else if (!quarter && lastQuarter > 0 && !dataset.funding.some((f) => f.fiscal_year === fiscalYear && f.quarter === lastQuarter)) {
+    gaps.push(`No Q${lastQuarter} ${fiscalYear} releases have been recorded yet; released figures stop at the previous quarter.`);
   }
   const notTracked = mdas.length - inTracking;
   if (notTracked > 0) {
@@ -415,6 +453,7 @@ function computeCoverage(
     mdas_total: mdas.length,
     mdas_in_tracking: inTracking,
     mdas_reported_latest: reportedLatest,
+    releases_recorded: releasesRecorded,
     gaps,
   };
 }
