@@ -12,12 +12,12 @@ env:
     availability:
       - RUNTIME
   - variable: EMAIL_FROM
-    value: "Kano Health Finance Tracker <notifications@kano-budget-tracker.app>"
+    value: "Kano Health Finance Tracker <notifications@kanohealthbudget.org>"
     availability:
       - RUNTIME
   # Origin used in invite and password-reset email links.
   - variable: NEXT_PUBLIC_APP_URL
-    value: https://kano-budget-tracker.app
+    value: https://kanohealthbudget.org
     availability:
       - BUILD
       - RUNTIME

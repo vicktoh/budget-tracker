@@ -44,7 +44,7 @@ import { sendAccountActionLink, type InviteDelivery } from "@/lib/server/invites
 import { buildMembershipRows, validateUserAccess } from "@/lib/admin/user-access";
 import { formatMdaLabel } from "@/lib/admin/users";
 
-const DEFAULT_ORIGIN = "https://kano-budget-tracker.app";
+const DEFAULT_ORIGIN = "https://kanohealthbudget.org";
 // Resend allows ~2 requests/second by default; stay well under it.
 const SEND_INTERVAL_MS = 700;
 

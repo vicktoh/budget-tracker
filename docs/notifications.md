@@ -81,7 +81,7 @@ A dry run returns the plan and a rendered preview without queueing anything.
 3. Store the app URL and the same secret in Supabase Vault:
 
    ```sql
-   select vault.create_secret('https://kano-budget-tracker.app', 'notifications_app_url');
+   select vault.create_secret('https://kanohealthbudget.org', 'notifications_app_url');
    select vault.create_secret('<the secret>', 'notifications_cron_secret');
    ```
 
