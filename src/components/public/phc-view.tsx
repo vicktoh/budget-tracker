@@ -117,7 +117,7 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
         <InfoIcon className="mt-0.5 size-4 shrink-0 text-[var(--pub-muted)]" aria-hidden />
         <p>
           Programmes are grouped by name from the approved budget and the State&apos;s quarterly reports. Spending is shown only for
-          the PHC Board, the one agency that reports spending by programme{r.passThrough > 0 ? "; Health Trust Fund transfers to these programmes are not counted twice" : ""}.
+          the PHC Board, the one agency that reports spending by programme{r.passThrough > 0 ? "; KHETFUND transfers to these programmes are not counted twice" : ""}.
         </p>
       </div>
     </div>
