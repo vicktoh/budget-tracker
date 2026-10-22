@@ -9,7 +9,7 @@ import { BudgetBar, SharePill } from "@/components/public/budget-bar";
 import { CountUp, Reveal, Ring } from "@/components/public/motion";
 import { SourceLink } from "@/components/public/source-link";
 import { CLASS_COLOR, CLASS_HINT, CLASS_LABEL } from "@/lib/public/labels";
-import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, formatShare, type Source } from "@/lib/public/model";
+import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, formatShare, sourceHref, sourceLabel, type Source } from "@/lib/public/model";
 import type { EconClass } from "@/lib/public/types";
 import { cn } from "@/lib/utils";
 
@@ -269,7 +269,7 @@ export function TopMdas({ rows, quarter }: { rows: MdaBar[]; quarter: number }) 
 // ---------------------------------------------------------------------------
 // Same point each year: animated columns.
 
-export type YearColumn = { year: number; budget: number; spent: number; share: number | null };
+export type YearColumn = { year: number; budget: number; spent: number; share: number | null; partial?: string; source: Source | null };
 
 export function YearColumns({ years, current }: { years: YearColumn[]; current: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -277,7 +277,7 @@ export function YearColumns({ years, current }: { years: YearColumn[]; current: 
   const max = Math.max(1, ...years.map((y) => Math.max(y.budget, y.spent)));
   return (
     <div ref={ref} className="rounded-3xl border border-[var(--pub-line)] bg-white p-5 sm:p-8">
-      <div className="flex h-64 items-end justify-around gap-4 border-b border-[var(--pub-line)] pt-8 sm:h-72">
+      <div className="flex h-64 items-end justify-around gap-2 border-b border-[var(--pub-line)] pt-8 sm:h-72 sm:gap-4">
         {years.map((y, i) => {
           const isNow = y.year === current;
           return (
@@ -307,10 +307,11 @@ export function YearColumns({ years, current }: { years: YearColumn[]; current: 
           );
         })}
       </div>
-      <div className="mt-3 flex justify-around gap-4">
+      <div className="mt-3 flex justify-around gap-2 sm:gap-4">
         {years.map((y) => (
           <div key={y.year} className="w-full max-w-[7rem] text-center">
             <p className="font-display text-2xl text-[var(--pub-navy)]">{y.year}</p>
+            {y.partial ? <p className="text-[11px] font-semibold text-[var(--pub-accent-deep)]">{y.partial}</p> : null}
             <p className="text-xs tabular-nums text-[var(--pub-muted)]">
               {formatNairaShort(y.spent)} of {formatNairaShort(y.budget)}
             </p>
@@ -329,6 +330,16 @@ export function YearColumns({ years, current }: { years: YearColumn[]; current: 
         </span>
         <span>Nominal naira, not adjusted for inflation.</span>
       </div>
+      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--pub-muted)]">
+        Sources:
+        {years
+          .filter((y) => y.source && sourceHref(y.source))
+          .map((y) => (
+            <a key={y.year} href={sourceHref(y.source!)!} target="_blank" rel="noopener" className="underline decoration-[var(--pub-line)] underline-offset-2 hover:text-[var(--pub-brand-deep)]">
+              {sourceLabel(y.source!)}
+            </a>
+          ))}
+      </p>
     </div>
   );
 }

@@ -1,0 +1,8 @@
+{
+  "about": "Full-year health sector totals (row 052100000000, Total Expenditure by Administrative Classification) from Q4 Budget Performance Reports whose full figures are not yet on the site. 2021 and 2022 parsed by scripts/bir/parse.py (row and MDA-table checks pass; only their function tables fail). 2024 transcribed from the image table on PDF page 25 and cross-checked: 2024 Q3 year-to-date (21,612,919,094.26) = full year − Q4 to the kobo. printedPct is the report's own % column, against the revised budget.",
+  "years": [
+    { "year": 2021, "slug": "2021-Q4", "table": 4, "page": 13, "originalBudget": 30720224964.43, "revisedBudget": 31104098610.86, "spent": 18291931162.28, "printedPct": 58.8, "method": "parsed" },
+    { "year": 2022, "slug": "2022-Q4", "table": 4, "page": 14, "originalBudget": 33972942567.26, "revisedBudget": 35320980543.26, "spent": 17786441595.15, "printedPct": 50.4, "method": "parsed" },
+    { "year": 2024, "slug": "2024-Q4", "table": 4, "page": 25, "originalBudget": 72001932297.77, "revisedBudget": 71669566708.56, "spent": 35825256294.07, "printedPct": 50.0, "method": "transcribed" }
+  ]
+}

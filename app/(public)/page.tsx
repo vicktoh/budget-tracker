@@ -4,15 +4,14 @@ import { KanoMap } from "@/components/public/kano-map";
 import { AskBand, KpiTiles, SpendingDonut, TopMdas, YearColumns } from "@/components/public/landing";
 import { Reveal } from "@/components/public/motion";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
+import { yearByYear } from "@/lib/public/history";
 import {
   ECON_CLASSES,
-  SECTOR_CODE,
   buildExplorerData,
   latestReport,
   lensRows,
   periodEnd,
   periodLabel,
-  samePointHistory,
   sectorValue,
   stateHeadline,
 } from "@/lib/public/model";
@@ -44,9 +43,10 @@ export default async function PublicHomePage() {
     const v = sectorValue(data, year, quarter, "mda", cls);
     return { cls, budget: v?.budget ?? 0, spent: v?.ytd ?? 0, share: v?.share ?? null };
   });
-  const history = samePointHistory(data, quarter, "mda", "total", SECTOR_CODE.mda)
-    .filter((h) => h.value)
-    .map((h) => ({ year: h.year, budget: h.value!.budget ?? 0, spent: h.value!.ytd ?? 0, share: h.value!.share }));
+  const history = yearByYear(data, year, quarter, (slug) => {
+    const report = ds.reports.find((r) => r.slug === slug);
+    return report ? reportPdfUrl(report) : null;
+  });
   const periodShort = periodLabel(year, quarter, true).replace(` ${year}`, "");
   const healthShare = sector?.budget && state.totalBudget ? sector.budget / state.totalBudget : null;
 
@@ -127,7 +127,13 @@ export default async function PublicHomePage() {
         </Section>
 
         {history.length > 1 ? (
-          <Section eyebrow="Over the years" title={`By ${periodEnd(quarter).replace("the end of ", "end of ")}, year by year`} lede="The same point in each year, so the comparison is like for like.">
+          <Section
+            eyebrow="Over the years"
+            title="Year by year"
+            lede={`Each year's health budget and what was spent by the end of that year.${
+              quarter < 4 ? ` ${year} shows spending so far, up to the latest published quarter.` : ""
+            }`}
+          >
             <YearColumns years={history} current={year} />
           </Section>
         ) : null}

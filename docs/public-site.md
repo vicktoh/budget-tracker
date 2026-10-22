@@ -126,3 +126,14 @@ page lists it under "Briefs and analysis". The database trigger
 `enforce_public_brief_period` refuses any period that is not officially
 published (a quarter needs its BIR publication; a full-year brief needs all
 four), so provisional quarters cannot go public this way.
+
+## Year-by-year chart (landing page)
+
+Full years come from each year's Q4 report: published figures first, then
+`src/lib/public/full-year-history.json` for years whose Q4 report is not fully
+on the site (2021 and 2022 parsed; 2024 transcribed from its image table and
+cross-checked against 2024 Q3). The current year shows spending up to the
+latest published quarter. `src/test/full-year-history.test.ts` re-checks each
+row against the report's own % column. 2020 and earlier use an older report
+format (supplementary budget; salaries, running costs and capital in separate
+tables) and are not included.
