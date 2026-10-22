@@ -6,7 +6,6 @@ import { ChevronDownIcon, InfoIcon } from "lucide-react";
 import { AskButton } from "@/components/public/ask-panel";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
 import { CLASS_COLOR, CLASS_LABEL } from "@/lib/public/labels";
-import { SourceLink } from "@/components/public/source-link";
 import {
   barLabel,
   ECON_CLASSES,
@@ -293,7 +292,6 @@ export function Explorer({ data, initialYear, initialQuarter }: { data: Explorer
             </ul>
           </LayoutGroup>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs">
-            {sector ? <SourceLink source={sector.source} /> : null}
             <span className="text-[var(--pub-muted)]">Amber % = below 25% of the budget spent{quarter >= 2 ? "" : " (shown from Q2)"}.</span>
           </div>
         </section>
@@ -368,7 +366,6 @@ function RowDetail({
           question={`Tell me about ${entity.name}'s ${cls === "total" ? "" : CLASS_LABEL[cls].toLowerCase() + " "}budget and spending in ${year} (${periodLabel(year, quarter)}), and how it compares with earlier years.`}
         />
         <div className="space-y-1 text-xs">
-          <SourceLink source={value.source} />
           {value.derived ? <p className="text-[var(--pub-muted)]">{value.derived}</p> : null}
           {value.note ? <p className="text-[var(--pub-muted)]">{value.note}</p> : null}
         </div>

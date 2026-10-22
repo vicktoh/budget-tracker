@@ -94,7 +94,6 @@ export default async function RevenuePage() {
           expected={sector?.budget ?? null}
           collected={sector?.ytd ?? null}
           share={sector?.share ?? null}
-          source={sector?.source ?? null}
           composition={parts(budgetLines)}
           mdas={mdas}
           contributors={contributorsBySource(budgetLines, (code) => mdaNames.get(code) ?? code)}

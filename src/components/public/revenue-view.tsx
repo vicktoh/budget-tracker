@@ -5,8 +5,7 @@ import { AnimatePresence, motion, useInView } from "motion/react";
 import { ChevronDownIcon, CoinsIcon, HandHeartIcon, InfoIcon, LandmarkIcon, MapPinnedIcon, ReceiptIcon, type LucideIcon } from "lucide-react";
 import { SharePill } from "@/components/public/budget-bar";
 import { CountUp, Reveal } from "@/components/public/motion";
-import { SourceLink } from "@/components/public/source-link";
-import { formatNairaShort, formatShare, type Source } from "@/lib/public/model";
+import { formatNairaShort, formatShare } from "@/lib/public/model";
 import { REVENUE_ORDER, REVENUE_SOURCES, type RevenueSourceKey } from "@/lib/public/revenue-sources";
 
 export type RevenuePart = { key: RevenueSourceKey; amount: number };
@@ -39,7 +38,6 @@ export function RevenueView({
   expected,
   collected,
   share,
-  source,
   composition,
   mdas,
   contributors,
@@ -49,7 +47,6 @@ export function RevenueView({
   expected: number | null;
   collected: number | null;
   share: number | null;
-  source: Source | null;
   composition: RevenuePart[];
   mdas: RevenueMda[];
   contributors: Partial<Record<RevenueSourceKey, Contributor[]>>;
@@ -77,11 +74,6 @@ export function RevenueView({
             </p>
             <p className="relative mt-1 text-sm text-white/85">{formatShare(share)} of what was expected</p>
           </div>
-          {source ? (
-            <p className="text-xs sm:col-span-2 lg:col-span-1">
-              <SourceLink source={source} />
-            </p>
-          ) : null}
         </div>
 
         {composition.length ? (

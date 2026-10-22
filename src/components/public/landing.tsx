@@ -7,9 +7,8 @@ import { ArrowLeftRightIcon, ArrowRightIcon, Building2Icon, SparklesIcon, UsersI
 import { useAsk } from "@/components/public/ask-context";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
 import { CountUp, Reveal, Ring } from "@/components/public/motion";
-import { SourceLink } from "@/components/public/source-link";
 import { CLASS_COLOR, CLASS_HINT, CLASS_LABEL } from "@/lib/public/labels";
-import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, formatShare, sourceHref, sourceLabel, type Source } from "@/lib/public/model";
+import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, formatShare } from "@/lib/public/model";
 import type { EconClass } from "@/lib/public/types";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +22,7 @@ export function KpiTiles({
   healthShare,
   periodShort,
   mdaCount,
-  source,
+  year,
 }: {
   budget: number | null;
   spent: number | null;
@@ -31,13 +30,13 @@ export function KpiTiles({
   healthShare: number | null;
   periodShort: string;
   mdaCount: number;
-  source: Source | null;
+  year: number;
 }) {
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile className="bg-[var(--pub-navy)]" delay={0}>
-          <TileLabel>Health budget</TileLabel>
+          <TileLabel>{year} Health budget</TileLabel>
           <TileNumber>
             <CountUp value={budget} kind="naira" />
           </TileNumber>
@@ -68,11 +67,6 @@ export function KpiTiles({
           <TileNote>Abuja Declaration target: 15%</TileNote>
         </Tile>
       </div>
-      {source ? (
-        <p className="text-xs">
-          <SourceLink source={source} />
-        </p>
-      ) : null}
     </div>
   );
 }
@@ -107,7 +101,7 @@ const CLASS_ICON: Record<EconClass, LucideIcon> = {
   other: ArrowLeftRightIcon, // grants and transfers
 };
 
-export function SpendingDonut({ slices, total, source }: { slices: SpendSlice[]; total: number; source: Source | null }) {
+export function SpendingDonut({ slices, total }: { slices: SpendSlice[]; total: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const seen = useInView(ref, { once: true, margin: "-10% 0px" });
   const [hover, setHover] = useState<EconClass | null>(null);
@@ -177,11 +171,6 @@ export function SpendingDonut({ slices, total, source }: { slices: SpendSlice[];
             </p>
           </li>
         ))}
-        {source ? (
-          <li className="text-xs sm:col-span-2">
-            <SourceLink source={source} />
-          </li>
-        ) : null}
       </ul>
     </div>
   );
@@ -269,7 +258,7 @@ export function TopMdas({ rows, quarter }: { rows: MdaBar[]; quarter: number }) 
 // ---------------------------------------------------------------------------
 // Same point each year: animated columns.
 
-export type YearColumn = { year: number; budget: number; spent: number; share: number | null; partial?: string; source: Source | null };
+export type YearColumn = { year: number; budget: number; spent: number; share: number | null; partial?: string };
 
 export function YearColumns({ years, current }: { years: YearColumn[]; current: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -330,16 +319,6 @@ export function YearColumns({ years, current }: { years: YearColumn[]; current: 
         </span>
         <span>Nominal naira, not adjusted for inflation.</span>
       </div>
-      <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-[var(--pub-muted)]">
-        Sources:
-        {years
-          .filter((y) => y.source && sourceHref(y.source))
-          .map((y) => (
-            <a key={y.year} href={sourceHref(y.source!)!} target="_blank" rel="noopener" className="underline decoration-[var(--pub-line)] underline-offset-2 hover:text-[var(--pub-brand-deep)]">
-              {sourceLabel(y.source!)}
-            </a>
-          ))}
-      </p>
     </div>
   );
 }
@@ -361,7 +340,7 @@ export function AskBand() {
       <span aria-hidden className="pointer-events-none absolute -bottom-20 left-1/3 size-56 rounded-full bg-[var(--pub-aqua)]/20 blur-2xl" />
       <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em]">
+          <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm font-semibold">
             <SparklesIcon className="size-3.5" /> Ask AI
           </p>
           <h2 className="font-display mt-3 text-3xl leading-tight sm:text-4xl">Have a question about the numbers?</h2>

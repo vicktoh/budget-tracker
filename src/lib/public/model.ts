@@ -389,12 +389,6 @@ export function sourceLabel(source: Source): string {
   return parts.join(", ");
 }
 
-/** Our own short link to the mirrored PDF (it redirects to the file at that page). */
-export function sourceHref(source: Source): string | null {
-  if (!source.pdf) return null;
-  return `/reports/${source.slug}/pdf${source.page ? `?page=${source.page}` : ""}`;
-}
-
 /** Accessible description of one budget bar. */
 export function barLabel(name: string, budget: number | null, spent: number | null, share: number | null) {
   return `${name}: ${formatNairaShort(spent)} spent of a ${formatNairaShort(budget)} budget (${formatShare(share)})`;

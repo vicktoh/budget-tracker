@@ -21,8 +21,7 @@ import {
 import { AskButton } from "@/components/public/ask-panel";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
 import { Reveal } from "@/components/public/motion";
-import { SourceLink } from "@/components/public/source-link";
-import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, periodLabel, type Source } from "@/lib/public/model";
+import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, periodLabel } from "@/lib/public/model";
 import { cn } from "@/lib/utils";
 
 /** b / y = the PHC Board's own budget and spending (from the BIR); others = other MDAs' budgets (approved budget lines). */
@@ -43,7 +42,6 @@ export type PhcReport = {
   programmes: PhcProgrammeRow[];
   otherBudgetsSource: string | null;
   passThrough: number;
-  projectSource: Source;
   officialObjectives: string[];
 };
 
@@ -132,9 +130,6 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
               programmes as remittances — counting it as well would count the same money twice.
             </p>
           ) : null}
-          <p className="flex flex-wrap gap-x-4">
-            <SourceLink source={r.projectSource} prefix="PHC Board projects" />
-          </p>
         </div>
       </div>
     </div>

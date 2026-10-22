@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { DownloadIcon } from "lucide-react";
 import { PageHero } from "@/components/public/page-hero";
-import { SourceLink } from "@/components/public/source-link";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
 import { CLASS_LABEL } from "@/lib/public/labels";
 import {
@@ -93,9 +92,6 @@ export default async function DataPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs">
-            <SourceLink source={sector.source} />
-          </p>
         </section>
       ) : null}
 

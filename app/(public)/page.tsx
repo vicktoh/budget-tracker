@@ -96,12 +96,12 @@ export default async function PublicHomePage() {
             healthShare={healthShare}
             periodShort={periodShort}
             mdaCount={mdaRows.length}
-            source={sector?.source ?? null}
+            year={year}
           />
         </div>
 
         <Section eyebrow="Where the money goes" title="Salaries, running costs and projects" lede="Each type of spending is budgeted, and spent, at a very different pace.">
-          <SpendingDonut slices={slices} total={sector?.budget ?? 0} source={sector?.source ?? null} />
+          <SpendingDonut slices={slices} total={sector?.budget ?? 0} />
         </Section>
 
         <Section
