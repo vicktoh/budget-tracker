@@ -55,7 +55,7 @@ export default async function DataPage() {
       {latest && sector ? (
         <section className="mt-14" aria-labelledby="table-view">
           <h2 id="table-view" className="font-display text-2xl font-semibold">
-            Table view · health MDAs, {periodLabel(latest.year, latest.quarter)}
+            Table view · Health MDAs, {periodLabel(latest.year, latest.quarter)}
           </h2>
           <p className="mt-2 text-sm text-[var(--pub-muted)]">Budget and spending so far, and the share spent by type. Amounts in naira.</p>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-[var(--pub-line)] bg-white">
