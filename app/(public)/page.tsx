@@ -82,10 +82,6 @@ export default async function PublicHomePage() {
           </div>
           <div className="relative">
             <KanoMap className="mx-auto w-full max-w-[26rem] lg:max-w-[30rem]" />
-            <div className="pointer-events-none absolute bottom-4 left-0 rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/15 backdrop-blur sm:left-4">
-              <p className="font-display text-3xl leading-none text-white">44</p>
-              <p className="text-xs text-white/75">local government areas</p>
-            </div>
           </div>
         </div>
       </section>

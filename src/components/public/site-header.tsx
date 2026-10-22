@@ -20,8 +20,9 @@ const NAV = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // Solid so it stays readable over the deep-teal sections it scrolls across.
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--pub-line)] bg-[var(--pub-canvas)]/90 backdrop-blur supports-[backdrop-filter]:bg-[var(--pub-canvas)]/75">
+    <header className="sticky top-0 z-40 border-b border-[var(--pub-line)] bg-[var(--pub-canvas)] shadow-[0_1px_12px_rgba(6,61,79,0.08)]">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-2.5" onClick={() => setOpen(false)}>
           <Image src="/kano-seal.png" alt="Kano State Government" width={46} height={42} priority className="h-9 w-auto sm:h-10" />
