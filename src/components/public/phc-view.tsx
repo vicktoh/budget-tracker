@@ -98,8 +98,8 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
             <h2 className="font-display text-3xl text-[var(--pub-navy)] sm:text-4xl">Health programmes</h2>
             <p className="mt-2 text-[var(--pub-ink-2)]">
               {r.otherBudgetsSource
-                ? `What each programme is budgeted in ${r.year} across all health MDAs, who funds it, and what the PHC Board has spent of its share by ${periodEndMonth}.`
-                : `What the PHC Board budgeted for each programme in ${r.year}, and how much it had spent by ${periodEndMonth}. Other MDAs' budgets are shown from 2026.`}
+                ? `What each programme is budgeted in ${r.year} across all health MDAs and who funds it, with spending up to ${periodEndMonth} where the reports show it.`
+                : `What each programme was budgeted in ${r.year}, with spending up to ${periodEndMonth} where the reports show it. Budgets across all MDAs are shown from 2026.`}
             </p>
           </div>
           <AskButton question={`How much is budgeted for immunisation, malaria and nutrition in Kano in ${r.year}, and which MDAs fund them?`} label="Ask AI about health programmes" />

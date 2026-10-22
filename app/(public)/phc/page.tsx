@@ -83,8 +83,8 @@ export default async function PhcPage() {
   return (
     <>
       <PageHero eyebrow="Health programmes" title="Health programmes, across every MDA">
-        What Kano State budgets for immunisation, malaria, nutrition, mothers and children and other health programmes, which
-        ministries and agencies fund them, and what the Primary Health Care Board has spent.
+        What Kano State budgets for immunisation, malaria, nutrition, mothers and children and other health programmes, and
+        which ministries and agencies fund them.
       </PageHero>
       <div className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
         {reports.length ? (
