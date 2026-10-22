@@ -25,7 +25,6 @@ export default async function PhcPage() {
     const pdf = reportPdfUrl(r);
     const source = (f?: PublicFigure | null): Source => ({ slug: r.slug, title: r.title, table: f?.table_number ?? null, page: f?.page ?? null, pdf });
     const econ = (code: string) => figs.find((f) => f.lens === "phc_economic" && f.code === code) ?? null;
-    const board = figs.find((f) => f.lens === "phc_mda" && f.code === "052100500100") ?? figs.find((f) => f.lens === "phc_mda" && f.code?.length === 12) ?? null;
 
     const groups = new Map<PhcProgrammeKey, PhcProgrammeRow>();
     for (const p of projects) {
@@ -44,7 +43,6 @@ export default async function PhcPage() {
       slug: r.slug,
       year: r.fiscal_year,
       quarter: r.quarter,
-      board: board ? { b: board.original_budget ?? board.revised_budget, y: board.ytd_actual, source: source(board) } : null,
       programmes: [...groups.values()].sort((a, b) => b.b - a.b),
       running: [
         ...(personnel && (personnel.original_budget ?? 0) > 0

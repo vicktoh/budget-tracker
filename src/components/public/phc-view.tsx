@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { AskButton } from "@/components/public/ask-panel";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
-import { CountUp, Reveal, Ring } from "@/components/public/motion";
+import { Reveal } from "@/components/public/motion";
 import { SourceLink } from "@/components/public/source-link";
 import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, formatShare, periodLabel, type Source } from "@/lib/public/model";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,6 @@ export type PhcReport = {
   slug: string;
   year: number;
   quarter: number;
-  board: { b: number | null; y: number | null; source: Source } | null;
   programmes: PhcProgrammeRow[];
   running: PhcProgrammeRow[];
   projectSource: Source;
@@ -89,29 +88,6 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
         ))}
       </div>
 
-      {r.board ? (
-        <section className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-          <div className="rounded-2xl bg-[var(--pub-brand-deep)] p-6 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/70">Primary Health Care Management Board · {period}</p>
-            <p className="font-display mt-3 text-5xl font-semibold">
-              <CountUp key={`b-${slug}`} value={r.board.y} kind="naira" />
-            </p>
-            <p className="mt-1 text-white/80">spent of a {formatNairaShort(r.board.b)} budget</p>
-            <p className="mt-6 text-xs [&_a]:text-white/80 [&_a]:decoration-white/30">
-              <SourceLink source={r.board.source} />
-            </p>
-          </div>
-          <div className="flex items-center gap-5 rounded-2xl border border-[var(--pub-line)] bg-white p-6">
-            <Ring key={`r-${slug}`} fraction={share(r.board) ?? 0} size={96} stroke={10} />
-            <div>
-              <p className="font-display text-4xl font-semibold">
-                <CountUp key={`s-${slug}`} value={share(r.board)} kind="percent" />
-              </p>
-              <p className="text-sm text-[var(--pub-muted)]">of the year&apos;s budget spent</p>
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       <section>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -194,5 +170,5 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
 // are neutral because they are not programmes.
 function colorFor(key: string, index: number) {
   if (key === "personnel" || key === "overhead") return index % 2 ? "#8a958f" : "#64706a";
-  return index % 2 ? "#1f8553" : "#167a4a";
+  return index % 2 ? "#1fa6ba" : "#00879b";
 }
