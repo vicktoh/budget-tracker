@@ -389,9 +389,10 @@ export function sourceLabel(source: Source): string {
   return parts.join(", ");
 }
 
+/** Our own short link to the mirrored PDF (it redirects to the file at that page). */
 export function sourceHref(source: Source): string | null {
   if (!source.pdf) return null;
-  return source.page ? `${source.pdf}#page=${source.page}` : source.pdf;
+  return `/reports/${source.slug}/pdf${source.page ? `?page=${source.page}` : ""}`;
 }
 
 /** Accessible description of one budget bar. */

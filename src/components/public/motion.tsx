@@ -99,13 +99,25 @@ export function GrowBar({
 }
 
 /** Progress ring for a single share (0–1). */
-export function Ring({ fraction, size = 72, stroke = 8, color = "var(--pub-green)" }: { fraction: number; size?: number; stroke?: number; color?: string }) {
+export function Ring({
+  fraction,
+  size = 72,
+  stroke = 8,
+  color = "var(--pub-brand)",
+  track = "var(--pub-track)",
+}: {
+  fraction: number;
+  size?: number;
+  stroke?: number;
+  color?: string;
+  track?: string;
+}) {
   const ref = useRef<SVGSVGElement>(null);
   const inView = useInView(ref, { once: true });
   const r = (size - stroke) / 2;
   return (
     <svg ref={ref} width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--pub-track)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track} strokeWidth={stroke} />
       <motion.circle
         cx={size / 2}
         cy={size / 2}

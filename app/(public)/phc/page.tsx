@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PhcView, type PhcProgrammeRow, type PhcReport } from "@/components/public/phc-view";
-import { Reveal } from "@/components/public/motion";
+import { PageHero } from "@/components/public/page-hero";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
 import { publishedReports, titleCase, type Source } from "@/lib/public/model";
 import { PHC_PROGRAMMES, classifyPhcProject, type PhcProgrammeKey } from "@/lib/public/phc-programmes";
@@ -61,15 +61,12 @@ export default async function PhcPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-      <Reveal className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-green-deep)]">Primary health care</p>
-        <h1 className="font-display mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">Primary health care, by health programme</h1>
-        <p className="mt-4 text-lg leading-relaxed text-[var(--pub-ink-2)]">
-          Primary health care centres are where most people in Kano are seen first. Here is what the Primary Health Care
-          Management Board has budgeted and spent on immunisation, family planning, nutrition, mothers and children, and more.
-        </p>
-      </Reveal>
+    <>
+      <PageHero eyebrow="Primary health care" title="Primary health care, by health programme">
+        Primary health care centres are where most people in Kano are seen first. Here is what the Primary Health Care Management
+        Board has budgeted and spent on immunisation, family planning, nutrition, mothers and children, and more.
+      </PageHero>
+    <div className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
       {reports.length ? (
         <div className="mt-10">
           <PhcView reports={reports} />
@@ -78,5 +75,6 @@ export default async function PhcPage() {
         <p className="mt-10 text-[var(--pub-muted)]">No report with a primary health care section has been published yet.</p>
       )}
     </div>
+    </>
   );
 }

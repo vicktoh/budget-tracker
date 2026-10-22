@@ -61,14 +61,14 @@ export function AskPanel() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.96 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay: 0.6 }}
-            className="group fixed bottom-5 right-4 z-40 inline-flex items-center gap-2.5 rounded-full bg-[var(--pub-green-deep)] py-3 pl-3.5 pr-5 text-[15px] font-semibold text-white shadow-[0_10px_30px_rgba(15,81,50,0.35)] ring-1 ring-white/10 transition hover:bg-[var(--pub-green)] sm:bottom-6 sm:right-6"
-            aria-label="Ask the data: ask a question about Kano's health budget"
+            className="group fixed bottom-5 right-4 z-40 inline-flex items-center gap-2.5 rounded-full bg-[var(--pub-accent)] py-3 pl-3.5 pr-5 text-[15px] font-semibold text-[var(--pub-navy)] shadow-[0_12px_30px_rgba(199,84,20,0.4)] ring-2 ring-white transition hover:bg-[var(--pub-accent-deep)] hover:text-white sm:bottom-6 sm:right-6"
+            aria-label="Ask AI: ask a question about Kano's health budget"
           >
-            <span className="relative inline-flex size-8 items-center justify-center rounded-full bg-white/15">
-              <span className="absolute inset-0 animate-ping rounded-full bg-white/25 [animation-iteration-count:3] motion-reduce:hidden" />
+            <span className="relative inline-flex size-8 items-center justify-center rounded-full bg-white/40">
+              <span className="absolute inset-0 animate-ping rounded-full bg-white/50 [animation-iteration-count:3] motion-reduce:hidden" />
               <SparklesIcon className="relative size-4" aria-hidden />
             </span>
-            Ask the data
+            Ask AI
           </motion.button>
         ) : null}
       </AnimatePresence>
@@ -92,7 +92,7 @@ export function AskPanel() {
           ref={panelRef}
           role="dialog"
           aria-modal="true"
-          aria-label="Ask the data"
+          aria-label="Ask AI"
           aria-hidden={!open}
           className={cn(
             "fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-[var(--pub-canvas)] shadow-[-20px_0_60px_rgba(20,32,26,0.18)] sm:w-[30rem] sm:rounded-l-2xl",
@@ -105,11 +105,11 @@ export function AskPanel() {
         >
           <div className="flex items-center justify-between gap-3 border-b border-[var(--pub-line)] px-4 py-3">
             <div className="flex items-center gap-2.5">
-              <span className="inline-flex size-9 items-center justify-center rounded-xl bg-[var(--pub-green-deep)] text-white">
+              <span className="inline-flex size-9 items-center justify-center rounded-xl bg-[var(--pub-accent)] text-[var(--pub-navy)]">
                 <SparklesIcon className="size-4" aria-hidden />
               </span>
               <div className="leading-tight">
-                <p className="font-display text-lg font-semibold">Ask the data</p>
+                <p className="font-display text-xl">Ask AI</p>
                 <p className="text-xs text-[var(--pub-muted)]">English or Hausa · answers from the official reports</p>
               </div>
             </div>
@@ -143,14 +143,14 @@ export function AskPanel() {
 }
 
 /** Contextual entry point, e.g. "Ask about PHC programmes". */
-export function AskButton({ question, label = "Ask about this", className }: { question: string; label?: string; className?: string }) {
+export function AskButton({ question, label = "Ask AI about this", className }: { question: string; label?: string; className?: string }) {
   const { ask } = useAsk();
   return (
     <button
       type="button"
       onClick={() => ask(question)}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--pub-green)]/30 bg-[var(--pub-mint)] px-3.5 py-2 text-sm font-medium text-[var(--pub-green-deep)] transition hover:border-[var(--pub-green)] hover:bg-white",
+        "inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--pub-brand)]/30 bg-[var(--pub-brand-soft)] px-3.5 py-2 text-sm font-medium text-[var(--pub-brand-deep)] transition hover:border-[var(--pub-brand)] hover:bg-white",
         className,
       )}
     >
@@ -161,7 +161,7 @@ export function AskButton({ question, label = "Ask about this", className }: { q
 }
 
 /** Header button (desktop and mobile menu). */
-export function AskHeaderButton({ onClick, className, label = "Ask the data" }: { onClick?: () => void; className?: string; label?: string }) {
+export function AskHeaderButton({ onClick, className, label = "Ask AI" }: { onClick?: () => void; className?: string; label?: string }) {
   const { ask } = useAsk();
   return (
     <button
@@ -171,7 +171,7 @@ export function AskHeaderButton({ onClick, className, label = "Ask the data" }: 
         ask();
       }}
       className={cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[var(--pub-green-deep)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--pub-green)]",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[var(--pub-accent)] px-4 py-2 text-sm font-semibold text-[var(--pub-navy)] shadow-sm transition hover:bg-[var(--pub-accent-deep)] hover:text-white",
         className,
       )}
     >
@@ -192,7 +192,7 @@ export function AskHeroBox() {
   const { ask } = useAsk();
   const [text, setText] = useState("");
   return (
-    <div className="rounded-2xl border border-[var(--pub-green)]/25 bg-white/90 p-3 shadow-[0_12px_40px_rgba(22,122,74,0.10)] backdrop-blur sm:p-4">
+    <div className="rounded-3xl bg-white p-3 text-[var(--pub-ink)] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)] sm:p-4">
       <form
         className="flex items-center gap-2"
         onSubmit={(e) => {
@@ -202,7 +202,7 @@ export function AskHeroBox() {
           setText("");
         }}
       >
-        <span className="hidden size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--pub-green-deep)] text-white sm:inline-flex">
+        <span className="hidden size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--pub-accent)] text-[var(--pub-navy)] sm:inline-flex">
           <SparklesIcon className="size-5" aria-hidden />
         </span>
         <label className="sr-only" htmlFor="hero-ask">
@@ -213,14 +213,14 @@ export function AskHeroBox() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={500}
-          placeholder="Ask anything about Kano's health budget…"
-          className="h-12 min-w-0 flex-1 rounded-xl border border-[var(--pub-line)] bg-[var(--pub-canvas)] px-4 text-base outline-none transition focus:border-[var(--pub-green)] focus:bg-white"
+          placeholder="Ask AI anything about Kano's health budget…"
+          className="h-12 min-w-0 flex-1 rounded-xl border border-[var(--pub-line)] bg-[var(--pub-canvas)] px-4 text-base outline-none transition focus:border-[var(--pub-brand)] focus:bg-white"
         />
         <button
           type="submit"
-          className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-[var(--pub-green)] px-4 font-semibold text-white transition hover:bg-[var(--pub-green-deep)]"
+          className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-[var(--pub-accent)] px-4 font-semibold text-[var(--pub-navy)] transition hover:bg-[var(--pub-accent-deep)] hover:text-white"
         >
-          <span className="hidden sm:inline">Ask</span>
+          <span className="hidden sm:inline">Ask AI</span>
           <SendHorizonalIcon className="size-4" aria-hidden />
         </button>
       </form>
@@ -230,7 +230,7 @@ export function AskHeroBox() {
             key={q}
             type="button"
             onClick={() => ask(q)}
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--pub-line)] bg-white px-3 py-1.5 text-left text-xs text-[var(--pub-ink-2)] transition hover:border-[var(--pub-green)] hover:text-[var(--pub-green-deep)] sm:text-sm"
+            className="inline-flex items-center gap-1 rounded-full border border-[var(--pub-line)] bg-white px-3 py-1.5 text-left text-xs text-[var(--pub-ink-2)] transition hover:border-[var(--pub-brand)] hover:text-[var(--pub-brand-deep)] sm:text-sm"
           >
             {q}
             <ArrowUpRightIcon className="size-3.5 shrink-0" aria-hidden />

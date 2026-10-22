@@ -9,11 +9,12 @@ naira, descriptive tone, anonymous AI assistant with a $100/month cap.
 
 | Route | What it shows |
 |---|---|
-| `/` | Headline cards, spending by type, three rule-generated facts, the lens explorer (MDA / programme / function × type × period, breakdown or compare years), same point each year, money in |
+| `/` | Deep-teal hero with an animated Kano LGA map and the Ask AI box, four colour tiles, spending-type donut, three rule-generated facts, top MDAs (largest budgets / lowest share spent), same point each year, Ask AI band |
+| `/explore` | The full lens explorer (MDA / programme / function × type × period, breakdown or compare years) and money in (revenue) |
 | `/phc` | Primary Health Care Management Board (2025 onward) by health programme. Programmes are grouped from capital-project names (`src/lib/public/phc-programmes.ts`, labelled on the page as our grouping); salaries and running costs shown separately. The BIR codes all 2026 PHC spending to one objective, so its own programme table is not used here. No project list (user's call, 22 Oct) |
 | `/reports` | All 24 reports since 2019: mirrored PDF download (counted), link to the original, SHA-256 |
 | `/data` | Full dataset CSV/JSON (CC BY 4.0), a plain table view, how figures are checked |
-| `/ask` | "Ask the data" assistant (English or Hausa), full page. The same chat opens as a slide-in panel from the header button, the floating launcher, the hero ask box and "Ask about …" buttons on every public page |
+| `/ask` | "Ask AI" assistant (English or Hausa), full page. Answers cite sources in plain text (report, table, page) with no links. The same chat opens as a slide-in panel from the header button, the floating launcher, the hero ask box and "Ask about …" buttons on every public page |
 
 Signed-in staff visiting `/` go to `/mda`; `/?view=public` (also in the staff
 user menu) shows the public site. The PWA starts at `/mda`.
@@ -69,7 +70,7 @@ public pages + /api/public/*   read only published rows, as the anon role
 5. Refresh the pages: `POST /api/public/revalidate` with the `x-cron-secret`
    header (or wait up to an hour).
 
-## Assistant guardrails
+## Ask AI guardrails
 
 `/api/public/chat` — no sign-in. Tools read only the in-memory published
 dataset (`src/lib/public/assistant.ts`); no database access.

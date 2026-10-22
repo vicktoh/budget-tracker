@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
 
-/** Counts a report download (no visitor data) and redirects to the mirrored PDF. */
-export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
+/** Counts a report download or source click (no visitor data) and redirects to the mirrored PDF, at ?page= if given. */
+export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const ds = await loadPublicDataset();
   const report = ds.reports.find((r) => r.slug === slug);
-  const url = report ? reportPdfUrl(report) : null;
+  const page = Number(new URL(request.url).searchParams.get("page")) || null;
+  const url = report ? reportPdfUrl(report, page) : null;
   if (!report || !url) return NextResponse.json({ error: "Report not found." }, { status: 404 });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

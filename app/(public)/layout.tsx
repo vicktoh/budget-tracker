@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Script from "next/script";
-import { Source_Serif_4 } from "next/font/google";
+import { DM_Serif_Display } from "next/font/google";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/public/site-header";
 import { PublicMotion } from "@/components/public/motion";
 import { AskPanel, AskProvider } from "@/components/public/ask-panel";
 
-const display = Source_Serif_4({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700"] });
+const display = DM_Serif_Display({ subsets: ["latin"], variable: "--font-display", weight: "400" });
 
 export const metadata: Metadata = {
   title: {
@@ -54,17 +54,17 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
 
 function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-[var(--pub-line)] bg-white">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 text-sm text-[var(--pub-ink-2)] sm:px-6 md:grid-cols-3">
+    <footer className="mt-24 bg-[var(--pub-navy)] text-white/80">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 text-sm sm:px-6 md:grid-cols-3 [&_a]:text-white [&_.font-semibold]:text-white">
         <div className="space-y-2">
-          <p className="font-display text-lg font-semibold text-[var(--pub-ink)]">Kano Health Budget</p>
+          <p className="font-display text-2xl text-white">Kano Health Budget</p>
           <p>
             Figures come from the Kano State Government&apos;s quarterly Budget Performance Reports, published by the
             Ministry of Budget and Planning. Amounts are in nominal naira and measured against the original budget.
           </p>
         </div>
         <div className="space-y-2">
-          <p className="font-semibold text-[var(--pub-ink)]">Use the data</p>
+          <p className="font-semibold text-white">Use the data</p>
           <p>
             Data on this site is free to reuse under{" "}
             <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener" target="_blank">
@@ -73,13 +73,14 @@ function SiteFooter() {
             . Credit: &ldquo;Kano State Government, Budget Performance Reports, via kanohealthbudget.org&rdquo;.
           </p>
           <p className="flex flex-wrap gap-x-4 gap-y-1">
+            <Link className="underline underline-offset-2" href="/explore">Explore</Link>
             <Link className="underline underline-offset-2" href="/data">Download the data</Link>
             <Link className="underline underline-offset-2" href="/reports">All reports</Link>
             <Link className="underline underline-offset-2" href="/data#method">How figures are checked</Link>
           </p>
         </div>
         <div className="space-y-2">
-          <p className="font-semibold text-[var(--pub-ink)]">For government staff</p>
+          <p className="font-semibold text-white">For government staff</p>
           <p>MDA finance officers and reviewers record and check entries in the staff workspace.</p>
           <Link className="underline underline-offset-2" href="/sign-in">Staff sign-in</Link>
         </div>

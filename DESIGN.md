@@ -63,20 +63,34 @@ Spacing should be practical and consistent: compact table rows, comfortable form
 
 ## 6. Public site (kanohealthbudget.org)
 
-The public pages (`app/(public)`, `src/components/public`) share the palette but
-use an editorial register. Tokens live under `.public-site` in `app/globals.css`.
+The public pages (`app/(public)`, `src/components/public`) use the International
+Budget Partnership (IBP) palette in a colourful, editorial register for civil
+society, journalists and partners. Tokens live under `.public-site` in
+`app/globals.css`; the staff workspace is unaffected.
 
-- **Type:** Source Serif 4 (`font-display`) for headlines and big numbers; Inter
-  with tabular numerals for everything else.
-- **Core mark:** `BudgetBar` — the track length is the budget (relative to the
-  largest shown), the fill is what has been spent; the figures are always printed
-  beside it. Reuse it rather than inventing new bar styles.
-- **Economic classes** (fixed order, validated for colour-blind separation):
-  personnel `#167a4a`, overhead `#2a78d6`, capital `#c0751a`, other `#9b4f96`.
-  Always labelled; never colour alone.
-- **Years** use a one-hue green ordinal ramp, oldest light → newest dark.
-- **Flags:** amber pill for below 25% spent (from Q2), with text, never red.
-- **Motion:** count-ups on first view, bars growing into place and gliding between
-  filter states, rows re-ordering with layout animation. Everything respects
-  `prefers-reduced-motion` (`PublicMotion`), and server HTML shows final values.
-- Phone first: every section stacks to one column at 375px; controls wrap.
+- **Palette (IBP):** deep teal-navy `#063D4F` (hero bands, footer, headings),
+  teal `#00879B`, cyan `#14B0C8`, aqua `#6FD3D9` (highlights on navy), orange
+  `#FF7A2E` (Ask AI and calls to action; `#C75414` where text sits on it),
+  red `#E14242`, warm sand neutrals `#F7F5F0` / `#ECEAE5`.
+- **Type:** DM Serif Display (`font-display`, IBP's heading face) for headlines
+  and big numbers; Inter with tabular numerals for everything else.
+- **Spending types** (fixed order, validated for adjacent and donut-wrap colour
+  separation): salaries `#00879B`, running costs `#FF7A2E`, capital projects
+  `#14B0C8`, other `#E14242`. Always labelled in plain words, never colour alone.
+- **Years:** one-hue teal ramp, oldest light → newest dark; the current year is
+  orange in the year columns.
+- **Core mark:** `BudgetBar` — track length is the budget, fill is spent, figures
+  printed beside it. Landing adds solid colour tiles, a spending donut, and
+  year columns (`src/components/public/landing.tsx`).
+- **Hero:** deep-teal band with an animated map of Kano's 44 LGAs
+  (`kano-map.tsx`, data from `scripts/public/build-kano-map.py`, geoBoundaries
+  CC BY 4.0). It is decorative: the BIRs have no LGA figures, so the map shows
+  names only.
+- **Flags:** soft-orange pill for below 25% spent (from Q2), with text.
+- **Motion:** count-ups, bars and donut growing into place, map outlines drawing
+  outward from Kano Municipal, layout animation on re-sorts; all respect
+  `prefers-reduced-motion`, and server HTML shows final values.
+- **Less on the landing page:** the full filters live on `/explore`; the landing
+  page tells the story in a few colourful blocks.
+- Phone first: one column at 375px, no horizontal scroll; the header's Ask AI
+  button drops below 380px (the floating Ask AI button remains).

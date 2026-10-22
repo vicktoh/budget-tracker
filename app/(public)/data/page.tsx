@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { DownloadIcon } from "lucide-react";
-import { Reveal } from "@/components/public/motion";
+import { PageHero } from "@/components/public/page-hero";
 import { SourceLink } from "@/components/public/source-link";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
 import { CLASS_LABEL } from "@/lib/public/labels";
@@ -33,26 +33,24 @@ export default async function DataPage() {
   const sector = latest ? sectorValue(data, latest.year, latest.quarter, "mda", "total") : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-      <Reveal className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-green-deep)]">Open data</p>
-        <h1 className="font-display mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">Take the data with you</h1>
-        <p className="mt-4 text-lg leading-relaxed text-[var(--pub-ink-2)]">
-          Every figure on this site, with the report, table and page it comes from. Free to reuse under{" "}
-          <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener">
-            CC BY 4.0
-          </a>{" "}
-          — please credit &ldquo;Kano State Government, Budget Performance Reports, via kanohealthbudget.org&rdquo;.
-        </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a href="/api/public/dataset?format=csv" className="inline-flex items-center gap-2 rounded-md bg-[var(--pub-green)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--pub-green-deep)]">
+    <>
+      <PageHero eyebrow="Open data" title="Take the data with you">
+        Every figure on this site, with the report, table and page it comes from. Free to reuse under{" "}
+        <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener">
+          CC BY 4.0
+        </a>{" "}
+        — please credit &ldquo;Kano State Government, Budget Performance Reports, via kanohealthbudget.org&rdquo;.
+      </PageHero>
+    <div className="mx-auto max-w-6xl px-4 pb-14 pt-8 sm:px-6">
+        <div className="flex flex-wrap gap-3">
+          <a href="/api/public/dataset?format=csv" className="inline-flex items-center gap-2 rounded-md bg-[var(--pub-brand)] px-4 py-2.5 text-sm font-medium text-white hover:bg-[var(--pub-brand-deep)]">
             <DownloadIcon className="size-4" aria-hidden /> All figures (CSV)
           </a>
           <a href="/api/public/dataset?format=json" className="inline-flex items-center gap-2 rounded-md border border-[var(--pub-line)] bg-white px-4 py-2.5 text-sm font-medium hover:border-[var(--pub-ink-2)]">
             <DownloadIcon className="size-4" aria-hidden /> All figures (JSON)
           </a>
         </div>
-      </Reveal>
+
 
       {latest && sector ? (
         <section className="mt-14" aria-labelledby="table-view">
@@ -77,7 +75,7 @@ export default async function DataPage() {
               </thead>
               <tbody className="divide-y divide-[var(--pub-line)] tabular-nums">
                 {[{ entity: { code: "052100000000", name: "Health sector (all MDAs)", short: "Health sector", order: -1 }, value: sector }, ...rows].map((r) => (
-                  <tr key={r.entity.code} className={r.entity.order === -1 ? "bg-[var(--pub-mint)] font-semibold" : undefined}>
+                  <tr key={r.entity.code} className={r.entity.order === -1 ? "bg-[var(--pub-brand-soft)] font-semibold" : undefined}>
                     <td className="px-4 py-2.5">{r.entity.name}</td>
                     <td className="px-4 py-2.5 text-right">{formatNairaFull(r.value.budget)}</td>
                     <td className="px-4 py-2.5 text-right">{formatNairaFull(r.value.ytd)}</td>
@@ -145,5 +143,6 @@ export default async function DataPage() {
         ) : null}
       </section>
     </div>
+    </>
   );
 }

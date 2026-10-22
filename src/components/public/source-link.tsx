@@ -11,7 +11,7 @@ export function SourceLink({ source, prefix = "Source" }: { source: Source; pref
       href={href}
       target="_blank"
       rel="noopener"
-      className="inline-flex items-center gap-1 text-[var(--pub-muted)] underline decoration-[var(--pub-line)] underline-offset-2 hover:text-[var(--pub-green-deep)] hover:decoration-[var(--pub-green)]"
+      className="inline-flex items-center gap-1 text-[var(--pub-muted)] underline decoration-[var(--pub-line)] underline-offset-2 hover:text-[var(--pub-brand-deep)] hover:decoration-[var(--pub-brand)]"
     >
       <FileTextIcon className="size-3.5" aria-hidden />
       {prefix}: {label}

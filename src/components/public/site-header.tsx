@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "Overview" },
-  { href: "/#explore", label: "Explore" },
+  { href: "/explore", label: "Explore" },
   { href: "/phc", label: "Primary health care" },
   { href: "/reports", label: "Reports" },
   { href: "/data", label: "Open data" },
@@ -21,11 +21,11 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--pub-line)] bg-[var(--pub-canvas)]/90 backdrop-blur supports-[backdrop-filter]:bg-[var(--pub-canvas)]/75">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5" onClick={() => setOpen(false)}>
-          <Image src="/kano-seal.png" alt="Kano State Government" width={46} height={42} priority className="h-10 w-auto" />
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <Link href="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-2.5" onClick={() => setOpen(false)}>
+          <Image src="/kano-seal.png" alt="Kano State Government" width={46} height={42} priority className="h-9 w-auto sm:h-10" />
           <span className="leading-tight">
-            <span className="font-display block whitespace-nowrap text-[1.05rem] font-semibold tracking-tight">Kano Health Budget</span>
+            <span className="font-display block whitespace-nowrap text-[1rem] sm:text-[1.1rem]">Kano Health Budget</span>
             <span className="hidden whitespace-nowrap text-[11px] text-[var(--pub-muted)] min-[400px]:block">Kano State Government</span>
           </span>
         </Link>
@@ -35,8 +35,8 @@ export function SiteHeader() {
               key={item.href}
               href={item.href}
               className={cn(
-                "whitespace-nowrap rounded-md px-2.5 py-2 text-sm text-[var(--pub-ink-2)] transition hover:bg-[var(--pub-mint)] hover:text-[var(--pub-green-deep)]",
-                pathname === item.href && "font-semibold text-[var(--pub-green-deep)]",
+                "whitespace-nowrap rounded-md px-2.5 py-2 text-sm text-[var(--pub-ink-2)] transition hover:bg-[var(--pub-brand-soft)] hover:text-[var(--pub-brand-deep)]",
+                pathname === item.href && "font-semibold text-[var(--pub-brand-deep)]",
               )}
             >
               {item.label}
@@ -50,11 +50,11 @@ export function SiteHeader() {
             Staff sign-in
           </Link>
         </nav>
-        <div className="flex items-center gap-2 lg:hidden">
-        <AskHeaderButton className="px-3 py-1.5" label="Ask" />
+        <div className="flex shrink-0 items-center gap-2 lg:hidden">
+        <AskHeaderButton className="px-3 py-1.5 max-[379px]:hidden" label="Ask AI" />
         <button
           type="button"
-          className="inline-flex size-10 items-center justify-center rounded-md border border-[var(--pub-line)] bg-white lg:hidden"
+          className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--pub-line)] bg-white sm:size-10 lg:hidden"
           aria-expanded={open}
           aria-controls="public-mobile-nav"
           onClick={() => setOpen((v) => !v)}
@@ -71,7 +71,7 @@ export function SiteHeader() {
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className="block rounded-md px-3 py-3 text-base text-[var(--pub-ink)] hover:bg-[var(--pub-mint)]"
+              className="block rounded-md px-3 py-3 text-base text-[var(--pub-ink)] hover:bg-[var(--pub-brand-soft)]"
             >
               {item.label}
             </Link>

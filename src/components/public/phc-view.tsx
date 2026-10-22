@@ -91,7 +91,7 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
 
       {r.board ? (
         <section className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
-          <div className="rounded-2xl bg-[var(--pub-green-deep)] p-6 text-white">
+          <div className="rounded-2xl bg-[var(--pub-brand-deep)] p-6 text-white">
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/70">Primary Health Care Management Board · {period}</p>
             <p className="font-display mt-3 text-5xl font-semibold">
               <CountUp key={`b-${slug}`} value={r.board.y} kind="naira" />
@@ -119,7 +119,7 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
             <h2 className="font-display text-3xl font-semibold tracking-tight">Where the money goes</h2>
             <p className="mt-2 text-[var(--pub-ink-2)]">Each health programme&apos;s budget for {r.year}, and how much of it was spent by {period.split("–")[1] ?? "the end of the year"}.</p>
           </div>
-          <AskButton question={`Which primary health care programmes have spent the least of their ${r.year} budget, and how much is left?`} label="Ask about PHC programmes" />
+          <AskButton question={`Which primary health care programmes have spent the least of their ${r.year} budget, and how much is left?`} label="Ask AI about PHC programmes" />
         </div>
 
         {/* Composition: every programme's share of the Board's budget */}
@@ -147,7 +147,7 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
               <Reveal key={`${slug}-${p.key}`} delay={Math.min(i, 8) * 0.04}>
                 <div className={cn("flex h-full flex-col gap-3 rounded-2xl border p-5", running ? "border-dashed border-[var(--pub-line)] bg-[var(--pub-canvas)]" : "border-[var(--pub-line)] bg-white")}>
                   <div className="flex items-start gap-3">
-                    <span className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-xl", running ? "bg-[#eceeed] text-[#4b5551]" : "bg-[var(--pub-mint)] text-[var(--pub-green-deep)]")}>
+                    <span className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-xl", running ? "bg-[#eceeed] text-[#4b5551]" : "bg-[var(--pub-brand-soft)] text-[var(--pub-brand-deep)]")}>
                       <Icon className="size-5" aria-hidden />
                     </span>
                     <div className="min-w-0">
@@ -161,7 +161,7 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
                     </p>
                     <SharePill share={s} flag={flag} />
                   </div>
-                  <BudgetBar budget={p.b} spent={p.y} maxBudget={max} color={running ? "#64706a" : "var(--pub-green)"} label={barLabel(p.name, p.b, p.y, s)} />
+                  <BudgetBar budget={p.b} spent={p.y} maxBudget={max} color={running ? "#64706a" : "var(--pub-brand)"} label={barLabel(p.name, p.b, p.y, s)} />
                   <p className="mt-auto text-xs text-[var(--pub-muted)]">
                     {formatShare(p.b / total)} of the Board&apos;s budget{p.count ? ` · ${p.count} ${p.count === 1 ? "project" : "projects"}` : ""}
                   </p>

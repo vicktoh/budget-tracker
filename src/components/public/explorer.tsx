@@ -158,7 +158,7 @@ export function Explorer({ data, initialYear, initialQuarter }: { data: Explorer
                       aria-pressed={quarter === q}
                       className={cn(
                         "h-10 rounded-md border px-3 text-sm transition disabled:cursor-not-allowed disabled:opacity-40",
-                        quarter === q ? "border-[var(--pub-green)] bg-[var(--pub-mint)] font-semibold text-[var(--pub-green-deep)]" : "border-[var(--pub-line)] bg-white text-[var(--pub-ink-2)]",
+                        quarter === q ? "border-[var(--pub-brand)] bg-[var(--pub-brand-soft)] font-semibold text-[var(--pub-brand-deep)]" : "border-[var(--pub-line)] bg-white text-[var(--pub-ink-2)]",
                       )}
                     >
                       {q === 4 ? "Full year" : `Jan–${["", "Mar", "Jun", "Sep"][q]}`}
@@ -364,7 +364,7 @@ function RowDetail({
         )}
         <AskButton
           className="mt-1"
-          label={`Ask about ${entity.short}`}
+          label={`Ask AI about ${entity.short}`}
           question={`Tell me about ${entity.name}'s ${cls === "total" ? "" : CLASS_LABEL[cls].toLowerCase() + " "}budget and spending in ${year} (${periodLabel(year, quarter)}), and how it compares with earlier years.`}
         />
         <div className="space-y-1 text-xs">

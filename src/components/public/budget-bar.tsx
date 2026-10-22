@@ -14,7 +14,7 @@ export function BudgetBar({
   budget,
   spent,
   maxBudget,
-  color = "var(--pub-green)",
+  color = "var(--pub-brand)",
   trackColor = "var(--pub-track)",
   height = 12,
   label,
@@ -78,7 +78,7 @@ export function SharePill({ share, flag }: { share: number | null; flag?: boolea
     <span
       className={cn(
         "inline-flex min-w-[3.6rem] justify-center rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums",
-        flag ? "bg-[var(--pub-flag-bg)] text-[var(--pub-flag)]" : "bg-[var(--pub-mint)] text-[var(--pub-green-deep)]",
+        flag ? "bg-[var(--pub-flag-bg)] text-[var(--pub-flag)]" : "bg-[var(--pub-brand-soft)] text-[var(--pub-brand-deep)]",
       )}
     >
       {formatShare(share)}

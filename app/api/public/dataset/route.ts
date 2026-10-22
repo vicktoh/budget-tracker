@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
+import { loadPublicDataset } from "@/lib/public/dataset";
+
+const SITE = process.env.NEXT_PUBLIC_APP_URL ?? "https://kanohealthbudget.org";
 
 const COLUMNS = [
   "fiscal_year",
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
         table_number: f.table_number,
         page: f.page,
         note: f.note,
-        source_pdf: reportPdfUrl(r, f.page),
+        source_pdf: `${SITE}/reports/${r.slug}/pdf${f.page ? `?page=${f.page}` : ""}`,
       };
     });
 

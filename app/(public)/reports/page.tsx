@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2Icon, DownloadIcon, ExternalLinkIcon, FileTextIcon } from "lucide-react";
-import { Reveal } from "@/components/public/motion";
+import { PageHero } from "@/components/public/page-hero";
 import { loadPublicDataset } from "@/lib/public/dataset";
 import type { PublicReport } from "@/lib/public/types";
 
@@ -29,24 +29,21 @@ export default async function ReportsPage() {
   const published = reports.filter((r) => r.data_status === "published").length;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-      <Reveal className="max-w-3xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-green-deep)]">Reports</p>
-        <h1 className="font-display mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">Budget Performance Reports</h1>
-        <p className="mt-4 text-lg leading-relaxed text-[var(--pub-ink-2)]">
-          The Kano State Ministry of Budget and Planning publishes a Budget Performance Report every quarter. All{" "}
-          {reports.length} are here, copied unchanged from{" "}
-          <a className="underline underline-offset-2" href="https://budget.kn.gov.ng/budget-performance-report/" target="_blank" rel="noopener">
-            budget.kn.gov.ng
-          </a>
-          . The health figures from {published} of them have been checked and are on this site.
-        </p>
-      </Reveal>
+    <>
+      <PageHero eyebrow="Reports" title="Budget Performance Reports">
+        The Kano State Ministry of Budget and Planning publishes a Budget Performance Report every quarter. All {reports.length} are
+        here, copied unchanged from{" "}
+        <a className="underline underline-offset-2" href="https://budget.kn.gov.ng/budget-performance-report/" target="_blank" rel="noopener">
+          budget.kn.gov.ng
+        </a>
+        . The health figures from {published} of them are on this site.
+      </PageHero>
+    <div className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
 
       <div className="mt-12 space-y-12">
         {years.map((year) => (
           <section key={year} aria-labelledby={`y-${year}`}>
-            <h2 id={`y-${year}`} className="font-display mb-4 text-2xl font-semibold">
+            <h2 id={`y-${year}`} className="font-display mb-4 text-3xl text-[var(--pub-navy)]">
               {year}
             </h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -56,7 +53,7 @@ export default async function ReportsPage() {
                 .map((r) => (
                   <li key={r.slug} className="flex flex-col gap-3 rounded-2xl border border-[var(--pub-line)] bg-white p-4">
                     <div className="flex items-start gap-3">
-                      <span className="flex h-14 w-11 shrink-0 items-center justify-center rounded-md border border-[var(--pub-line)] bg-[var(--pub-canvas)] text-[var(--pub-green-deep)]">
+                      <span className="flex h-14 w-11 shrink-0 items-center justify-center rounded-md border border-[var(--pub-line)] bg-[var(--pub-canvas)] text-[var(--pub-brand-deep)]">
                         <FileTextIcon className="size-5" aria-hidden />
                       </span>
                       <div className="min-w-0">
@@ -67,7 +64,7 @@ export default async function ReportsPage() {
                       </div>
                     </div>
                     {r.data_status === "published" ? (
-                      <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--pub-green-deep)]">
+                      <p className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--pub-brand-deep)]">
                         <CheckCircle2Icon className="size-3.5" aria-hidden /> Health figures on this site
                       </p>
                     ) : (
@@ -79,7 +76,7 @@ export default async function ReportsPage() {
                         <Link
                           href={`/reports/${r.slug}/pdf`}
                           prefetch={false}
-                          className="inline-flex items-center gap-1.5 rounded-md bg-[var(--pub-green)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--pub-green-deep)]"
+                          className="inline-flex items-center gap-1.5 rounded-md bg-[var(--pub-brand)] px-3 py-2 text-sm font-medium text-white hover:bg-[var(--pub-brand-deep)]"
                         >
                           <DownloadIcon className="size-4" aria-hidden /> Download
                         </Link>
@@ -108,5 +105,6 @@ export default async function ReportsPage() {
         ))}
       </div>
     </div>
+    </>
   );
 }

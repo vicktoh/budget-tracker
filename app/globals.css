@@ -164,33 +164,41 @@
   }
 }
 
-/* Public site (kanohealthbudget.org): an editorial, data-journalism register on
-   the same green/earth palette as the staff app. See DESIGN.md § Public site. */
+/* Public site (kanohealthbudget.org): an editorial, colourful register in the
+   International Budget Partnership (IBP) palette. See DESIGN.md § Public site. */
 .public-site {
-  --pub-canvas: #f6f8f4;
+  --pub-canvas: #f7f5f0;
+  --pub-sand: #eceae5;
+  --pub-sand-2: #dad5ca;
   --pub-surface: #ffffff;
-  --pub-ink: #14201a;
-  --pub-ink-2: #3f4b44;
-  --pub-muted: #66726b;
-  --pub-line: #dce4dd;
-  --pub-track: #e8eee9;
-  --pub-green: #167a4a;
-  --pub-green-deep: #0f5132;
-  --pub-mint: #e7f4ec;
-  --pub-earth: #8a5a2b;
-  --pub-clay: #f3e9dc;
-  --pub-flag: #9a5b00;
-  --pub-flag-bg: #fff4dc;
-  /* Economic classes, fixed order (validated: adjacent CVD ΔE ≥ 8, all ≥ 3:1). */
-  --pub-personnel: #167a4a;
-  --pub-overhead: #2a78d6;
-  --pub-capital: #c0751a;
-  --pub-other: #9b4f96;
-  /* Years, ordinal one-hue ramp, oldest → newest. */
-  --pub-year-1: #86c29f;
-  --pub-year-2: #4ea677;
-  --pub-year-3: #1f8553;
-  --pub-year-4: #0f5132;
+  --pub-ink: #12262c;
+  --pub-ink-2: #3c4a4e;
+  --pub-muted: #6d6a5f;
+  --pub-line: #e2ded5;
+  --pub-track: #e9e6df;
+  /* IBP brand */
+  --pub-navy: #063d4f;
+  --pub-brand-deep: #0b5566;
+  --pub-brand: #00879b;
+  --pub-cyan: #14b0c8;
+  --pub-aqua: #6fd3d9;
+  --pub-brand-soft: #e2f4f6;
+  --pub-accent: #ff7a2e;
+  --pub-accent-deep: #c75414;
+  --pub-accent-soft: #fff0e6;
+  --pub-red: #e14242;
+  --pub-flag: #b4440f;
+  --pub-flag-bg: #ffeee3;
+  /* Spending types, fixed order (validated: adjacent incl. donut wrap CVD ΔE ≥ 13). */
+  --pub-personnel: #00879b;
+  --pub-overhead: #ff7a2e;
+  --pub-capital: #14b0c8;
+  --pub-other: #e14242;
+  /* Years, ordinal one-hue teal ramp, oldest → newest. */
+  --pub-year-1: #5fc2cf;
+  --pub-year-2: #1fa6ba;
+  --pub-year-3: #00839a;
+  --pub-year-4: #0b5566;
   background: var(--pub-canvas);
   color: var(--pub-ink);
   font-feature-settings: "tnum" 1, "cv11" 1;
@@ -198,9 +206,16 @@
 
 .public-site .font-display {
   font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-weight: 400;
   font-feature-settings: normal;
+  letter-spacing: -0.01em;
 }
 
 .public-site ::selection {
-  background: #cfe9d9;
+  background: #bfe9ee;
+}
+
+@keyframes pub-pulse {
+  0% { transform: scale(0.2); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 0; }
 }

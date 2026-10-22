@@ -1,21 +1,17 @@
 import Link from "next/link";
-import { ArrowRightIcon, BookOpenIcon, MessageCircleQuestionIcon, StethoscopeIcon } from "lucide-react";
+import { ArrowRightIcon, BookOpenIcon, DownloadIcon, StethoscopeIcon } from "lucide-react";
 import { AskHeroBox } from "@/components/public/ask-panel";
-import { Explorer } from "@/components/public/explorer";
-import { ClassStrip, HeadlineCards } from "@/components/public/headline";
-import { CLASS_LABEL } from "@/lib/public/labels";
-import { BudgetBar } from "@/components/public/budget-bar";
+import { KanoMap } from "@/components/public/kano-map";
+import { AskBand, KpiTiles, SpendingDonut, TopMdas, YearColumns } from "@/components/public/landing";
 import { Reveal } from "@/components/public/motion";
 import { SourceLink } from "@/components/public/source-link";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
 import {
-  barLabel,
   ECON_CLASSES,
   SECTOR_CODE,
   buildExplorerData,
   buildFacts,
   formatNairaShort,
-  formatShare,
   latestReport,
   lensRows,
   periodEnd,
@@ -27,6 +23,8 @@ import {
 
 export const revalidate = 3600;
 
+const FACT_COLORS = ["var(--pub-brand)", "var(--pub-accent)", "var(--pub-cyan)"];
+
 export default async function PublicHomePage() {
   const ds = await loadPublicDataset();
   const data = buildExplorerData(ds, (r) => reportPdfUrl(r));
@@ -34,13 +32,13 @@ export default async function PublicHomePage() {
 
   if (!latest) {
     return (
-      <Shell>
-        <h1 className="font-display text-4xl font-semibold">Kano Health Budget</h1>
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <h1 className="font-display text-5xl text-[var(--pub-navy)]">Kano Health Budget</h1>
         <p className="mt-4 max-w-xl text-[var(--pub-ink-2)]">
-          Official figures will appear here once the first Budget Performance Report is published. Past reports are available
-          on the <Link className="underline" href="/reports">reports page</Link>.
+          Official figures will appear here once the first Budget Performance Report is published. Past reports are on the{" "}
+          <Link className="underline" href="/reports">reports page</Link>.
         </p>
-      </Shell>
+      </div>
     );
   }
 
@@ -48,68 +46,88 @@ export default async function PublicHomePage() {
   const sector = sectorValue(data, year, quarter, "mda", "total");
   const state = stateHeadline(ds, latest, latest.pdf);
   const facts = buildFacts(data, year, quarter);
-  const mdaCount = lensRows(data, year, quarter, "mda", "total").filter((r) => (r.value.budget ?? 0) > 0).length;
-  const classes = ECON_CLASSES.map((cls) => {
+  const mdaRows = lensRows(data, year, quarter, "mda", "total").filter((r) => (r.value.budget ?? 0) > 0);
+  const slices = ECON_CLASSES.map((cls) => {
     const v = sectorValue(data, year, quarter, "mda", cls);
-    return { cls, label: CLASS_LABEL[cls], budget: v?.budget ?? null, spent: v?.ytd ?? null, share: v?.share ?? null };
+    return { cls, budget: v?.budget ?? 0, spent: v?.ytd ?? 0, share: v?.share ?? null };
   });
-  const history = samePointHistory(data, quarter, "mda", "total", SECTOR_CODE.mda).filter((h) => h.value);
-  const historyMax = Math.max(0, ...history.map((h) => Math.max(h.value?.budget ?? 0, h.value?.ytd ?? 0)));
-  const revenue = sectorValue(data, year, quarter, "revenue", "total");
-  const revenueRows = lensRows(data, year, quarter, "revenue", "total").slice(0, 8);
-  const revenueMax = Math.max(0, ...revenueRows.map((r) => Math.max(r.value.budget ?? 0, r.value.ytd ?? 0)));
-  const period = periodLabel(year, quarter);
+  const history = samePointHistory(data, quarter, "mda", "total", SECTOR_CODE.mda)
+    .filter((h) => h.value)
+    .map((h) => ({ year: h.year, budget: h.value!.budget ?? 0, spent: h.value!.ytd ?? 0, share: h.value!.share }));
+  const periodShort = periodLabel(year, quarter, true).replace(` ${year}`, "");
+  const healthShare = sector?.budget && state.totalBudget ? sector.budget / state.totalBudget : null;
 
   return (
     <>
-      <section className="border-b border-[var(--pub-line)] bg-[radial-gradient(1200px_500px_at_10%_-10%,#dff0e5_0%,transparent_60%),radial-gradient(900px_420px_at_100%_0%,#f3e9dc_0%,transparent_55%)]">
-        <div className="mx-auto max-w-6xl px-4 pb-12 pt-12 sm:px-6 sm:pt-16">
-          <Reveal>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-green-deep)]">
-              Kano State · Health sector · {period}
-            </p>
-            <h1 className="font-display mt-3 max-w-4xl text-[2.35rem] font-semibold leading-[1.08] tracking-tight sm:text-6xl">
-              {formatNairaShort(sector?.budget)} for health in {year}.{" "}
-              <span className="text-[var(--pub-green)]">{formatNairaShort(sector?.ytd)} spent</span> by {periodEnd(quarter)}.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--pub-ink-2)] sm:text-lg">
-              Official figures from the Kano State {latest.title.replace(/^Kano State /, "")}, covering every health ministry,
-              department and agency. Each number links to the page of the report it comes from.
-            </p>
-          </Reveal>
-          <Reveal delay={0.1} className="mt-7 max-w-3xl">
-            <AskHeroBox />
-          </Reveal>
-          <div className="mt-10">
-            <HeadlineCards
-              periodLabel={periodLabel(year, quarter, true).replace(` ${year}`, "")}
-              budget={sector?.budget ?? null}
-              spent={sector?.ytd ?? null}
-              share={sector?.share ?? null}
-              stateBudget={state.totalBudget}
-              stateSpent={state.totalSpent}
-              mdaCount={mdaCount}
-              source={sector?.source ?? null}
-              stateSource={state.source}
-              classes={classes}
-            />
+      {/* HERO */}
+      <section className="relative overflow-hidden bg-[var(--pub-navy)] text-white">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(900px_500px_at_85%_20%,rgba(20,176,200,0.35),transparent_60%),radial-gradient(700px_400px_at_10%_110%,rgba(255,122,46,0.25),transparent_60%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.07] [background-image:radial-gradient(#ffffff_1px,transparent_1px)] [background-size:22px_22px]" />
+        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 pb-28 pt-12 sm:px-6 sm:pt-16 lg:grid-cols-[1.15fr_1fr] lg:items-center">
+          <div>
+            <Reveal>
+              <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-aqua)] ring-1 ring-white/15">
+                Kano State · health budget · {periodLabel(year, quarter)}
+              </p>
+              <h1 className="font-display mt-5 text-[2.6rem] leading-[1.04] sm:text-6xl lg:text-[4.2rem]">
+                <span className="text-[var(--pub-aqua)]">{formatNairaShort(sector?.budget)}</span> for health in {year}.{" "}
+                <span className="text-[var(--pub-accent)]">{formatNairaShort(sector?.ytd)}</span> spent by {periodEnd(quarter).replace("the end of ", "")}.
+              </h1>
+              <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/80">
+                Official figures from Kano State&apos;s own budget reports, made simple. See where the money goes, and ask anything.
+              </p>
+            </Reveal>
+            <Reveal delay={0.1} className="mt-7 max-w-xl">
+              <AskHeroBox />
+            </Reveal>
+            <Reveal delay={0.15} className="mt-6 flex flex-wrap gap-3">
+              <Link href="/explore" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[var(--pub-navy)] transition hover:bg-[var(--pub-aqua)]">
+                Explore the numbers <ArrowRightIcon className="size-4" />
+              </Link>
+              <Link href="/reports" className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white ring-1 ring-white/30 transition hover:bg-white/10">
+                <DownloadIcon className="size-4" /> Official reports
+              </Link>
+            </Reveal>
+          </div>
+          <div className="relative">
+            <KanoMap className="mx-auto w-full max-w-[26rem] lg:max-w-[30rem]" />
+            <div className="pointer-events-none absolute bottom-4 left-0 rounded-2xl bg-white/10 px-4 py-3 ring-1 ring-white/15 backdrop-blur sm:left-4">
+              <p className="font-display text-3xl leading-none text-white">44</p>
+              <p className="text-xs text-white/75">local government areas</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <Shell>
-        <SectionTitle eyebrow="Where the budget goes" title="By type of spending" lede="Salaries, running costs and capital projects are budgeted — and spent — at very different rates." />
-        <ClassStrip classes={classes} total={sector?.budget ?? null} />
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {/* TILES, overlapping the hero */}
+        <div className="relative -mt-20">
+          <KpiTiles
+            budget={sector?.budget ?? null}
+            spent={sector?.ytd ?? null}
+            share={sector?.share ?? null}
+            healthShare={healthShare}
+            periodShort={periodShort}
+            mdaCount={mdaRows.length}
+            source={sector?.source ?? null}
+          />
+        </div>
+
+        <Section eyebrow="Where the money goes" title="Salaries, running costs and projects" lede="Each type of spending is budgeted, and spent, at a very different pace.">
+          <SpendingDonut slices={slices} total={sector?.budget ?? 0} source={sector?.source ?? null} />
+        </Section>
 
         {facts.length ? (
-          <div className="mt-16">
-            <SectionTitle eyebrow={`To ${periodEnd(quarter)} ${year}`} title={`${facts.length} things to know`} />
+          <Section eyebrow={`To ${periodEnd(quarter)} ${year}`} title={`${facts.length} things to know`}>
             <div role="list" className="grid gap-4 md:grid-cols-3">
               {facts.map((f, i) => (
                 <Reveal key={f.title} delay={i * 0.08} className="h-full">
-                  <div role="listitem" className="flex h-full flex-col gap-3 rounded-2xl border border-[var(--pub-line)] bg-white p-5">
-                    <span className="font-display text-3xl font-semibold text-[var(--pub-green)]">{i + 1}</span>
-                    <p className="font-display text-xl font-semibold leading-snug">{f.title}</p>
+                  <div role="listitem" className="relative flex h-full flex-col gap-3 overflow-hidden rounded-3xl bg-white p-6 shadow-[0_10px_30px_-18px_rgba(6,61,79,0.35)] ring-1 ring-[var(--pub-line)]">
+                    <span aria-hidden className="absolute inset-x-0 top-0 h-1.5" style={{ background: FACT_COLORS[i % FACT_COLORS.length] }} />
+                    <span className="font-display text-5xl leading-none" style={{ color: FACT_COLORS[i % FACT_COLORS.length] }}>
+                      {i + 1}
+                    </span>
+                    <p className="font-display text-2xl leading-snug text-[var(--pub-navy)]">{f.title}</p>
                     <p className="text-sm leading-relaxed text-[var(--pub-ink-2)]">{f.body}</p>
                     {f.source ? (
                       <p className="mt-auto pt-2 text-xs">
@@ -120,118 +138,68 @@ export default async function PublicHomePage() {
                 </Reveal>
               ))}
             </div>
-          </div>
+          </Section>
         ) : null}
 
-        <div id="explore" className="mt-20 scroll-mt-24">
-          <SectionTitle
-            eyebrow="Explore"
-            title="Who has the money, and how much they have spent"
-            lede="Choose how to cut the health budget, the type of spending and the period. Open a row to see its breakdown and the same point in other years."
+        <Section eyebrow="Who holds the budget" title="Health MDAs at a glance" lede="The ministries, boards and agencies that hold the health budget, and how much of it they have spent so far.">
+          <TopMdas
+            quarter={quarter}
+            rows={mdaRows.map((r) => ({
+              code: r.entity.code,
+              name: r.entity.name,
+              short: r.entity.short,
+              budget: r.value.budget ?? 0,
+              spent: r.value.ytd ?? 0,
+              share: r.value.share,
+            }))}
           />
-          <Explorer data={data} initialYear={year} initialQuarter={quarter} />
-        </div>
+        </Section>
 
         {history.length > 1 ? (
-          <div className="mt-20">
-            <SectionTitle
-              eyebrow="Over the years"
-              title={`Health budget and spending, ${periodLabel(year, quarter, true).replace(` ${year}`, "")} each year`}
-              lede="The same point in each year, so the comparison is like for like. Nominal naira, not adjusted for inflation."
-            />
-            <ul className="space-y-4 rounded-2xl border border-[var(--pub-line)] bg-white p-5">
-              {history.map((h) => (
-                <li key={h.year} className="grid gap-2 sm:grid-cols-[5rem_1fr_14rem] sm:items-center">
-                  <span className="font-display text-xl font-semibold">{h.year}</span>
-                  <BudgetBar
-                    budget={h.value!.budget}
-                    spent={h.value!.ytd}
-                    maxBudget={historyMax}
-                    height={16}
-                    label={barLabel(`Health sector ${h.year}`, h.value!.budget, h.value!.ytd, h.value!.share)}
-                  />
-                  <span className="text-sm tabular-nums text-[var(--pub-ink-2)] sm:text-right">
-                    <strong className="text-[var(--pub-ink)]">{formatNairaShort(h.value!.ytd)}</strong> of {formatNairaShort(h.value!.budget)} ·{" "}
-                    {formatShare(h.value!.share)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <Section eyebrow="Over the years" title={`By ${periodEnd(quarter).replace("the end of ", "end of ")}, year by year`} lede="The same point in each year, so the comparison is like for like.">
+            <YearColumns years={history} current={year} />
+          </Section>
         ) : null}
 
-        {revenue ? (
-          <div className="mt-20">
-            <SectionTitle
-              eyebrow="Money in"
-              title="Revenue the health MDAs expected and collected"
-              lede="Fees, contributions, grants and other income budgeted to health MDAs. The report gives one total per MDA; it does not separate fees from grants or donor aid."
-            />
-            <div className="grid gap-4 lg:grid-cols-[18rem_1fr]">
-              <div className="rounded-2xl border border-[var(--pub-line)] bg-[var(--pub-clay)] p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--pub-earth)]">Health revenue, {periodLabel(year, quarter, true)}</p>
-                <p className="font-display mt-2 text-4xl font-semibold">{formatNairaShort(revenue.ytd)}</p>
-                <p className="text-sm text-[var(--pub-ink-2)]">
-                  collected of {formatNairaShort(revenue.budget)} expected · {formatShare(revenue.share)}
-                </p>
-                <p className="mt-4 text-xs">
-                  <SourceLink source={revenue.source} />
-                </p>
-              </div>
-              <ul className="space-y-3 rounded-2xl border border-[var(--pub-line)] bg-white p-5">
-                {revenueRows.map((r) => (
-                  <li key={r.entity.code} className="grid gap-1.5 sm:grid-cols-[12rem_1fr_11rem] sm:items-center">
-                    <span className="truncate text-sm font-semibold">{r.entity.short}</span>
-                    <BudgetBar
-                      budget={r.value.budget}
-                      spent={r.value.ytd}
-                      maxBudget={revenueMax}
-                      color="var(--pub-earth)"
-                      trackColor="var(--pub-clay)"
-                      label={barLabel(`${r.entity.name} revenue`, r.value.budget, r.value.ytd, r.value.share)}
-                    />
-                    <span className="text-xs tabular-nums text-[var(--pub-muted)] sm:text-right">
-                      {formatNairaShort(r.value.ytd)} of {formatNairaShort(r.value.budget)} · {formatShare(r.value.share)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ) : null}
-
-        <div className="mt-20 grid gap-4 md:grid-cols-3">
-          <Teaser href="/phc" icon={<StethoscopeIcon className="size-5" />} title="Primary health care" body="PHC Board spending by programme, by type and by named capital project." />
-          <Teaser href="/ask" icon={<MessageCircleQuestionIcon className="size-5" />} title="Ask the data" body="Ask a question in English or Hausa and get an answer, with a chart and sources, from the published figures." />
-          <Teaser href="/reports" icon={<BookOpenIcon className="size-5" />} title="Every report since 2019" body="Browse and download all of the State's quarterly Budget Performance Reports." />
+        <div className="mt-20">
+          <AskBand />
         </div>
-      </Shell>
+
+        <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <QuickLink href="/phc" color="var(--pub-brand)" icon={<StethoscopeIcon className="size-5" />} title="Primary health care" body="Immunisation, family planning, nutrition and more." />
+          <QuickLink href="/reports" color="var(--pub-accent)" icon={<BookOpenIcon className="size-5" />} title="Every report since 2019" body="Browse and download the State's Budget Performance Reports." />
+          <QuickLink href="/data" color="var(--pub-cyan)" icon={<DownloadIcon className="size-5" />} title="Open data" body="Download every figure (CSV or JSON), free to reuse." />
+        </div>
+      </div>
     </>
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">{children}</div>;
-}
-
-function SectionTitle({ eyebrow, title, lede }: { eyebrow: string; title: string; lede?: string }) {
+function Section({ eyebrow, title, lede, children }: { eyebrow: string; title: string; lede?: string; children: React.ReactNode }) {
   return (
-    <Reveal className="mb-6 max-w-3xl">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-green-deep)]">{eyebrow}</p>
-      <h2 className="font-display mt-2 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{title}</h2>
-      {lede ? <p className="mt-3 text-base leading-relaxed text-[var(--pub-ink-2)]">{lede}</p> : null}
-    </Reveal>
+    <section className="mt-20">
+      <Reveal className="mb-7 max-w-3xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--pub-accent-deep)]">{eyebrow}</p>
+        <h2 className="font-display mt-2 text-4xl leading-tight text-[var(--pub-navy)] sm:text-5xl">{title}</h2>
+        {lede ? <p className="mt-3 text-lg leading-relaxed text-[var(--pub-ink-2)]">{lede}</p> : null}
+      </Reveal>
+      {children}
+    </section>
   );
 }
 
-function Teaser({ href, icon, title, body }: { href: string; icon: React.ReactNode; title: string; body: string }) {
+function QuickLink({ href, icon, title, body, color }: { href: string; icon: React.ReactNode; title: string; body: string; color: string }) {
   return (
-    <Link href={href} className="group flex flex-col gap-3 rounded-2xl border border-[var(--pub-line)] bg-white p-5 transition hover:-translate-y-0.5 hover:border-[var(--pub-green)] hover:shadow-[0_8px_30px_rgba(22,122,74,0.08)]">
-      <span className="inline-flex size-10 items-center justify-center rounded-xl bg-[var(--pub-mint)] text-[var(--pub-green-deep)]">{icon}</span>
-      <span className="font-display text-xl font-semibold">{title}</span>
-      <span className="text-sm text-[var(--pub-ink-2)]">{body}</span>
-      <span className="mt-auto inline-flex items-center gap-1 text-sm font-semibold text-[var(--pub-green-deep)]">
-        Open <ArrowRightIcon className="size-4 transition group-hover:translate-x-0.5" />
+    <Link href={href} className="group flex items-start gap-4 rounded-3xl bg-white p-5 ring-1 ring-[var(--pub-line)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_30px_-18px_rgba(6,61,79,0.45)]">
+      <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl text-white" style={{ background: color }}>
+        {icon}
+      </span>
+      <span>
+        <span className="font-display block text-xl text-[var(--pub-navy)]">{title}</span>
+        <span className="block text-sm text-[var(--pub-ink-2)]">{body}</span>
+        <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[var(--pub-brand-deep)]">
+          Open <ArrowRightIcon className="size-4 transition group-hover:translate-x-0.5" />
+        </span>
       </span>
     </Link>
   );
