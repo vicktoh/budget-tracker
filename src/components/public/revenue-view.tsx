@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "motion/react";
-import { CoinsIcon, HandHeartIcon, InfoIcon, LandmarkIcon, MapPinnedIcon, ReceiptIcon, type LucideIcon } from "lucide-react";
+import { useRef, useState } from "react";
+import { AnimatePresence, motion, useInView } from "motion/react";
+import { ChevronDownIcon, CoinsIcon, HandHeartIcon, InfoIcon, LandmarkIcon, MapPinnedIcon, ReceiptIcon, type LucideIcon } from "lucide-react";
 import { SharePill } from "@/components/public/budget-bar";
 import { CountUp, Reveal } from "@/components/public/motion";
 import { SourceLink } from "@/components/public/source-link";
@@ -10,6 +10,9 @@ import { formatNairaShort, formatShare, type Source } from "@/lib/public/model";
 import { REVENUE_ORDER, REVENUE_SOURCES, type RevenueSourceKey } from "@/lib/public/revenue-sources";
 
 export type RevenuePart = { key: RevenueSourceKey; amount: number };
+
+/** One line (or, for fees, one MDA's fees) behind a revenue source. */
+export type Contributor = { label: string; mda: string; amount: number };
 
 export type RevenueMda = {
   code: string;
@@ -40,6 +43,7 @@ export function RevenueView({
   composition,
   mdas,
   compositionSource,
+  contributors,
 }: {
   year: number;
   periodShort: string;
@@ -50,13 +54,15 @@ export function RevenueView({
   composition: RevenuePart[];
   mdas: RevenueMda[];
   compositionSource: string | null;
+  contributors: Partial<Record<RevenueSourceKey, Contributor[]>>;
 }) {
   const total = composition.reduce((a, p) => a + p.amount, 0);
+  const [openSource, setOpenSource] = useState<RevenueSourceKey | null>(null);
   return (
     <div className="space-y-16">
       {/* Summary */}
       <section className="grid gap-4 lg:grid-cols-[minmax(0,20rem)_1fr]">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 lg:self-start">
           <div className="relative overflow-hidden rounded-3xl bg-[var(--pub-navy)] p-6 text-white">
             <span aria-hidden className="absolute -right-10 -top-10 size-32 rounded-full bg-white/10" />
             <p className="relative text-xs font-semibold uppercase tracking-[0.1em] text-white/75">Expected in {year}</p>
@@ -83,33 +89,20 @@ export function RevenueView({
         {composition.length ? (
           <div className="rounded-3xl border border-[var(--pub-line)] bg-white p-5 sm:p-6">
             <h2 className="font-display text-3xl text-[var(--pub-navy)]">Where it is expected to come from</h2>
-            <p className="mt-1 text-sm text-[var(--pub-muted)]">Health MDAs&apos; {year} revenue budget, by source.</p>
+            <p className="mt-1 text-sm text-[var(--pub-muted)]">Health MDAs&apos; {year} revenue budget, by source. Tap a source to see what makes it up.</p>
             <StackedBar parts={composition} height={22} className="mt-5" />
-            <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-              {REVENUE_ORDER.filter((k) => composition.some((p) => p.key === k && p.amount > 0)).map((k) => {
-                const amount = composition.find((p) => p.key === k)!.amount;
-                const Icon = ICON[k];
-                const color = REVENUE_SOURCES[k].color;
-                return (
-                  <li key={k} className="flex items-start gap-3 rounded-2xl bg-[var(--pub-canvas)] p-3">
-                    <span
-                      aria-hidden
-                      className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl"
-                      style={{ background: `color-mix(in srgb, ${color} 15%, white)`, color: `color-mix(in srgb, ${color} 82%, black)` }}
-                    >
-                      <Icon className="size-5" strokeWidth={2.2} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <p className="font-semibold">{REVENUE_SOURCES[k].name}</p>
-                        <p className="font-display text-2xl text-[var(--pub-navy)]">{formatShare(amount / total)}</p>
-                      </div>
-                      <p className="text-sm tabular-nums text-[var(--pub-ink-2)]">{formatNairaShort(amount)}</p>
-                      <p className="mt-0.5 text-xs text-[var(--pub-muted)]">{REVENUE_SOURCES[k].hint}</p>
-                    </div>
-                  </li>
-                );
-              })}
+            <ul className="mt-5 grid items-start gap-3 sm:grid-cols-2">
+              {REVENUE_ORDER.filter((k) => composition.some((p) => p.key === k && p.amount > 0)).map((k) => (
+                <SourceCard
+                  key={k}
+                  sourceKey={k}
+                  amount={composition.find((p) => p.key === k)!.amount}
+                  total={total}
+                  contributors={contributors[k] ?? []}
+                  open={openSource === k}
+                  onToggle={() => setOpenSource((o) => (o === k ? null : k))}
+                />
+              ))}
             </ul>
           </div>
         ) : null}
@@ -144,6 +137,95 @@ export function RevenueView({
         </p>
       </div>
     </div>
+  );
+}
+
+function SourceCard({
+  sourceKey,
+  amount,
+  total,
+  contributors,
+  open,
+  onToggle,
+}: {
+  sourceKey: RevenueSourceKey;
+  amount: number;
+  total: number;
+  contributors: Contributor[];
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const Icon = ICON[sourceKey];
+  const color = REVENUE_SOURCES[sourceKey].color;
+  const shown = contributors.slice(0, 8);
+  const rest = contributors.slice(8);
+  const restTotal = rest.reduce((a, c) => a + c.amount, 0);
+  return (
+    <li className={`rounded-2xl transition ${open ? "bg-white ring-2 ring-[var(--pub-line)] shadow-md" : "bg-[var(--pub-canvas)] hover:bg-white hover:shadow-sm"}`}>
+      <button type="button" onClick={onToggle} aria-expanded={open} className="flex w-full items-start gap-3 p-3 text-left">
+        <span
+          aria-hidden
+          className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: `color-mix(in srgb, ${color} 15%, white)`, color: `color-mix(in srgb, ${color} 82%, black)` }}
+        >
+          <Icon className="size-5" strokeWidth={2.2} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline justify-between gap-2">
+            <span className="font-semibold">{REVENUE_SOURCES[sourceKey].name}</span>
+            <span className="font-display text-2xl text-[var(--pub-navy)]">{formatShare(amount / total)}</span>
+          </span>
+          <span className="block text-sm tabular-nums text-[var(--pub-ink-2)]">{formatNairaShort(amount)}</span>
+          <span className="mt-0.5 block text-xs text-[var(--pub-muted)]">{REVENUE_SOURCES[sourceKey].hint}</span>
+          <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[var(--pub-brand-deep)]">
+            {open ? "Hide" : "See"} what makes it up
+            <ChevronDownIcon className={`size-3.5 transition ${open ? "rotate-180" : ""}`} aria-hidden />
+          </span>
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <ul className="space-y-2.5 border-t border-[var(--pub-line)] px-3 pb-3 pt-3">
+              {shown.map((c, i) => (
+                <li key={`${c.label}-${c.mda}-${i}`} className="space-y-1">
+                  <div className="flex items-start justify-between gap-3 text-sm">
+                    <span className="min-w-0">
+                      <span className="block leading-snug text-[var(--pub-ink)]">{c.label}</span>
+                      <span className="block text-xs text-[var(--pub-muted)]">{c.mda}</span>
+                    </span>
+                    <span className="shrink-0 text-right tabular-nums">
+                      <span className="block font-semibold">{formatNairaShort(c.amount)}</span>
+                      <span className="block text-xs text-[var(--pub-muted)]">{formatShare(c.amount / amount)}</span>
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--pub-track)]">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ background: color }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(c.amount / amount) * 100}%` }}
+                      transition={{ duration: 0.6, delay: 0.05 * i, ease: [0.16, 1, 0.3, 1] }}
+                    />
+                  </div>
+                </li>
+              ))}
+              {rest.length ? (
+                <li className="text-xs text-[var(--pub-muted)]">
+                  + {rest.length} smaller {rest.length === 1 ? "item" : "items"} ({formatNairaShort(restTotal)})
+                </li>
+              ) : null}
+            </ul>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </li>
   );
 }
 
