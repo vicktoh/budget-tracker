@@ -17,8 +17,8 @@ naira, descriptive tone, anonymous AI assistant with a $100/month cap.
 | `/data` | Full dataset CSV/JSON (CC BY 4.0), a plain table view, how figures are checked |
 | `/ask` | "Ask AI" assistant (English or Hausa), full page. Answers cite sources in plain text (report, table, page) with no links. The same chat opens as a slide-in panel from the header button, the floating launcher, the hero ask box and "Ask about …" buttons on every public page |
 
-Signed-in staff visiting `/` go to `/mda`; `/?view=public` (also in the staff
-user menu) shows the public site. The PWA starts at `/mda`.
+Everyone sees the public site at `/`; the staff user menu links to it too.
+The PWA starts at `/mda`.
 
 ## Data flow
 
@@ -137,3 +137,7 @@ latest published quarter. `src/test/full-year-history.test.ts` re-checks each
 row against the report's own % column. 2020 and earlier use an older report
 format (supplementary budget; salaries, running costs and capital in separate
 tables) and are not included.
+
+`/` is the public landing page for everyone, signed in or not (22 Oct 2026: the
+earlier redirect of signed-in staff to /mda was removed). Signed-in staff see a
+"My workspace" link in the public header; installed staff PWAs start at /mda.

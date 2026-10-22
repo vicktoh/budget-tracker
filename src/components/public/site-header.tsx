@@ -4,8 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { MenuIcon, XIcon } from "lucide-react";
+import { LayoutDashboardIcon, MenuIcon, XIcon } from "lucide-react";
 import { AskHeaderButton } from "@/components/public/ask-panel";
+import { useAuth } from "@/components/auth/auth-provider";
+import { getDefaultPathForProfile } from "@/lib/access";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -20,6 +22,9 @@ const NAV = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // Signed-in staff get a link back to their workspace instead of "Staff sign-in".
+  const { user, profile } = useAuth();
+  const staffLink = user ? { href: getDefaultPathForProfile(profile), label: "My workspace" } : { href: "/sign-in", label: "Staff sign-in" };
   // Solid so it stays readable over the deep-teal sections it scrolls across.
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--pub-line)] bg-[var(--pub-canvas)] shadow-[0_1px_12px_rgba(6,61,79,0.08)]">
@@ -46,10 +51,15 @@ export function SiteHeader() {
           ))}
           <AskHeaderButton className="ml-2" />
           <Link
-            href="/sign-in"
-            className="ml-1 hidden whitespace-nowrap rounded-md px-2.5 py-2 text-sm text-[var(--pub-muted)] hover:text-[var(--pub-ink)] xl:inline-flex"
+            href={staffLink.href}
+            title={staffLink.label}
+            className={cn(
+              "ml-1 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-2 text-sm hover:text-[var(--pub-ink)]",
+              user ? "inline-flex font-medium text-[var(--pub-brand-deep)]" : "hidden text-[var(--pub-muted)] xl:inline-flex",
+            )}
           >
-            Staff sign-in
+            {user ? <LayoutDashboardIcon className="size-4" aria-hidden /> : null}
+            <span className={user ? "sr-only xl:not-sr-only" : undefined}>{staffLink.label}</span>
           </Link>
         </nav>
         <div className="flex shrink-0 items-center gap-2 lg:hidden">
@@ -78,8 +88,8 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Link href="/sign-in" className="mt-2 block rounded-md px-3 py-3 text-base text-[var(--pub-muted)]">
-            Staff sign-in
+          <Link href={staffLink.href} className="mt-2 block rounded-md px-3 py-3 text-base text-[var(--pub-muted)]">
+            {staffLink.label}
           </Link>
         </nav>
       ) : null}

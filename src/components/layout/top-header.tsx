@@ -103,7 +103,7 @@ export function TopHeader({ profile }: { profile: AppProfile }) {
             <UserCogIcon aria-hidden="true" className="size-4" />
             Account settings
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => window.open("/?view=public", "_blank", "noopener")}>
+          <DropdownMenuItem onClick={() => window.open("/", "_blank", "noopener")}>
             <GlobeIcon aria-hidden="true" className="size-4" />
             View public site
           </DropdownMenuItem>
