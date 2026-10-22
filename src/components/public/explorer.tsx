@@ -173,7 +173,7 @@ export function Explorer({ data, initialYear, initialQuarter }: { data: Explorer
               value={view}
               onChange={setView}
               options={[
-                { value: "ytd", label: "So far this year" },
+                { value: "ytd", label: "Till date" },
                 { value: "quarter", label: `In Q${quarter} only` },
               ]}
             />
