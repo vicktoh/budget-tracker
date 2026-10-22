@@ -217,11 +217,11 @@ export function TopMdas({ rows, quarter }: { rows: MdaBar[]; quarter: number }) 
     .slice(0, 6);
   return (
     <div className="rounded-3xl border border-[var(--pub-line)] bg-white p-5 sm:p-6">
-      <div className="mb-5 inline-flex rounded-full bg-[var(--pub-sand)] p-1" role="tablist" aria-label="Rank MDAs by share of budget spent">
+      <div className="mb-5 inline-flex rounded-full bg-[var(--pub-sand)] p-1" role="tablist" aria-label="Rank MDAs by budget performance (share of budget spent)">
         {(
           [
-            ["highest", "Highest % spent"],
-            ["lowest", "Lowest % spent"],
+            ["highest", "Highest performing"],
+            ["lowest", "Lowest performing"],
           ] as const
         ).map(([key, label]) => (
           <button

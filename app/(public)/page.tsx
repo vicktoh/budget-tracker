@@ -108,7 +108,11 @@ export default async function PublicHomePage() {
           <SpendingDonut slices={slices} total={sector?.budget ?? 0} source={sector?.source ?? null} />
         </Section>
 
-        <Section eyebrow="Who holds the budget" title="Health MDAs at a glance" lede="The ministries, boards and agencies that hold the health budget, and how much of it they have spent so far.">
+        <Section
+          eyebrow="Who holds the budget"
+          title="Health MDAs at a glance"
+          lede={`Budget performance is the share of its yearly budget an MDA has spent, here up to ${periodEnd(quarter)} — the same measure the State's Budget Performance Reports use. "Highest performing" are the MDAs that have spent the largest share so far; "lowest performing", the smallest. It tracks spending progress, not the quality of services.`}
+        >
           <TopMdas
             quarter={quarter}
             rows={mdaRows.map((r) => ({
