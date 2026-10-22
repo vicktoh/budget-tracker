@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowUpRightIcon, MaximizeIcon, SendHorizonalIcon, SparklesIcon, XIcon } from "lucide-react";
+import { MaximizeIcon, SparklesIcon, XIcon } from "lucide-react";
 import dynamic from "next/dynamic";
 
 // The chat (markdown, code highlighting, charts) is heavy: fetch it only when
@@ -19,8 +19,8 @@ export { AskProvider, useAsk } from "@/components/public/ask-context";
 import { cn } from "@/lib/utils";
 
 /**
- * "Ask the data" everywhere on the public site: a floating launcher, a header
- * button, a hero ask box and contextual "Ask about this" buttons all open one
+ * "Ask AI" everywhere on the public site: a floating launcher, a header button
+ * and contextual "Ask AI about…" buttons all open one
  * slide-in panel. The panel stays mounted after first use, so the conversation
  * survives closing and reopening it.
  */
@@ -178,65 +178,5 @@ export function AskHeaderButton({ onClick, className, label = "Ask AI" }: { onCl
       <SparklesIcon className="size-4" aria-hidden />
       {label}
     </button>
-  );
-}
-
-const HERO_EXAMPLES = [
-  "How much of the health budget has been spent this year?",
-  "Which MDAs have spent the least of their budget?",
-  "Nawa aka ware wa fannin lafiya a 2026?",
-];
-
-/** The big ask box in the landing hero. */
-export function AskHeroBox() {
-  const { ask } = useAsk();
-  const [text, setText] = useState("");
-  return (
-    <div className="rounded-3xl bg-white p-3 text-[var(--pub-ink)] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)] sm:p-4">
-      <form
-        className="flex items-center gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!text.trim()) return ask();
-          ask(text.trim());
-          setText("");
-        }}
-      >
-        <span className="hidden size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--pub-accent)] text-[var(--pub-navy)] sm:inline-flex">
-          <SparklesIcon className="size-5" aria-hidden />
-        </span>
-        <label className="sr-only" htmlFor="hero-ask">
-          Ask a question about Kano&apos;s health budget
-        </label>
-        <input
-          id="hero-ask"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={500}
-          placeholder="Ask AI anything about Kano's health budget…"
-          className="h-12 min-w-0 flex-1 rounded-xl border border-[var(--pub-line)] bg-[var(--pub-canvas)] px-4 text-base outline-none transition focus:border-[var(--pub-brand)] focus:bg-white"
-        />
-        <button
-          type="submit"
-          className="inline-flex h-12 shrink-0 items-center gap-2 rounded-xl bg-[var(--pub-accent)] px-4 font-semibold text-[var(--pub-navy)] transition hover:bg-[var(--pub-accent-deep)] hover:text-white"
-        >
-          <span className="hidden sm:inline">Ask AI</span>
-          <SendHorizonalIcon className="size-4" aria-hidden />
-        </button>
-      </form>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {HERO_EXAMPLES.map((q) => (
-          <button
-            key={q}
-            type="button"
-            onClick={() => ask(q)}
-            className="inline-flex items-center gap-1 rounded-full border border-[var(--pub-line)] bg-white px-3 py-1.5 text-left text-xs text-[var(--pub-ink-2)] transition hover:border-[var(--pub-brand)] hover:text-[var(--pub-brand-deep)] sm:text-sm"
-          >
-            {q}
-            <ArrowUpRightIcon className="size-3.5 shrink-0" aria-hidden />
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }

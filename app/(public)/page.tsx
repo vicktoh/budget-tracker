@@ -1,17 +1,13 @@
 import Link from "next/link";
 import { ArrowRightIcon, BookOpenIcon, DownloadIcon, StethoscopeIcon } from "lucide-react";
-import { AskHeroBox } from "@/components/public/ask-panel";
 import { KanoMap } from "@/components/public/kano-map";
 import { AskBand, KpiTiles, SpendingDonut, TopMdas, YearColumns } from "@/components/public/landing";
 import { Reveal } from "@/components/public/motion";
-import { SourceLink } from "@/components/public/source-link";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
 import {
   ECON_CLASSES,
   SECTOR_CODE,
   buildExplorerData,
-  buildFacts,
-  formatNairaShort,
   latestReport,
   lensRows,
   periodEnd,
@@ -22,8 +18,6 @@ import {
 } from "@/lib/public/model";
 
 export const revalidate = 3600;
-
-const FACT_COLORS = ["var(--pub-brand)", "var(--pub-accent)", "var(--pub-cyan)"];
 
 export default async function PublicHomePage() {
   const ds = await loadPublicDataset();
@@ -45,7 +39,6 @@ export default async function PublicHomePage() {
   const { year, quarter } = latest;
   const sector = sectorValue(data, year, quarter, "mda", "total");
   const state = stateHeadline(ds, latest, latest.pdf);
-  const facts = buildFacts(data, year, quarter);
   const mdaRows = lensRows(data, year, quarter, "mda", "total").filter((r) => (r.value.budget ?? 0) > 0);
   const slices = ECON_CLASSES.map((cls) => {
     const v = sectorValue(data, year, quarter, "mda", cls);
@@ -67,20 +60,18 @@ export default async function PublicHomePage() {
           <div>
             <Reveal>
               <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-aqua)] ring-1 ring-white/15">
-                Kano State · health budget · {periodLabel(year, quarter)}
+                Kano State health budget tracker
               </p>
               <h1 className="font-display mt-5 text-[2.6rem] leading-[1.04] sm:text-6xl lg:text-[4.2rem]">
-                <span className="text-[var(--pub-aqua)]">{formatNairaShort(sector?.budget)}</span> for health in {year}.{" "}
-                <span className="text-[var(--pub-accent)]">{formatNairaShort(sector?.ytd)}</span> spent by {periodEnd(quarter).replace("the end of ", "")}.
+                Your <span className="text-[var(--pub-aqua)]">health budget</span>, in{" "}
+                <span className="text-[var(--pub-accent)]">plain numbers</span>.
               </h1>
               <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/80">
-                Official figures from Kano State&apos;s own budget reports, made simple. See where the money goes, and ask anything.
+                Kano State&apos;s health budget and spending, made simple: where the money is planned, where it has gone, and what is
+                still to be spent.
               </p>
             </Reveal>
-            <Reveal delay={0.1} className="mt-7 max-w-xl">
-              <AskHeroBox />
-            </Reveal>
-            <Reveal delay={0.15} className="mt-6 flex flex-wrap gap-3">
+            <Reveal delay={0.1} className="mt-8 flex flex-wrap gap-3">
               <Link href="/explore" className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[var(--pub-navy)] transition hover:bg-[var(--pub-aqua)]">
                 Explore the numbers <ArrowRightIcon className="size-4" />
               </Link>
@@ -116,30 +107,6 @@ export default async function PublicHomePage() {
         <Section eyebrow="Where the money goes" title="Salaries, running costs and projects" lede="Each type of spending is budgeted, and spent, at a very different pace.">
           <SpendingDonut slices={slices} total={sector?.budget ?? 0} source={sector?.source ?? null} />
         </Section>
-
-        {facts.length ? (
-          <Section eyebrow={`To ${periodEnd(quarter)} ${year}`} title={`${facts.length} things to know`}>
-            <div role="list" className="grid gap-4 md:grid-cols-3">
-              {facts.map((f, i) => (
-                <Reveal key={f.title} delay={i * 0.08} className="h-full">
-                  <div role="listitem" className="relative flex h-full flex-col gap-3 overflow-hidden rounded-3xl bg-white p-6 shadow-[0_10px_30px_-18px_rgba(6,61,79,0.35)] ring-1 ring-[var(--pub-line)]">
-                    <span aria-hidden className="absolute inset-x-0 top-0 h-1.5" style={{ background: FACT_COLORS[i % FACT_COLORS.length] }} />
-                    <span className="font-display text-5xl leading-none" style={{ color: FACT_COLORS[i % FACT_COLORS.length] }}>
-                      {i + 1}
-                    </span>
-                    <p className="font-display text-2xl leading-snug text-[var(--pub-navy)]">{f.title}</p>
-                    <p className="text-sm leading-relaxed text-[var(--pub-ink-2)]">{f.body}</p>
-                    {f.source ? (
-                      <p className="mt-auto pt-2 text-xs">
-                        <SourceLink source={f.source} />
-                      </p>
-                    ) : null}
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </Section>
-        ) : null}
 
         <Section eyebrow="Who holds the budget" title="Health MDAs at a glance" lede="The ministries, boards and agencies that hold the health budget, and how much of it they have spent so far.">
           <TopMdas
