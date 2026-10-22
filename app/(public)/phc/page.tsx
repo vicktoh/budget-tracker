@@ -36,7 +36,6 @@ export default async function PhcPage() {
     if (!projects.length) continue;
     const pdf = reportPdfUrl(r);
     const source = (f?: PublicFigure | null): Source => ({ slug: r.slug, title: r.title, table: f?.table_number ?? null, page: f?.page ?? null, pdf });
-    const econ = (code: string) => figs.find((f) => f.lens === "phc_economic" && f.code === code) ?? null;
 
     const groups = new Map<PhcProgrammeKey, PhcProgrammeRow>();
     const group = (key: PhcProgrammeKey) => {
@@ -73,26 +72,14 @@ export default async function PhcPage() {
 
     const all = [...groups.values()];
     const total = (g: PhcProgrammeRow) => g.b + (g.others ?? []).reduce((a, o) => a + o.amount, 0);
-    const personnel = econ("21");
-    const overhead = econ("22");
     reports.push({
       slug: r.slug,
       year: r.fiscal_year,
       quarter: r.quarter,
       programmes: all.filter((g) => CROSS_MDA_PROGRAMMES.includes(g.key as PhcProgrammeKey)).sort((a, b) => total(b) - total(a)),
-      operations: [
-        ...all.filter((g) => !CROSS_MDA_PROGRAMMES.includes(g.key as PhcProgrammeKey)).sort((a, b) => b.b - a.b),
-        ...(overhead && (overhead.original_budget ?? 0) > 0
-          ? [{ key: "overhead", name: "Running costs", blurb: "Travel, utilities, supplies — not tied to one programme", b: overhead.original_budget ?? 0, y: overhead.ytd_actual ?? 0 }]
-          : []),
-        ...(personnel && (personnel.original_budget ?? 0) > 0
-          ? [{ key: "personnel", name: "Salaries", blurb: "Staff pay — not tied to one programme", b: personnel.original_budget ?? 0, y: personnel.ytd_actual ?? 0 }]
-          : []),
-      ],
       otherBudgetsSource: other ? other.source : null,
       passThrough,
       projectSource: source(projects[0]),
-      econSource: source(econ("23") ?? econ("2")),
       officialObjectives: figs.filter((f) => f.lens === "phc_programme" && f.code?.length === 4).map((o) => titleCase(o.name)),
     });
   }

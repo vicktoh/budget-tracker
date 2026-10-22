@@ -41,11 +41,9 @@ export type PhcReport = {
   year: number;
   quarter: number;
   programmes: PhcProgrammeRow[];
-  operations: PhcProgrammeRow[];
   otherBudgetsSource: string | null;
   passThrough: number;
   projectSource: Source;
-  econSource: Source;
   officialObjectives: string[];
 };
 
@@ -75,7 +73,6 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
   const period = periodLabel(r.year, r.quarter);
   const periodEndMonth = period.split("–")[1] ?? `the end of ${r.year}`;
   const singleObjective = r.officialObjectives.length === 1 ? r.officialObjectives[0] : null;
-  const opsMax = Math.max(0, ...r.operations.map((p) => p.b));
 
   return (
     <div className="space-y-14">
@@ -119,46 +116,6 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
         </div>
       </section>
 
-      {/* 2. The PHC Board's own operations */}
-      <section>
-        <div className="max-w-2xl">
-          <h2 className="font-display text-3xl text-[var(--pub-navy)] sm:text-4xl">The PHC Board&apos;s own operations</h2>
-          <p className="mt-2 text-[var(--pub-ink-2)]">
-            The rest of the Primary Health Care Board&apos;s {r.year} budget — facilities, management and services that support every
-            programme — and how much of it was spent by {periodEndMonth}.
-          </p>
-        </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {r.operations.map((p, i) => {
-            const Icon = ICON[p.key] ?? InfoIcon;
-            const s = share(p.b, p.y);
-            const running = p.key === "personnel" || p.key === "overhead";
-            return (
-              <Reveal key={`${slug}-op-${p.key}`} delay={Math.min(i, 8) * 0.04}>
-                <div className={cn("flex h-full flex-col gap-3 rounded-2xl border p-5", running ? "border-dashed border-[var(--pub-line)] bg-[var(--pub-canvas)]" : "border-[var(--pub-line)] bg-white")}>
-                  <div className="flex items-start gap-3">
-                    <span className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-xl", running ? "bg-[#eceeed] text-[#4b5551]" : "bg-[var(--pub-brand-soft)] text-[var(--pub-brand-deep)]")}>
-                      <Icon className="size-5" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-semibold leading-snug">{p.name}</p>
-                      <p className="text-xs text-[var(--pub-muted)]">{p.blurb}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-baseline justify-between gap-2">
-                    <p className="text-xl font-semibold tabular-nums">
-                      {formatNairaShort(p.y)} <span className="text-sm font-normal text-[var(--pub-muted)]">of {formatNairaShort(p.b)}</span>
-                    </p>
-                    <SharePill share={s} flag={r.quarter >= 2 && s !== null && s < LOW_SPEND_THRESHOLD} />
-                  </div>
-                  <BudgetBar budget={p.b} spent={p.y} maxBudget={opsMax} color={running ? "#64706a" : "var(--pub-brand)"} label={barLabel(p.name, p.b, p.y, s)} />
-                  {p.count ? <p className="mt-auto text-xs text-[var(--pub-muted)]">{p.count} {p.count === 1 ? "project" : "projects"}</p> : null}
-                </div>
-              </Reveal>
-            );
-          })}
-        </div>
-      </section>
 
       <div className="flex items-start gap-2 rounded-xl border border-[var(--pub-line)] bg-white px-4 py-3 text-sm text-[var(--pub-ink-2)]">
         <InfoIcon className="mt-0.5 size-4 shrink-0 text-[var(--pub-muted)]" aria-hidden />
@@ -177,7 +134,6 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
           ) : null}
           <p className="flex flex-wrap gap-x-4">
             <SourceLink source={r.projectSource} prefix="PHC Board projects" />
-            <SourceLink source={r.econSource} prefix="PHC Board totals" />
           </p>
         </div>
       </div>
@@ -230,9 +186,8 @@ function ProgrammeCard({ p, quarter }: { p: PhcProgrammeRow; quarter: number }) 
         </div>
       ) : null}
 
-      <div className="mt-auto rounded-2xl bg-[var(--pub-canvas)] p-3">
-        {p.b > 0 ? (
-          <>
+      {p.b > 0 ? (
+        <div className="mt-auto rounded-2xl bg-[var(--pub-canvas)] p-3">
             <div className="flex items-baseline justify-between gap-2 text-sm">
               <span className="text-[var(--pub-ink-2)]">
                 PHC Board spent <strong className="text-[var(--pub-ink)]">{formatNairaShort(p.y)}</strong> of {formatNairaShort(p.b)}
@@ -242,12 +197,8 @@ function ProgrammeCard({ p, quarter }: { p: PhcProgrammeRow; quarter: number }) 
             <div className="mt-2">
               <BudgetBar budget={p.b} spent={p.y} maxBudget={p.b} height={8} label={barLabel(`PHC Board ${p.name}`, p.b, p.y, s)} />
             </div>
-            {others.length ? <p className="mt-2 text-[11px] text-[var(--pub-muted)]">Other MDAs&apos; spending on this programme is not reported.</p> : null}
-          </>
-        ) : (
-          <p className="text-xs text-[var(--pub-muted)]">Spending on this programme is not reported for these MDAs.</p>
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

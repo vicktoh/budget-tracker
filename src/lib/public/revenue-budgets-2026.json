@@ -1,0 +1,608 @@
+{
+ "fiscalYear": 2026,
+ "source": "Kano State Health Sector 2026 approved revenue budget (budget lines)",
+ "lines": [
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 80611200
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "13010202",
+   "description": "Lafiya Project Aid to support Research for Health Programmes in the Ministry of Health",
+   "stream": "capital_receipt",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 9164340
+  },
+  {
+   "mdaCode": "052101400100",
+   "economicCode": "13020104",
+   "description": "Support to Kano state Disease control (KNDC) for construction of additional toilets & 9 windows by Kano state Health Trust Fund (KHETFUND)",
+   "stream": "capital_receipt",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 2430073.08
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020724",
+   "description": "EARNING FROM SCANNING SERVICES",
+   "stream": "recurrent",
+   "amount": 33615000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 906795.47
+  },
+  {
+   "mdaCode": "052100500100",
+   "economicCode": "13020202",
+   "description": "UNICEF Support Grant - IMPACT PROJECT",
+   "stream": "capital_receipt",
+   "amount": 2030400000
+  },
+  {
+   "mdaCode": "052100400300",
+   "economicCode": "12020437",
+   "description": "STUDENT REGISTRATION FEES",
+   "stream": "recurrent",
+   "amount": 32400000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020701",
+   "description": "EARNINGS FROM CONSULTANCY SERVICES",
+   "stream": "recurrent",
+   "amount": 31706640
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020450",
+   "description": "Agricultural Product/Produce Sales Fees",
+   "stream": "recurrent",
+   "amount": 16200000
+  },
+  {
+   "mdaCode": "052103000100",
+   "economicCode": "12020482",
+   "description": "OTHER FEES",
+   "stream": "recurrent",
+   "amount": 53460000
+  },
+  {
+   "mdaCode": "052101300100",
+   "economicCode": "13020102",
+   "description": "FGN Grant for the Intergrated last mile delivery by Gate fundation",
+   "stream": "capital_receipt",
+   "amount": 70000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020612",
+   "description": "PROCEEDS FROM SALES OF DRUGS AND MEDICATIONS",
+   "stream": "recurrent",
+   "amount": 87807240
+  },
+  {
+   "mdaCode": "052100800100",
+   "economicCode": "12020453",
+   "description": "SURVEY FEES",
+   "stream": "recurrent",
+   "amount": 2430000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020725",
+   "description": "EARNING FRON MATUARY SERVICES",
+   "stream": "recurrent",
+   "amount": 891700.99
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020718",
+   "description": "EARNINGS FROM DENTAL SERVICES",
+   "stream": "recurrent",
+   "amount": 10928395.62
+  },
+  {
+   "mdaCode": "052100400800",
+   "economicCode": "12020437",
+   "description": "STUDENT REGISTRATION FEES",
+   "stream": "recurrent",
+   "amount": 19440000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 231070320
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020716",
+   "description": "EARNINGS FROM ENT SERVICES",
+   "stream": "recurrent",
+   "amount": 15301386.16
+  },
+  {
+   "mdaCode": "052100400300",
+   "economicCode": "12020482",
+   "description": "OTHER FEES",
+   "stream": "recurrent",
+   "amount": 16200000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020726",
+   "description": "EARNING FROM THEATRE SERCICES",
+   "stream": "recurrent",
+   "amount": 28385640
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 324000.52
+  },
+  {
+   "mdaCode": "052104000100",
+   "economicCode": "12020482",
+   "description": "OTHER FEES",
+   "stream": "recurrent",
+   "amount": 25920000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 20541600
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 6421680
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020724",
+   "description": "EARNING FROM SCANNING SERVICES",
+   "stream": "recurrent",
+   "amount": 571060903.07
+  },
+  {
+   "mdaCode": "052100400700",
+   "economicCode": "12020437",
+   "description": "STUDENT REGISTRATION FEES",
+   "stream": "recurrent",
+   "amount": 16200000
+  },
+  {
+   "mdaCode": "052100400800",
+   "economicCode": "12020482",
+   "description": "OTHER FEES",
+   "stream": "recurrent",
+   "amount": 6480000
+  },
+  {
+   "mdaCode": "052100500100",
+   "economicCode": "13020104",
+   "description": "LGAs Grant to Support to Primary Health Care Service Delivery",
+   "stream": "capital_receipt",
+   "amount": 1219000000.98
+  },
+  {
+   "mdaCode": "052100400700",
+   "economicCode": "12020482",
+   "description": "OTHER FEES",
+   "stream": "recurrent",
+   "amount": 15390000
+  },
+  {
+   "mdaCode": "052104000100",
+   "economicCode": "12020441",
+   "description": "APPLICATIONS FORMS & FEES",
+   "stream": "recurrent",
+   "amount": 324000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020725",
+   "description": "EARNING FRON MATUARY SERVICES",
+   "stream": "recurrent",
+   "amount": 222615922.83
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020721",
+   "description": "EARNINGS FROM EYE CLINIC SERVICES",
+   "stream": "recurrent",
+   "amount": 8743623.99
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "13010102",
+   "description": "Donation by individual to Accident and Emergency",
+   "stream": "capital_receipt",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "economicCode": "12020441",
+   "description": "APPLICATIONS FORMS & FEES",
+   "stream": "recurrent",
+   "amount": 32400000
+  },
+  {
+   "mdaCode": "052100400800",
+   "economicCode": "12020470",
+   "description": "HOTEL REGISTRSTION FEES",
+   "stream": "recurrent",
+   "amount": 7290000
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "13020202",
+   "description": "UNICEF supported Grant - Certification for Open Defecation Free (ODF) claimed communities  RUWASA",
+   "stream": "capital_receipt",
+   "amount": 710000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020428",
+   "description": "BIRTH & DEATH REGISTRATION FEES",
+   "stream": "recurrent",
+   "amount": 219607200
+  },
+  {
+   "mdaCode": "052100400100",
+   "economicCode": "12020482",
+   "description": "OTHER FEES",
+   "stream": "recurrent",
+   "amount": 275400000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020720",
+   "description": "EARNING FROM 10% NHIS /KSCHMA",
+   "stream": "recurrent",
+   "amount": 11463323.34
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020702",
+   "description": "EARNINGS FROM LABORATORY SERVICES",
+   "stream": "recurrent",
+   "amount": 243162000
+  },
+  {
+   "mdaCode": "052104000100",
+   "economicCode": "12020437",
+   "description": "STUDENT REGISTRATION FEES",
+   "stream": "recurrent",
+   "amount": 2203200
+  },
+  {
+   "mdaCode": "052101400100",
+   "economicCode": "13020106",
+   "description": "Capital Grant from BMCF AND DANGOTE (HEALTH MoU BASKET)",
+   "stream": "capital_receipt",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020452",
+   "description": "PROCESSING FEES",
+   "stream": "recurrent",
+   "amount": 48600000
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020417",
+   "description": "TENDER  FEES",
+   "stream": "recurrent",
+   "amount": 40500000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020727",
+   "description": "EARNING FROM SCBU SERVICES (SPECIAL CARE BABY UNIT)",
+   "stream": "recurrent",
+   "amount": 222615922.83
+  },
+  {
+   "mdaCode": "052101300100",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 162000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 1273568.77
+  },
+  {
+   "mdaCode": "052101400100",
+   "economicCode": "13020104",
+   "description": "1% Grant From the LGA For Emergency Prepadness Respose (EPR)",
+   "stream": "capital_receipt",
+   "amount": 3000000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020732",
+   "description": "PATIENT ADMISSION SERVICE",
+   "stream": "recurrent",
+   "amount": 6259680
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020501",
+   "description": "FINES/PENALTIES",
+   "stream": "recurrent",
+   "amount": 29970000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020731",
+   "description": "EARNING FROM DRESSING SERVICE",
+   "stream": "recurrent",
+   "amount": 5436720
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020726",
+   "description": "EARNING FROM THEATRE SERCICES",
+   "stream": "recurrent",
+   "amount": 117968400
+  },
+  {
+   "mdaCode": "052100400300",
+   "economicCode": "12020470",
+   "description": "HOTEL REGISTRSTION FEES",
+   "stream": "recurrent",
+   "amount": 3240000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020722",
+   "description": "EARNING FROM ICU SERVICES",
+   "stream": "recurrent",
+   "amount": 130831200
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020403",
+   "description": "Patent Medicine Licensing Fees",
+   "stream": "recurrent",
+   "amount": 24300000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 64800000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 4082400
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020722",
+   "description": "EARNING FROM ICU SERVICES",
+   "stream": "recurrent",
+   "amount": 23059852.93
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020717",
+   "description": "EARNINGS FROM DIALYSIS SERVICES",
+   "stream": "recurrent",
+   "amount": 64800000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020719",
+   "description": "EARNING FROM PHYSIOTHERAPHY SERVICES",
+   "stream": "recurrent",
+   "amount": 7413742.65
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020136",
+   "description": "HEALTH FACILITIES LICENSES",
+   "stream": "recurrent",
+   "amount": 40500000
+  },
+  {
+   "mdaCode": "052100800100",
+   "economicCode": "13020103",
+   "description": "Local Government Grant (1% ) Support to  Contributory Health Scheme (KACHIMA) to fund Medical Supplies",
+   "stream": "capital_receipt",
+   "amount": 1219000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "economicCode": "13020102",
+   "description": "FGN Grant to Support Upgrade/Renovation of 4 zonal warehouse and 4 central warehouses",
+   "stream": "capital_receipt",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "economicCode": "13020104",
+   "description": "Local Government 1% Grant to support Health Trust Fund Service Delivery",
+   "stream": "capital_receipt",
+   "amount": 3000000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020427",
+   "description": "ASSOCIATION FEES",
+   "stream": "recurrent",
+   "amount": 51840000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 49167000
+  },
+  {
+   "mdaCode": "052100500100",
+   "economicCode": "13020102",
+   "description": "Basic Healthcare Programm BHCPF Programm",
+   "stream": "capital_receipt",
+   "amount": 2030400000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020735",
+   "description": "EARNING FROM PUBLIC CONVENIENCES",
+   "stream": "recurrent",
+   "amount": 40176000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 203680980
+  },
+  {
+   "mdaCode": "052100500100",
+   "economicCode": "13020202",
+   "description": "United Nations Childrens Fund (UNICEF) Grant For Community Health Influences, Promoters and Awareness Programme in Kano State",
+   "stream": "capital_receipt",
+   "amount": 1023995297.98
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 100083753.51
+  },
+  {
+   "mdaCode": "052104000100",
+   "economicCode": "12020437",
+   "description": "STUDENT REGISTRATION FEES",
+   "stream": "recurrent",
+   "amount": 234900000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 571060903.07
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020134",
+   "description": "PRIVATE SCHOOLS LICENSES",
+   "stream": "recurrent",
+   "amount": 8100000
+  },
+  {
+   "mdaCode": "052101100100",
+   "economicCode": "12020707",
+   "description": "EARNINGS FROM MEDICAL SERVICES",
+   "stream": "recurrent",
+   "amount": 85860000
+  },
+  {
+   "mdaCode": "052100300200",
+   "economicCode": "12020723",
+   "description": "EARNING FROM X-RAY SERVICES",
+   "stream": "recurrent",
+   "amount": 31509000
+  },
+  {
+   "mdaCode": "052100400100",
+   "economicCode": "12020441",
+   "description": "APPLICATIONS FORMS & FEES",
+   "stream": "recurrent",
+   "amount": 32400000
+  },
+  {
+   "mdaCode": "052100800100",
+   "economicCode": "12021103",
+   "description": "OTHER INVESTMENT INCOME",
+   "stream": "recurrent",
+   "amount": 1944000000
+  },
+  {
+   "mdaCode": "052100400100",
+   "economicCode": "12020482",
+   "description": "OTHER FEES",
+   "stream": "recurrent",
+   "amount": 16200000
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "12020441",
+   "description": "APPLICATIONS FORMS & FEES",
+   "stream": "recurrent",
+   "amount": 16200000
+  },
+  {
+   "mdaCode": "052100300100",
+   "economicCode": "12020712",
+   "description": "EARNINGS FROM DRF SERVICE ACCOUNT",
+   "stream": "recurrent",
+   "amount": 63612540
+  },
+  {
+   "mdaCode": "052100400100",
+   "economicCode": "12020437",
+   "description": "STUDENT REGISTRATION FEES",
+   "stream": "recurrent",
+   "amount": 21060000
+  },
+  {
+   "mdaCode": "052100900100",
+   "economicCode": "13020104",
+   "description": "Local Government Grant Contribution to Support  Kano State Health Trust Fund (KHEFUND) for Health care and Nutrition Programmes",
+   "stream": "capital_receipt",
+   "amount": 1218591639
+  },
+  {
+   "mdaCode": "052100100100",
+   "economicCode": "13020102",
+   "description": "FGN Grant - Basic Health Care Provision Fund (BHCPF)",
+   "stream": "capital_receipt",
+   "amount": 705862500
+  }
+ ]
+}

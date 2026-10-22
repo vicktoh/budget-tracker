@@ -10,8 +10,9 @@ naira, descriptive tone, anonymous AI assistant with a $100/month cap.
 | Route | What it shows |
 |---|---|
 | `/` | Deep-teal hero with an animated Kano LGA map and the Ask AI box, four colour tiles, spending-type donut, three rule-generated facts, top MDAs (largest budgets / lowest share spent), same point each year, Ask AI band |
-| `/explore` | The full lens explorer (MDA / programme / function × type × period, breakdown or compare years) and money in (revenue) |
-| `/phc` | Primary Health Care Management Board (2025 onward) by health programme. Programmes are grouped from capital-project names (`src/lib/public/phc-programmes.ts`, labelled on the page as our grouping); salaries and running costs shown separately. The BIR codes all 2026 PHC spending to one objective, so its own programme table is not used here. No project list (user's call, 22 Oct) |
+| `/explore` | The full lens explorer (MDA / programme / function × type × period, breakdown or compare years) |
+| `/phc` | Health programmes (immunisation, malaria, nutrition, maternal & child health, family planning, disease control): 2026 budget totalled across every MDA from the approved capital budget lines (`src/lib/public/programme-budgets-<year>.json`, from `scripts/public/export-programme-budgets.ts`), with a who-funds-it split; spending shown for the PHC Board only (the one body whose project spending the BIR reports). Grouping by project name in `src/lib/public/phc-programmes.ts`; KHETFUND remittances excluded to avoid double counting |
+| `/revenue` | Where health MDAs' own revenue comes from: expected revenue by source (federal incl. BHCPF, local governments, donors, fees, other) from the approved revenue budget lines (`revenue-budgets-<year>.json`, `scripts/public/export-revenue-budgets.ts`, grouped in `revenue-sources.ts`), and collected so far per MDA from the BIR (totals only — the BIR does not split collections by source) |
 | `/reports` | All 24 reports since 2019: mirrored PDF download (counted), link to the original, SHA-256 |
 | `/data` | Full dataset CSV/JSON (CC BY 4.0), a plain table view, how figures are checked |
 | `/ask` | "Ask AI" assistant (English or Hausa), full page. Answers cite sources in plain text (report, table, page) with no links. The same chat opens as a slide-in panel from the header button, the floating launcher, the hero ask box and "Ask about …" buttons on every public page |
@@ -100,3 +101,17 @@ Cloudflare Web Analytics loads when `NEXT_PUBLIC_CF_ANALYTICS_TOKEN` is set
 writes the dataset as JSON; the `dev-public-fixture` launch config runs
 `next dev` with `PUBLIC_DATASET_FIXTURE=tmp/bir-dataset.json`, so pages render
 without touching the database.
+
+## Yearly budget-line exports
+
+The programme and revenue pages also use the year's approved budget lines,
+committed as JSON (the approved budget changes once a year). After a new
+year's budget is loaded into `approved_budget_lines` / `budget_line_revenues`:
+
+```
+npx tsx scripts/public/export-programme-budgets.ts <year>
+npx tsx scripts/public/export-revenue-budgets.ts <year>
+```
+
+then add the new files to `OTHER_MDA_BUDGETS` (app/(public)/phc/page.tsx) and
+`REVENUE_BUDGETS` (app/(public)/revenue/page.tsx).
