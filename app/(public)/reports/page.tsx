@@ -26,7 +26,6 @@ export default async function ReportsPage() {
   const ds = await loadPublicDataset();
   const reports = [...ds.reports].sort((a, b) => b.fiscal_year - a.fiscal_year || b.quarter - a.quarter);
   const years = [...new Set(reports.map((r) => r.fiscal_year))];
-  const published = reports.filter((r) => r.data_status === "published").length;
 
   return (
     <>
@@ -36,7 +35,7 @@ export default async function ReportsPage() {
         <a className="underline underline-offset-2" href="https://budget.kn.gov.ng/budget-performance-report/" target="_blank" rel="noopener">
           budget.kn.gov.ng
         </a>
-        . The health figures from {published} of them are on this site.
+        .
       </PageHero>
     <div className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
 
