@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { motion, useInView } from "motion/react";
-import { ArrowRightIcon, SparklesIcon } from "lucide-react";
+import { ArrowLeftRightIcon, ArrowRightIcon, Building2Icon, SparklesIcon, UsersIcon, ZapIcon, type LucideIcon } from "lucide-react";
 import { useAsk } from "@/components/public/ask-context";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
 import { CountUp, Reveal, Ring } from "@/components/public/motion";
@@ -99,6 +99,14 @@ const TileNote = ({ children }: { children: React.ReactNode }) => <p className="
 
 export type SpendSlice = { cls: EconClass; budget: number; spent: number; share: number | null };
 
+const CLASS_ICON: Record<EconClass, LucideIcon> = {
+  total: SparklesIcon,
+  personnel: UsersIcon, // staff pay
+  overhead: ZapIcon, // utilities, travel, supplies
+  capital: Building2Icon, // buildings and equipment
+  other: ArrowLeftRightIcon, // grants and transfers
+};
+
 export function SpendingDonut({ slices, total, source }: { slices: SpendSlice[]; total: number; source: Source | null }) {
   const ref = useRef<HTMLDivElement>(null);
   const seen = useInView(ref, { once: true, margin: "-10% 0px" });
@@ -155,14 +163,14 @@ export function SpendingDonut({ slices, total, source }: { slices: SpendSlice[];
               hover === s.cls ? "border-[var(--pub-ink-2)] shadow-md" : "border-[var(--pub-line)]",
             )}
           >
-            <div className="flex items-center gap-2">
-              <span className="size-3 rounded-full" style={{ background: CLASS_COLOR[s.cls] }} aria-hidden />
+            <div className="flex items-center gap-3">
+              <ClassIcon cls={s.cls} />
               <p className="font-semibold">{CLASS_LABEL[s.cls]}</p>
               <p className="font-display ml-auto text-2xl" style={{ color: "var(--pub-navy)" }}>
                 {formatShare(s.budget / sum)}
               </p>
             </div>
-            <p className="mt-1 text-xs text-[var(--pub-muted)]">{CLASS_HINT[s.cls]}</p>
+            <p className="mt-2 text-xs text-[var(--pub-muted)]">{CLASS_HINT[s.cls]}</p>
             <p className="mt-3 text-sm tabular-nums text-[var(--pub-ink-2)]">
               <strong className="text-[var(--pub-ink)]">{formatNairaShort(s.spent)}</strong> spent of {formatNairaShort(s.budget)} ·{" "}
               {formatShare(s.share)}
@@ -176,6 +184,20 @@ export function SpendingDonut({ slices, total, source }: { slices: SpendSlice[];
         ) : null}
       </ul>
     </div>
+  );
+}
+
+function ClassIcon({ cls }: { cls: EconClass }) {
+  const Icon = CLASS_ICON[cls];
+  const color = CLASS_COLOR[cls];
+  return (
+    <span
+      aria-hidden
+      className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl"
+      style={{ background: `color-mix(in srgb, ${color} 14%, white)`, color: `color-mix(in srgb, ${color} 82%, black)` }}
+    >
+      <Icon className="size-5" strokeWidth={2.2} />
+    </span>
   );
 }
 
