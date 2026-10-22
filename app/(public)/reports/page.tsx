@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2Icon, DownloadIcon, ExternalLinkIcon, FileTextIcon } from "lucide-react";
+import { CheckCircle2Icon, ChevronDownIcon, DownloadIcon, ExternalLinkIcon, FileTextIcon } from "lucide-react";
 import { PageHero } from "@/components/public/page-hero";
 import { loadPublicDataset } from "@/lib/public/dataset";
 import type { PublicReport } from "@/lib/public/types";
@@ -40,13 +40,21 @@ export default async function ReportsPage() {
       </PageHero>
     <div className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
 
-      <div className="mt-12 space-y-12">
-        {years.map((year) => (
-          <section key={year} aria-labelledby={`y-${year}`}>
-            <h2 id={`y-${year}`} className="font-display mb-4 text-3xl text-[var(--pub-navy)]">
-              {year}
-            </h2>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 space-y-4">
+        {years.map((year, index) => {
+          const yearReports = reports.filter((r) => r.fiscal_year === year);
+          const withFigures = yearReports.filter((r) => r.data_status === "published").length;
+          return (
+          <details key={year} open={index === 0} className="group rounded-3xl border border-[var(--pub-line)] bg-white/60 open:bg-transparent open:border-transparent">
+            <summary className="flex cursor-pointer list-none items-center gap-4 rounded-3xl px-5 py-4 transition hover:bg-white [&::-webkit-details-marker]:hidden">
+              <h2 className="font-display text-3xl text-[var(--pub-navy)]">{year}</h2>
+              <span className="text-sm text-[var(--pub-muted)]">
+                {yearReports.length} {yearReports.length === 1 ? "report" : "reports"}
+                {withFigures ? ` · ${withFigures} with figures on this site` : ""}
+              </span>
+              <ChevronDownIcon className="ml-auto size-5 text-[var(--pub-muted)] transition group-open:rotate-180" aria-hidden />
+            </summary>
+            <ul className="grid gap-3 px-1 pb-2 pt-2 sm:grid-cols-2 lg:grid-cols-4">
               {reports
                 .filter((r) => r.fiscal_year === year)
                 .sort((a, b) => a.quarter - b.quarter)
@@ -101,8 +109,9 @@ export default async function ReportsPage() {
                   </li>
                 ))}
             </ul>
-          </section>
-        ))}
+          </details>
+          );
+        })}
       </div>
     </div>
     </>
