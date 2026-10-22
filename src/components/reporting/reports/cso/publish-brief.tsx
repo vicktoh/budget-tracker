@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ExternalLinkIcon, GlobeIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth/auth-provider";
 import { isAdmin } from "@/lib/access";
@@ -45,6 +46,8 @@ export function PublishBriefButton({
   const [periodOpen, setPeriodOpen] = React.useState<boolean | null>(null);
   const [existing, setExisting] = React.useState<PublishedBrief | null>(null);
   const [busy, setBusy] = React.useState(false);
+  // In-app confirmation (native confirm() is blocked in some embedded browsers).
+  const [confirming, setConfirming] = React.useState<"publish" | "unpublish" | null>(null);
   const admin = isAdmin(profile);
 
   const refresh = React.useCallback(async () => {
@@ -70,8 +73,10 @@ export function PublishBriefButton({
 
   async function publish() {
     const element = capture();
-    if (!supabase || !element || fiscalYear === null) return;
-    if (!window.confirm(`Publish the Accountability Brief for ${periodLabel} to kanohealthbudget.org? Anyone will be able to read and download it.`)) return;
+    if (!supabase || !element || fiscalYear === null) {
+      toast.error("The brief is not ready to publish yet. Wait for it to load and try again.");
+      return;
+    }
     setBusy(true);
     try {
       const { exportElementToPdfBlob } = await import("@/lib/reporting/export-pdf");
@@ -112,7 +117,6 @@ export function PublishBriefButton({
 
   async function unpublish() {
     if (!supabase || !existing) return;
-    if (!window.confirm(`Remove the ${periodLabel} Accountability Brief from the public site?`)) return;
     setBusy(true);
     try {
       const { error } = await supabase.from("public_briefs" as never).delete().eq("id", existing.id);
@@ -135,7 +139,7 @@ export function PublishBriefButton({
         type="button"
         variant="outline"
         disabled={disabled || busy || periodOpen !== true}
-        onClick={publish}
+        onClick={() => setConfirming("publish")}
         title={blocked ? "Only officially published quarters can go to the public site." : undefined}
       >
         {busy ? <Loader2Icon aria-hidden className="size-4 animate-spin" /> : <GlobeIcon aria-hidden className="size-4" />}
@@ -152,7 +156,7 @@ export function PublishBriefButton({
             Live since {new Date(existing.published_at).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}
             <ExternalLinkIcon aria-hidden className="size-3" />
           </a>
-          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={unpublish} title="Remove from public site">
+          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => setConfirming("unpublish")} title="Remove from public site">
             <Trash2Icon aria-hidden className="size-4" />
             <span className="sr-only">Remove from public site</span>
           </Button>
@@ -160,6 +164,25 @@ export function PublishBriefButton({
       ) : blocked ? (
         <span className="text-xs text-muted-foreground">Not a published quarter</span>
       ) : null}
+      <AlertDialog
+        open={confirming !== null}
+        onOpenChange={(open) => (open ? null : setConfirming(null))}
+        title={confirming === "unpublish" ? "Remove from the public site?" : "Publish to the public site?"}
+        description={
+          confirming === "unpublish"
+            ? `The ${periodLabel} Accountability Brief will no longer be listed or downloadable on kanohealthbudget.org.`
+            : `The Accountability Brief for ${periodLabel}, as shown here, will be saved as a PDF and listed on kanohealthbudget.org/reports. Anyone will be able to read and download it.${existing ? " It replaces the version published earlier." : ""}`
+        }
+        confirmLabel={confirming === "unpublish" ? "Remove" : existing ? "Republish" : "Publish"}
+        confirmVariant={confirming === "unpublish" ? "destructive" : "default"}
+        loading={busy}
+        onConfirm={() => {
+          const action = confirming;
+          setConfirming(null);
+          if (action === "publish") void publish();
+          if (action === "unpublish") void unpublish();
+        }}
+      />
     </div>
   );
 }
