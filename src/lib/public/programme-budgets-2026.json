@@ -1,0 +1,2029 @@
+{
+ "fiscalYear": 2026,
+ "source": "Kano State Health Sector 2026 Approved Budget (budget lines)",
+ "lines": [
+  {
+   "mdaCode": "052100100100",
+   "description": "Rehabilitation Of Gwarzo General Hospital And Provision Of Free Anti-Natal Medication.",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 115000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Panisau PHC To Cottage Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052101100100",
+   "description": "Construction of Office Building",
+   "budgetClass": "capital",
+   "economicCode": "23020101",
+   "amount": 25000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Cctv Cameras At Secondary Health Facilities In The State",
+   "budgetClass": "capital",
+   "economicCode": "23010128",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Kawaji PHC In Nasarawa LGA, Sabon Birni Health Centre In Fagge ,Dakata PHC In Nasarawa Tudun Murtala PHC In Nasarawa To Maternity HospitalIn Nassarawa LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 160000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of School Health Services Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Makoda Cottage Hospital To General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 400000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Epidemic Prevention And Control",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Plan Preventives Maintenance Of The Central DMCSA And Zonal Warehouses",
+   "budgetClass": "capital",
+   "economicCode": "23040104",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SPecial Intervention For Inter-Plast Surgical Mission, Support To Sicklers & Other Surgical Interventions",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Power Generating Plant At Gezawa General Hospital(150KVA), Tudun Wada General Hospital(150KVA), Minjibir General Hospital(150KVA), Nuhu Bamalli Maternity Hospital(150KVA), Idh (150KVA), Smsgh (200KVA)",
+   "budgetClass": "capital",
+   "economicCode": "23010119",
+   "amount": 275000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Instalments Of Solar Power At Khetfund New Office",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 25198500
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Nut.3.Implementation Of Unicef Assisted Programme (Nutrition)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 800000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Epidemic Preparedness And Response (EPR)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 5000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Dausayi PHC In Warure Gwale Local Government",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Dental Unit At Muhammad Abdullahi Wase Teaching Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 35000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Reconstruction Of Agundawa Health Post And Provision Of Equipment In Gaya LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Renovation and Upgrading of Health facilities at Unguwar Dorayi Primary Health Care and Unguwar Dabai Health Centre, Kabuga.",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Durum MCH To Status Of Cottage HospitalIn Kabo LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Purchase Of Equipment For The Proposed KSCHMA Clinic",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 15000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Medical Assistance",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 1500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.4: Integrated Maternal Newborn And Child Health (IMNCH)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement/Provision Of Plant Generators To 20 Shfs In The State",
+   "budgetClass": "capital",
+   "economicCode": "23010119",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurements/Provision Of HospitalEquipment At New Audallawa/Madari Health Centre Warawa LGA",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Purchase Of 31no. Motorcycles (Fisrts Batch) For LGA Liason Offices",
+   "budgetClass": "capital",
+   "economicCode": "23010104",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Drugs Revolving Fund Programme Monitoring",
+   "budgetClass": "capital",
+   "economicCode": "23050103",
+   "amount": 34640000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Kibiya Comprehensive Health Centre To General Hospital In Kibiya Town (House Resolution)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Establishment Of Staff Canteen",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 85000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Implementation Of UNICEF Assisted Programme In The State",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 1000000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Essentials Health Equipment To The Accident And Emergency To 15 SHFs Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Medical Outreaches Including Kwankwasiyya Medical Outreah, Eye And Other Medical Outreaches Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 800000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Upgrading/Renovation Of 4 Zonal Warehouse And 4 Central Warehouses",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.3: Provision Of Blood Transfusion Services",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Expansion & Renovation Of Murtala Mohd Specialist Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100600100",
+   "description": "Increasing The Uptake And Acess To HIV Testing, Treatment, Care, Viral Suppression",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 1000000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Drugs Abuse Campaign Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Implementation Of The Formal Sector And Other Contributory Healthcare Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 3579500000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Control Of Non Communicable Diseases",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Garko Hospital To Comprehensive Hospital In Garko LGA (House Resolution)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Procurement Of 30no. Of Laptops Computers To The Management And 16 Zonal Offices",
+   "budgetClass": "capital",
+   "economicCode": "23010113",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Establishment Of College Of Health Science And Technology Gaya",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Emergency preparedness, response and relief.",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Procureement Of Office Equipments (15no Computers, 2no. Hisense Smart Projector 86 Inch)",
+   "budgetClass": "capital",
+   "economicCode": "23010113",
+   "amount": 41700000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of New Intensive Care Units At Mmsh & Mawt",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 473543834.59
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Development Of Accreditation Programme For Postgraduate School Of Radiology And O&G At MAWTH",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Tuberculosis And Leprosy Control Programs,",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 313854000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Conduct Of Bi- Annual Review Meeting ( AoP)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 37000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Kore PHC To Cottage Hospital In Dambatta LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Purchase Of Computers And Accessories",
+   "budgetClass": "capital",
+   "economicCode": "23010113",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Implementation Of The BHCPF",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 1500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "General Rehabilitation Of SMOH Headquarters",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 800000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Provision/Renovation Of Administrative Block",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 131078450
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "General Renovation Of Bagwaro Health Facility In Takai LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Procurement Of Office Furnitures For Khetfund New Office",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 56895670
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Establishing Of Comprehensive Eye Care System In The State",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 90000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Implementation Of Health Sector Adaptation Plan (HSAP)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Procurement Of 10,000 Liters (9tons) Water Tanker For The State Drugs Manufacturing Unit (Isuzu)",
+   "budgetClass": "capital",
+   "economicCode": "23010106",
+   "amount": 53588750
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision And Maintenance Of 10 Additional Functional Blood Banks",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Public Health Laboratories Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Global Polio Eradication Initiatives Proagramme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.15: Procurement Of Treatment/Management Of Severe Acute Malnutrition/Moderate Malnutrition In Children 0-23 Months Of Age",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Nut.3.Identification And Evaluation Of Research Ingredients For Production Of RUTF",
+   "budgetClass": "capital",
+   "economicCode": "23050101",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Kiru Comprehensive Hospital To General Hospital (Completion Works)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP: 1.2.8: Counterpart Funding For Accelerating Nutrition Results In Nigeria (ANRIN) (Khetfund)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Renovation And Additional Of Boreholes For 33 Secondary Health Facilities In The State",
+   "budgetClass": "capital",
+   "economicCode": "23030104",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Accident & Emergency Unit And Provision Of 24 Hours Solar Power At Gaya LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Conduct Re-Accreditation Of Radiology Department Of The Hospital.",
+   "budgetClass": "capital",
+   "economicCode": "23050103",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Procurement Of Essential Drugs To Address PPH (Peristol, Mesopristol,Oxytocin,Tranexiamic Acid Etc)",
+   "budgetClass": "capital",
+   "economicCode": "23010106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Nut.2/SP.1.2.1 Procurement And Distribution Of Zinc And L-Ors, Deworming Tablets For Mnch Weeks And Routine Services Programme (Khetfund)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Solarization Of Maternity,SCBU & Labour Room Unit",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 150265000
+  },
+  {
+   "mdaCode": "052101100100",
+   "description": "Purchase Of 1no. Operational Vehicles (18 Seater Bus)",
+   "budgetClass": "capital",
+   "economicCode": "23010108",
+   "amount": 120000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Of Furnitures To Newly Upgraded Phcs To General Hospitals Across 18 LGAs",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.6: Provision And Distribution Of Supplementary Food To Children With Moderate Acute Malnutrition (MAM)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 250000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Counterpart Funding For BMGF The Challenge Initiative",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Extension Of A&E At Muhammad Abdullahi Wase Teaching Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 60000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Establishment Of Kschma Registration Centres At 20 Major Public Places Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Logistics Management Control Unit (LMCU)",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 6000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision of one ambulance to each of the 44 LGAs",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Remodelling, Upgrading And Furnishing A Warehouse To External Preparations Manufacturing Unit To Gmpapproaved Standard",
+   "budgetClass": "capital",
+   "economicCode": "23030127",
+   "amount": 250000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Purchase Of Brand New Lifter",
+   "budgetClass": "capital",
+   "economicCode": "23010199",
+   "amount": 210150675
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Tuberculosis And Leprosy Drugs For (Khetfund)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Computerization Of Medical Records And Training Institution Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23050102",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Of Office Furniture/Working Materials At EoH & GHO Units",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of Office Furnitures For Kncdc Headquarters, Procurement Of Kitcheen Equipment, Procurement Of 15 Wall Hanging Fire Extinguishers For Kncdc Headquarters",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 82150000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Sabo Garba Hospital, Kwachiri (House Resolution)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Health Sector Research Program",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 17543835
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "State Emergency Medical And Ambulance System",
+   "budgetClass": "capital",
+   "economicCode": "23010105",
+   "amount": 400000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Procurerement Of 6no. Mini Truckstrucks For Health Commodities Distribution For Rano, Gaya, Gwarzo, Danbatta And Central Medical Stores Zonal Stores",
+   "budgetClass": "capital",
+   "economicCode": "23010107",
+   "amount": 42000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Of Furniture At Kafin Maiyaki Hospital, Tsanyawa PHC, Garun Ali BPHCC, Kiru Cottage Hospital, Madobi Phc,Garo PHC, Ghari PHC, Imam Wali Gen. Hospital, Sir Muhammad Sunusi General Hospital SMSGS)",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 230000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Of Furniture At 'SMAGs",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "General Renovation Of Accident And Emergency Unit",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 210000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Procurement Of School Teaching And Clinical Instruction Materials",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of School Of Nursing At Rogo, In LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 530000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of Emergency Vehicles To Strengthen Emergency Response (64 Boxer Motorcycle Machine)",
+   "budgetClass": "capital",
+   "economicCode": "23010120",
+   "amount": 160000000
+  },
+  {
+   "mdaCode": "052100600100",
+   "description": "Conduct Of Aop And Ensure Alignment Of Partners' Plans To National/State Health Sector AoP",
+   "budgetClass": "capital",
+   "economicCode": "23050101",
+   "amount": 34561775
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Nut.3/SP.1.2.12:Food Demonstration On How To Prepare Local RUTF {Tom Brown}SMOH",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052101100100",
+   "description": "Procurement Of Office Furniture And Upgrading Of Electricity Solar At Private Health Institution Management Agency",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 5000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Construction Of Additional Office Block At Agency H/Q",
+   "budgetClass": "capital",
+   "economicCode": "23020101",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Procurement Of Operational Vehicles (2no Hilux And 1no Saloon Car)",
+   "budgetClass": "capital",
+   "economicCode": "23010105",
+   "amount": 365000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Development Of HMB Strategic Plan",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 80000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Completion Of Aisami Phc In Gwale Local Government",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Provision/Remodelling Of Existing Redbricks Classrooms - 2 Blocks Of Classrooms To Be Converted Into Storey Building",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 101714872
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Nut.3/SP.1.2.11:Provision Of Ready-To-Use Therapeutic Food (RUTF) For The Treatment Of Sam And Malnutrition Among PLWHA And Vulnerable Children",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of E- Health Solution Development",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Intergrated Last Mile Delivery By Gate Fundation",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 780000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Construction/Provision Of Laboratory Complex That Will House The Pharmacy Laboratory On The Ground Floor And 2 Science Laboratories On The First Floor",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 99376272
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Primary Health Care At Kofar Wambai",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction of Hospitals Across the State",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 19500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Of Medical Equipment To General Hospitals Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 25000000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "National Annual Council On Health Meetings",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 48500000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Accident And Emergency Unit At Kafin Maiyaki Cottage HoSPital.",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of Emergency Vehicles To Strengthen Emergency Response (One Operational Bus Model Toyota)",
+   "budgetClass": "capital",
+   "economicCode": "23010118",
+   "amount": 94015000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Knsg/Bmgf/Dangote Foundation Support To Health Program Activities",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Accredation Of O&G Unit At Murtala SPecialist Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Rogo PHC To Cottage Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Establishment Of Nutrition Rehabilitation Centres",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurements/Provision Of HospitalEquipment At Massu PHC In Sumaila LGA",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Tofa PHC To Comprehensive Health Centre",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP: 1.2.7: Human Reproductive Health Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of New Health Outpost At Sabon Gari Ward In Wudil LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 70000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Budget Process Reforms (BPR)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 35000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Supporting The State Annual Council On Health Meetings",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 70000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Purchase Of 2no Of New Ambulances",
+   "budgetClass": "capital",
+   "economicCode": "23010108",
+   "amount": 115200000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Implementation Of Demographic Dividend Roadmap",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 70000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Establishment Of Geriatrics Centre",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Dashi Comprehensive Health Centre In Kiru LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.10: Iron Folic Supplementation For Pregnant Women",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 144000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Upgrading Of Inventory Control Software At DMCSA Hq And 4 Zonal Stores (M-Supply)",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 164639146
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Procurement Of 500 KVA Plant Generator At MAWTH",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 98455813.95
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Renovation Of PHC In Dala Local Government",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "General Renovation Of HMB Headquarter",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Procurement Of 4no. Mortuary Chilling With Hydrolic Mobile Copse Gray Lift Machine",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 183600000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurements/Provision Of Hospital Equipment At Kadawa Gate Bhc In G/Malam LGA",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 400000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Women For Health Programme Financial Year Programme (FY)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Medical outreach across the state",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 1000000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Upgrading Of Existing Solar Inverter System",
+   "budgetClass": "capital",
+   "economicCode": "23030102",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Provision Of Internet Service At HMB Headquarters",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Establishing Of Deafness Screening And Treatment Centers In Five Emirate's Hfs",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Construction/Provision Of Lecture Halls - A Storey Building Containing 2 Halls",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 101084856
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Family Health Initiative Intervention Of Donor Agency (Oxygen, ICU Rooms For Complex Equipment)",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 10000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Additional Post Basic Programmes In The State",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 1000000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrade Of Ungogo PHC To General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Rehabilitation Of Secondary Health Facilities In The State",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 1500000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Disbursement Of 2% Remittances To KSCHMA Vulnerable Group Program Monthly To Augement The Services.",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 144000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Incinerators At Various Health Facilities In The State",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Repairs Of HoSPitals Medical Equipments (Bloodbank Refrigirators, Chemistry/Heamatology Anlyzer, PCV Machine)",
+   "budgetClass": "capital",
+   "economicCode": "23010119",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Purchase Of Office Equipment/Office Funitures",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 10000000
+  },
+  {
+   "mdaCode": "052100600100",
+   "description": "Optimization The Health Management Information System (HMIS)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 28602250
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Costruction Of Vocational Skill Acquisition Center At Diso Quarters Gwale LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of RDT Kits (Cholera, CSM Etc) To Primary, Secondary And Tertiary HFS Annually, Procurement Of Public Health Laboratory Equipment, Reagent And Consumables",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 69027020
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Purchase Of Office Furniture",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Renovation/Construction Work Of New Zone I Building At Kano Dental Center (AMDY)",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 250000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Procurement Of Operational Vehicles (Toyota Hilux Engine (08m 03 Kn) And Motorcycle (Boxer 125cc Model), 1no D.I Printer Bizhub C368)",
+   "budgetClass": "capital",
+   "economicCode": "23010104",
+   "amount": 20800000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Disbursement Of 5% Remiitances To Free Maternal And Child Healthcare Program Monthly To Reduce Maternal Mortality Rate In The State",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 360000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Health Education Communication Training And Information Centre",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Gwagwarwa Primary Health Care To Cottage Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Development & Accreditation Programme for the Schools of Nursimg",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 280000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Conduct Accreditation Of O&G Departiment With National Post Graduate Medical College Of Nigeria (NPMCN).",
+   "budgetClass": "capital",
+   "economicCode": "23050103",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Development & Accreditation Programme (Post Graduate College Of Family Medicine)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Rehabilitation/Renovation Work At Sir Mahammad Sunusi General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 250000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Conversion and upgrading of Isa Kaita Health Centre in Gama B into a Paediatrics’ hospital and fully equip the Mal. Shuaibu Comprehensive Health Centre in Tudun Wada ward.",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of OPD Unit At Muhammad Abdullahi Wase Teaching Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Disbursement Of 6% Remittances To Other Services & Diseases (Such As: Sickle Cell, Drug Abuse/Psychiatric Illnesses, HIV, TB/Leprosy, Etc.) Monthly To Improve Healthcare Services In The State",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 432000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Expansion Dorayi Karama HospitalIn Gwale LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Inspection Of Pharmaceutical Facilities In The State/Activities Of State Task Force On Fake & Counterfeid Drugs And Mobile Court",
+   "budgetClass": "capital",
+   "economicCode": "23050103",
+   "amount": 33854000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Cancer Centre At Giginyu General Hospital(Completion O F Equipping & Furnishing Works)",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Ambulances To Kumbotso General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23010105",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100600100",
+   "description": "Scale Up Integrated HIV Prevention Services",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 39581980
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Modern Health Care Facilities At Bagwai PHC",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Health Management Information System ( H M I S ) And Health Sector Research Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050101",
+   "amount": 47543835
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction of School of Health Technology Rogo",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Garum Mal. Phc. To General HospitalAt Garum Mallam LGA.",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 350000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Sexual Assualt Refferal Center At Karaye Council H/Q HoSPital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 35000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Improvement Of The Access To Quality ORAL Health Services Across Primary And Secondary Health Facilities",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Conduct Nutrition And Consumer Education On Improved Food Quality And Safety At The Community Level",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 90000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Support The Delivery Of The Climate Informed Health Program Intervention Plans-Vector Born Diseases",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 120727137.5
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "MSP One PHC Per Ward 484 Wards (General Renovation/Upgrading Of 200 PHCs)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 1500000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Sensitazation, Mobilization And Coordinating Round Table Discussion On How To Improve Qualitative Service Delivery With (HospitalFriends, Zonal Directos, Cmos,Hods,Cpos And Admin Officers)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Supporting The Development Of State Annual Operation Plan (Health Sector)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 250000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Procurement 100KVA Gen. Set",
+   "budgetClass": "capital",
+   "economicCode": "23010119",
+   "amount": 5000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "General Rehabilitation /Renovation Works At Dawakin Kudu LGA. HoSPital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Purchase of 2no Hilux Vehicle",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.17: Procurement Of Vitamin A Supplementation To Children 6-59 Months Of Age",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 25000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provide / Support Active Case Finding Of Sam And Provide Appropriate Treatment",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Procurements Of 1000 Mattresses, 2000 Bed Sheets, 2000 Pillow Cases, 2000 Blankets And 1000 Pillows To Secondary Health Facilities In The State",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.2: Cancer Awareness And Screening Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Disbursement Of 10% Remittances To Malaria And Nutrition Program Montly To Augment Their Services",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 720000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Hospital At Dorayi Baba (Completion Work) Ramin Jigawa",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052101100100",
+   "description": "Purchase Of 2no. Operational Vehicles (Double Cab Toyota Hilux 4x4)",
+   "budgetClass": "capital",
+   "economicCode": "23010105",
+   "amount": 140000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Nut.3/SP.1.2.13:Provide / Sustain And Scale Up Distribution Of Micronutrient Powder (MNP) For Children 6-23 Months",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 600000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "General Renovation Works At Rogo General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Procurement Of Free Maternal And Childcare And Accident & Emergency Drugs Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 1500000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Procurement Of State-Of-The-Art Equipments For The External Pharmaceutial Preparations",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 501000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Basic Health Post At Atumbu",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Madachi PHC In Rano, Rogo PHC, Kore Phc In Danbatta, Kaura Goje And Gama PHC In Nasarawa LGA To Cottage Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 105000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.18: Care/Rehabilitation Of VVF",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Additional Maternity Care Unit At Tsakuwa Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of Emergency Medical Equipment For Extreme Weather Events Response",
+   "budgetClass": "capital",
+   "economicCode": "23010114",
+   "amount": 158240000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Mil-Tara And Panisau Health Centre To Maternity Hospital/Clinic Ungogo LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 120000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Chiranci PHC To Cottage Hospital In Kumbotso LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Capacity Building Of Health Personnel On Regular Monitoring Of Growth And Promotion (Gmp) At Health Facilities And Communities.",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 20500000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Basic Health Centre Madachi Rano LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Onchocerciasis Control Programme (NTD)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 709383938
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Vulnerable Healthcare Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 1600000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Rirum PHC In Rano LGA, Kwana Dangora In Kiru LGA, Garo PHC In Kabo LGA, To Cottage Hospital Rano LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 90000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Of SPecialized Medical Equipment E.G Neurosurgery, Orthopedic ICTs, Ct Scan, Dental Unit, X-Ray Unit Etc",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Provision Of Interlocking, Lanscaping And Drainage System",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 179419593
+  },
+  {
+   "mdaCode": "052101100100",
+   "description": "Monitoring & Supervision Project",
+   "budgetClass": "capital",
+   "economicCode": "23050103",
+   "amount": 60000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Provision Of 1no Water Tanker Truck",
+   "budgetClass": "capital",
+   "economicCode": "23010107",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Establishment Of Health Training Institution At Kiru",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Training Of Health Workers, Religious Leaders On Key Household Practices Including Infant And Young Child Feeding (LYCF), Hiv/Aids Counseling And Testing",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Kafin Maiyaki PHC To Cottage Hospital (Completion Work)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052101100100",
+   "description": "Sensitization Workshop For Private Health Facilities",
+   "budgetClass": "capital",
+   "economicCode": "23050101",
+   "amount": 28000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "General Renovation, Expansion Of Hungu Primary Health Care In Albasu LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Development Electronic Medical Record (EMR )At 6 Facilities 2no From Each Senetorial Zones",
+   "budgetClass": "capital",
+   "economicCode": "23050102",
+   "amount": 1000000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Procurement/Provision Of Affordable Sickle Cell Drugs In Hospital Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Rehabilitation/Renovation Work Doguwa General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Conversion Of Tarauni PHC To General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Renovation Of T/Wada General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction of a General Hospital at Kumbotso Local Government Headquarters",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Conversion Of Gyadi-Gyadi Women Centre Comprehensive Health Centre",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Supporting And Implementation Of Donor Activities In The State",
+   "budgetClass": "capital",
+   "economicCode": "23050103",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Renovation And Rehabilitation Of Health Training Institutions In The State",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 1000000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Building Of Accident And Emergency Unit At Sumaila General.",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.4: Malaria Control Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 600000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Medical Equipments To Gwarzo, Sumaila, Minjibir, Rogo, Tofa, Ungogo, Dala, G/Mallam, Karaye & Fagge Hospitals",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Phc At Unguwa Uku Tarauni LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 300000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Renovation of Rogo burnt General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 1000000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Construction/Provision Of A Theatre With A Capacity Of 500",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 138027498
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Procurement Of Additional Laboratory Testing Machine To The DMCSA Modern Drug Quality Control",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Panisau Health Centre To Maternity Hospital/Clinic In Ungogo LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 210000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of General Hospital At Ungogo Town Of Ungogo LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.5: Epidemiology And Control Of Outbreaks, E.G. Polio, Measles, Rubella, Etc",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Some Primary Health Cares To General Hospitals Within The State.",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 2500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Post Midwifery Institution At Gezawa",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrade Of Gano PHC To General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100600100",
+   "description": "Strengthening The Communicable Disease Prevention Task Forces Focused On HIV, TB, Malaria And NTDs At The State Level",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 54674600
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Providing Landscaping And Interlock, Borehole, Tank And Water Reticulation Totwo Zonal Medical Stores (Gaya And Rano)",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of Drugs, Consumables And Equipment For Epidemic And Pandemic Preparedness And Response Through Strengthened Coordination With The National Supply Chain Management System",
+   "budgetClass": "capital",
+   "economicCode": "23010123",
+   "amount": 370000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Essentials Health Equipment To The Accident And Emergency Unit And All The Department To Sumaila General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Supply Of Drugs And Medical Consumables In The State",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Revatilize The End-End (Production To Retaintion) Healthcare Workers Pipeline",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 280000000
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Disbursement Of 50% Remitances To Primary, Secondary And Tertiary Health Facilities Monthly To Improve Healtcare Service Delivery",
+   "budgetClass": "capital",
+   "economicCode": "23020118",
+   "amount": 3600000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "General Renovation Of The Agency",
+   "budgetClass": "capital",
+   "economicCode": "23020118",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Encouragement The Celebration Of The World Breastfeeding Week And All Other National Nutrition Event At All Levels - State, LGAs And Wards. SMOH To Coordinate",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 32000000
+  },
+  {
+   "mdaCode": "052104000100",
+   "description": "Provision/Construction Of 1 Block Of Storey Building Containing 4 Classrooms",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 118654330
+  },
+  {
+   "mdaCode": "052100900100",
+   "description": "Disbursement Of 25% Remittances To State Owned Health Institutions Monthly For Procuments Of Teaching AIDs And Capacity Building",
+   "budgetClass": "capital",
+   "economicCode": "23020118",
+   "amount": 1800000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Zarewa PHC To Cottage Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Installation Of 60no. Solar Panels And Accessories For Inventory Control Software Server At Central Medical Stores",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 180000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of Vacational And Skill Acquistion Center",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 30000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Adolescent And Young People Health And Development",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Capitilization Of 350 Health Facilities With Drugs & Medical Consumables To Commence DRF Scheme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Procurement Of Office Funitures For Dmcsa Central And 6no Hp 3 In 1 Photocopying Machine For 4 Zonal Warehouse",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 64000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Hernia operations across the state",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 1500000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Construction Of Drainage, Landscape, Tarr, Interlock Street Lights Dmcsa Old Site",
+   "budgetClass": "capital",
+   "economicCode": "23020116",
+   "amount": 40000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Purchase Of Health/Medical Equipment For Maternal And New Born Care",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 256135000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Dangora PHC In Kiru, Tofa Phc To Cottage Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 70000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.15: Procurement And Distribution Zinc And L -Ors, Deworming Tablet For Mnchw And Routine Services Programme",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 230000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Provision Of Medical Equipment At Sabuwar Madina Hospital In Gwale LGA",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of 10 No Computer Printers For KNCDC Headquarter, Procurement Of 10 No Photocopying Machines For KNCDC Headquarter, Procurement Of 10 No Scanners For KNCDC Headquarters, Procurement Of Books, Sops And Guidelines",
+   "budgetClass": "capital",
+   "economicCode": "23010113",
+   "amount": 27023500
+  },
+  {
+   "mdaCode": "052101100100",
+   "description": "Procurement Of Office Equipment (7no Laptop Computers Hp Eite X36o0, 2no Printers, Computess Software, 1no Photocopy Machines",
+   "budgetClass": "capital",
+   "economicCode": "23010113",
+   "amount": 26000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of 20 No Laptops Hp Mv 14th Generation",
+   "budgetClass": "capital",
+   "economicCode": "23010112",
+   "amount": 47160000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Establishment Of Drugs Information Centre At DMCSA Central",
+   "budgetClass": "capital",
+   "economicCode": "23020127",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Establishment of Community Midwifery School Kiru",
+   "budgetClass": "capital",
+   "economicCode": "23020107",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052100600100",
+   "description": "Reach, Treat And Sustain Vertical HIV Transmission And Paediatrics Interventions",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 86380440
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Rehabilitation/Renovation At Wudil General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 200000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Co-Coordinating And Implementation Of The Legislative Health Agenda In Collaboration With The National Assembly Health Committee (Health Summit)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Rehabilitation Of Accident And Emergency Units Across The State",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 450000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Construction Of Gate, Sign Board And Bill Boards At Agency H/Q",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052101300100",
+   "description": "Designing, Construction And Furnishing A Modern Drugs Quelity Control Laborotory At DMCSA Central Medical Storei",
+   "budgetClass": "capital",
+   "economicCode": "23020128",
+   "amount": 150000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "General Rehabilitation Of Imam Wali General Hospital (Completion Work)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Capital Grand For Water Tanker Donation",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100600100",
+   "description": "Conduction, Review, Update And Adopt Stratagic Decumentation On His To Support Monitoring And Evaluation Of Health Sector Plan",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 45080875
+  },
+  {
+   "mdaCode": "052100300200",
+   "description": "Provision Of Industrial Borehole Water Facilities",
+   "budgetClass": "capital",
+   "economicCode": "23020105",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100800100",
+   "description": "Establishment Of Clinic At The Agency",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Rehabilitation/ Renovation Work At Kura General Hospital",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 270000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Construction Of School Of Health Technology At Gafasa In Ajingi LGA",
+   "budgetClass": "capital",
+   "economicCode": "23020106",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Free Maternal And Child Health",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 2000000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Development & Accreditation Programme (School Of Hygiene, Kano And School Of Health Technology Bebeji)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 90376937
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Maternal, New-born & Child Health Programs, Immunization & Routine Child Health, Hospital and PHC Infrastructure for Maternal Delivery, and Financing Mechanisms for Maternal & Child Care.",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 100000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Dawakin Dakata PHC In Nasarawa, Upgrading Of Mariri PHC In Kumbotsa To Cottage Hospital, Completion Of Work And Equiping At Dorayi Babba HospitalIn Gwale LGA",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 50000000
+  },
+  {
+   "mdaCode": "052100300100",
+   "description": "Solarization Of Hmb Headquater, Facilities Maternity And Blood Bank",
+   "budgetClass": "capital",
+   "economicCode": "23020103",
+   "amount": 120000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Ungogo Town Basic Health Clinic To Comprehensive Health Centre And Equipment’s In Ungogo LGA (House Resolution)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 20000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "State Highway Emergency Ambulance Scheme (HESS)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 70000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "SP.1.2.9: Child Birth SPacing Programme (Procurement Of Commodity)",
+   "budgetClass": "capital",
+   "economicCode": "23050128",
+   "amount": 500000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Procurement Of Emergency Vehicles To Strengthen Emergency Response (4 Toyota Hillux, 2 Toyota Hiace And 2 Toyota Coaster/Ambulance)",
+   "budgetClass": "capital",
+   "economicCode": "23010115",
+   "amount": 508507750
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Upgrading Of Kachako PHC To Cottage Hospital (Completion)",
+   "budgetClass": "capital",
+   "economicCode": "23030105",
+   "amount": 101000000
+  },
+  {
+   "mdaCode": "052101400100",
+   "description": "Construction Of Public Health Laboratory In The KNCDC Complex",
+   "budgetClass": "capital",
+   "economicCode": "23010122",
+   "amount": 250000000
+  },
+  {
+   "mdaCode": "052100100100",
+   "description": "Procurement Of Hospital Ambulances For SHFs In The State",
+   "budgetClass": "capital",
+   "economicCode": "23010105",
+   "amount": 500000000
+  }
+ ]
+}

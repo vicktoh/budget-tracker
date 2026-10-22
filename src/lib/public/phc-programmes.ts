@@ -38,12 +38,13 @@ export const PHC_PROGRAMMES: Record<PhcProgrammeKey, { name: string; blurb: stri
 };
 
 const RULES: [PhcProgrammeKey, RegExp][] = [
-  ["immunisation", /immuni[sz]|vaccine|cold store|cold chain/i],
+  ["disease_control", /epidemiolog|outbreak/i],
+  ["immunisation", /immuni[sz]|vaccine|cold store|cold chain|polio/i],
   ["family_planning", /birth spacing|family planning/i],
   ["nutrition", /nutrition|malnutrition|\bsam\b|infant and young child|iycf|breastfeeding|\bebf\b/i],
   ["mnch", /maternal|new ?born|child health|imnch|semchic|school health|resus/i],
+  ["disease_control", /(?<!non )communicable|tuber ?cul|\btb\b|leprosy|\bhiv\b|\baids\b|hepatitis|sickle|surveillance|public health emergency|public health laborator|laboratory services|f[ue]r?m[a-z]*gation/i],
   ["malaria", /malaria|\bsmc\b/i],
-  ["disease_control", /(?<!non )communicable|tuber ?cul|\btb\b|surveillance|public health emergency|laborator|f[ue]r?m[a-z]*gation/i],
   ["essential_services", /minimal service|minimum service|\bmsp\b|quality of care|referral|mobile health|field unit|non communicable|mental health|eye care|oral health/i],
   ["community", /community|acsm|placo|influencers|promoters/i],
   ["drugs_supplies", /\bdrf\b|drug|consumable|logistic|lmcu|nhci/i],
@@ -54,4 +55,27 @@ const RULES: [PhcProgrammeKey, RegExp][] = [
 export function classifyPhcProject(name: string): PhcProgrammeKey {
   for (const [key, rx] of RULES) if (rx.test(name)) return key;
   return "other";
+}
+
+/**
+ * Programmes that other MDAs fund too, so the public page totals their budget
+ * across all MDAs. The other groups (facilities, management, essential PHC
+ * services, drugs) describe the PHC Board's own operations and stay Board-only.
+ */
+export const CROSS_MDA_PROGRAMMES: PhcProgrammeKey[] = [
+  "immunisation",
+  "family_planning",
+  "mnch",
+  "nutrition",
+  "malaria",
+  "disease_control",
+];
+
+/**
+ * KHETFUND passes a fixed share of its revenue on to programmes run by other
+ * bodies ("remittances"); counting those under the programmes would count the
+ * same naira twice.
+ */
+export function isPassThrough(description: string): boolean {
+  return /remit|re-?mit|remiitance|disbursement of/i.test(description);
 }

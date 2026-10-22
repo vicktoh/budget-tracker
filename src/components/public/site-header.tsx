@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", label: "Overview" },
   { href: "/explore", label: "Explore" },
-  { href: "/phc", label: "Primary health care" },
+  { href: "/phc", label: "Health programmes" },
   { href: "/reports", label: "Reports" },
   { href: "/data", label: "Open data" },
 ];

@@ -137,7 +137,7 @@ export default async function PublicHomePage() {
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-3">
-          <QuickLink href="/phc" color="var(--pub-brand)" icon={<StethoscopeIcon className="size-5" />} title="Primary health care" body="Immunisation, family planning, nutrition and more." />
+          <QuickLink href="/phc" color="var(--pub-brand)" icon={<StethoscopeIcon className="size-5" />} title="Health programmes" body="Immunisation, malaria, nutrition and more, across every MDA." />
           <QuickLink href="/reports" color="var(--pub-accent)" icon={<BookOpenIcon className="size-5" />} title="Every report since 2019" body="Browse and download the State's Budget Performance Reports." />
           <QuickLink href="/data" color="var(--pub-cyan)" icon={<DownloadIcon className="size-5" />} title="Open data" body="Download every figure (CSV or JSON), free to reuse." />
         </div>
