@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { ChevronDownIcon, InfoIcon } from "lucide-react";
+import { AskButton } from "@/components/public/ask-panel";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
 import { CLASS_COLOR, CLASS_LABEL } from "@/lib/public/labels";
 import { SourceLink } from "@/components/public/source-link";
@@ -361,6 +362,11 @@ function RowDetail({
             </div>
           </dl>
         )}
+        <AskButton
+          className="mt-1"
+          label={`Ask about ${entity.short}`}
+          question={`Tell me about ${entity.name}'s ${cls === "total" ? "" : CLASS_LABEL[cls].toLowerCase() + " "}budget and spending in ${year} (${periodLabel(year, quarter)}), and how it compares with earlier years.`}
+        />
         <div className="space-y-1 text-xs">
           <SourceLink source={value.source} />
           {value.derived ? <p className="text-[var(--pub-muted)]">{value.derived}</p> : null}

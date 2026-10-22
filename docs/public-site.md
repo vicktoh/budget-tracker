@@ -10,10 +10,10 @@ naira, descriptive tone, anonymous AI assistant with a $100/month cap.
 | Route | What it shows |
 |---|---|
 | `/` | Headline cards, spending by type, three rule-generated facts, the lens explorer (MDA / programme / function × type × period, breakdown or compare years), same point each year, money in |
-| `/phc` | Primary Health Care Management Board section (2025 onward): totals, economic lines, programmes, capital projects |
+| `/phc` | Primary Health Care Management Board (2025 onward) by health programme. Programmes are grouped from capital-project names (`src/lib/public/phc-programmes.ts`, labelled on the page as our grouping); salaries and running costs shown separately. The BIR codes all 2026 PHC spending to one objective, so its own programme table is not used here. No project list (user's call, 22 Oct) |
 | `/reports` | All 24 reports since 2019: mirrored PDF download (counted), link to the original, SHA-256 |
 | `/data` | Full dataset CSV/JSON (CC BY 4.0), a plain table view, how figures are checked |
-| `/ask` | "Ask the data" assistant (English or Hausa) |
+| `/ask` | "Ask the data" assistant (English or Hausa), full page. The same chat opens as a slide-in panel from the header button, the floating launcher, the hero ask box and "Ask about …" buttons on every public page |
 
 Signed-in staff visiting `/` go to `/mda`; `/?view=public` (also in the staff
 user menu) shows the public site. The PWA starts at `/mda`.

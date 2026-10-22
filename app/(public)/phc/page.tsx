@@ -1,47 +1,62 @@
 import type { Metadata } from "next";
-import { PhcView, type PhcReport, type PhcRow } from "@/components/public/phc-view";
+import { PhcView, type PhcProgrammeRow, type PhcReport } from "@/components/public/phc-view";
 import { Reveal } from "@/components/public/motion";
 import { loadPublicDataset, reportPdfUrl } from "@/lib/public/dataset";
-import { publishedReports, titleCase } from "@/lib/public/model";
+import { publishedReports, titleCase, type Source } from "@/lib/public/model";
+import { PHC_PROGRAMMES, classifyPhcProject, type PhcProgrammeKey } from "@/lib/public/phc-programmes";
 import type { PublicFigure } from "@/lib/public/types";
 
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Primary health care",
-  description: "Kano State Primary Health Care Management Board budget and spending: by programme, by type and by capital project.",
+  description: "Kano State Primary Health Care Management Board budget and spending, by health programme.",
 };
-
-function row(f: PublicFigure): PhcRow {
-  return {
-    code: f.code ?? "",
-    name: titleCase(f.name),
-    b: f.original_budget ?? f.revised_budget,
-    y: f.ytd_actual,
-    q: f.quarter_actual,
-    p: f.page,
-    t: f.table_number,
-  };
-}
 
 export default async function PhcPage() {
   const ds = await loadPublicDataset();
   const reports: PhcReport[] = [];
+
   for (const r of publishedReports(ds)) {
     const figs = ds.figures.filter((f) => f.report_id === r.id && f.lens.startsWith("phc_"));
-    if (!figs.length) continue;
-    const pick = (lens: PublicFigure["lens"]) => figs.filter((f) => f.lens === lens && f.code).map(row);
+    const projects = figs.filter((f) => f.lens === "phc_project");
+    // The programme view is built from the project table; skip reports where it is unreadable.
+    if (!projects.length) continue;
+    const pdf = reportPdfUrl(r);
+    const source = (f?: PublicFigure | null): Source => ({ slug: r.slug, title: r.title, table: f?.table_number ?? null, page: f?.page ?? null, pdf });
+    const econ = (code: string) => figs.find((f) => f.lens === "phc_economic" && f.code === code) ?? null;
+    const board = figs.find((f) => f.lens === "phc_mda" && f.code === "052100500100") ?? figs.find((f) => f.lens === "phc_mda" && f.code?.length === 12) ?? null;
+
+    const groups = new Map<PhcProgrammeKey, PhcProgrammeRow>();
+    for (const p of projects) {
+      const key = classifyPhcProject(p.name);
+      const g = groups.get(key) ?? { key, name: PHC_PROGRAMMES[key].name, blurb: PHC_PROGRAMMES[key].blurb, b: 0, y: 0, count: 0 };
+      g.b += p.original_budget ?? p.revised_budget ?? 0;
+      g.y += p.ytd_actual ?? 0;
+      g.count = (g.count ?? 0) + 1;
+      groups.set(key, g);
+    }
+    const objectives = figs.filter((f) => f.lens === "phc_programme" && f.code?.length === 4);
+
+    const personnel = econ("21");
+    const overhead = econ("22");
     reports.push({
       slug: r.slug,
       year: r.fiscal_year,
       quarter: r.quarter,
-      title: r.title,
-      pdf: reportPdfUrl(r),
-      admin: pick("phc_mda"),
-      programme: pick("phc_programme"),
-      functions: pick("phc_function"),
-      economic: pick("phc_economic"),
-      projects: figs.filter((f) => f.lens === "phc_project").map((f) => ({ ...row(f), code: f.mda_code ?? "", name: f.name })),
+      board: board ? { b: board.original_budget ?? board.revised_budget, y: board.ytd_actual, source: source(board) } : null,
+      programmes: [...groups.values()].sort((a, b) => b.b - a.b),
+      running: [
+        ...(personnel && (personnel.original_budget ?? 0) > 0
+          ? [{ key: "personnel", name: "Salaries", blurb: "Staff pay — not tied to one programme", b: personnel.original_budget ?? 0, y: personnel.ytd_actual ?? 0 }]
+          : []),
+        ...(overhead && (overhead.original_budget ?? 0) > 0
+          ? [{ key: "overhead", name: "Running costs", blurb: "Overheads: travel, utilities, supplies — not tied to one programme", b: overhead.original_budget ?? 0, y: overhead.ytd_actual ?? 0 }]
+          : []),
+      ],
+      projectSource: source(projects[0]),
+      econSource: source(econ("23") ?? econ("2")),
+      officialObjectives: objectives.map((o) => titleCase(o.name)),
     });
   }
 
@@ -49,10 +64,10 @@ export default async function PhcPage() {
     <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
       <Reveal className="max-w-3xl">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--pub-green-deep)]">Primary health care</p>
-        <h1 className="font-display mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">The first stop for most patients</h1>
+        <h1 className="font-display mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">Primary health care, by health programme</h1>
         <p className="mt-4 text-lg leading-relaxed text-[var(--pub-ink-2)]">
-          Primary health care centres are where most people in Kano are seen first. Since 2025 the State&apos;s reports include a
-          section on the Primary Health Care Management Board: what it spends by type and programme, and on each capital project.
+          Primary health care centres are where most people in Kano are seen first. Here is what the Primary Health Care
+          Management Board has budgeted and spent on immunisation, family planning, nutrition, mothers and children, and more.
         </p>
       </Reveal>
       {reports.length ? (

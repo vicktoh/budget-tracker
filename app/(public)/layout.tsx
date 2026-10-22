@@ -5,6 +5,7 @@ import { Source_Serif_4 } from "next/font/google";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/public/site-header";
 import { PublicMotion } from "@/components/public/motion";
+import { AskPanel, AskProvider } from "@/components/public/ask-panel";
 
 const display = Source_Serif_4({ subsets: ["latin"], variable: "--font-display", weight: ["500", "600", "700"] });
 
@@ -29,12 +30,15 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`public-site ${display.variable} min-h-screen`}>
       <PublicMotion>
+        <AskProvider>
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">
           Skip to content
         </a>
         <SiteHeader />
         <main id="main">{children}</main>
         <SiteFooter />
+        <AskPanel />
+        </AskProvider>
       </PublicMotion>
       {beacon ? (
         // Cloudflare Web Analytics: cookieless, no personal data, no consent banner needed.

@@ -1,68 +1,77 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { SearchIcon } from "lucide-react";
+import { useState } from "react";
+import { motion } from "motion/react";
+import {
+  AppleIcon,
+  BabyIcon,
+  BugIcon,
+  Building2Icon,
+  HeartHandshakeIcon,
+  InfoIcon,
+  NetworkIcon,
+  PillIcon,
+  ReceiptIcon,
+  ShieldAlertIcon,
+  StethoscopeIcon,
+  SyringeIcon,
+  UsersIcon,
+  WalletIcon,
+  type LucideIcon,
+} from "lucide-react";
+import { AskButton } from "@/components/public/ask-panel";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
-import { CountUp, Ring } from "@/components/public/motion";
+import { CountUp, Reveal, Ring } from "@/components/public/motion";
 import { SourceLink } from "@/components/public/source-link";
-import { CLASS_COLOR } from "@/lib/public/labels";
 import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, formatShare, periodLabel, type Source } from "@/lib/public/model";
 import { cn } from "@/lib/utils";
 
-export type PhcRow = { code: string; name: string; b: number | null; y: number | null; q: number | null; p: number | null; t: number | null };
+export type PhcProgrammeRow = { key: string; name: string; blurb: string; b: number; y: number; count?: number };
 
 export type PhcReport = {
   slug: string;
   year: number;
   quarter: number;
-  title: string;
-  pdf: string | null;
-  admin: PhcRow[];
-  programme: PhcRow[];
-  functions: PhcRow[];
-  economic: PhcRow[];
-  projects: PhcRow[];
+  board: { b: number | null; y: number | null; source: Source } | null;
+  programmes: PhcProgrammeRow[];
+  running: PhcProgrammeRow[];
+  projectSource: Source;
+  econSource: Source;
+  officialObjectives: string[];
 };
 
-const ECON_GROUPS: { code: string; label: string; color: string }[] = [
-  { code: "21", label: "Personnel", color: CLASS_COLOR.personnel },
-  { code: "22", label: "Overhead and other recurrent", color: CLASS_COLOR.overhead },
-  { code: "23", label: "Capital", color: CLASS_COLOR.capital },
-];
+const ICON: Record<string, LucideIcon> = {
+  immunisation: SyringeIcon,
+  family_planning: HeartHandshakeIcon,
+  mnch: BabyIcon,
+  nutrition: AppleIcon,
+  malaria: BugIcon,
+  disease_control: ShieldAlertIcon,
+  essential_services: StethoscopeIcon,
+  community: UsersIcon,
+  drugs_supplies: PillIcon,
+  facilities: Building2Icon,
+  health_systems: NetworkIcon,
+  other: InfoIcon,
+  personnel: WalletIcon,
+  overhead: ReceiptIcon,
+};
 
-function share(r: PhcRow) {
+function share(r: { b: number | null; y: number | null }) {
   return r.b ? (r.y ?? 0) / r.b : null;
 }
 
 export function PhcView({ reports }: { reports: PhcReport[] }) {
   const [slug, setSlug] = useState(reports[reports.length - 1].slug);
-  const [query, setQuery] = useState("");
-  const [projectSort, setProjectSort] = useState<"budget" | "share">("budget");
   const r = reports.find((x) => x.slug === slug)!;
-  const source = (row?: PhcRow): Source => ({ slug: r.slug, title: r.title, table: row?.t ?? null, page: row?.p ?? null, pdf: r.pdf });
-
-  const board = r.admin.find((x) => x.code === "052100500100") ?? r.admin.find((x) => x.code.length === 12);
-  const programmes = r.programme.filter((x) => x.code.length === 4).sort((a, b) => (b.b ?? 0) - (a.b ?? 0));
-  const programmeMax = Math.max(0, ...programmes.map((x) => x.b ?? 0));
-  const groups = ECON_GROUPS.map((g) => ({
-    ...g,
-    total: r.economic.find((x) => x.code === g.code),
-    lines: r.economic
-      .filter((x) => x.code.length === 8 && x.code.startsWith(g.code))
-      .filter((x) => (x.b ?? 0) > 0 || (x.y ?? 0) > 0)
-      .sort((a, b) => (b.b ?? 0) - (a.b ?? 0)),
-  })).filter((g) => g.total && ((g.total.b ?? 0) > 0 || (g.total.y ?? 0) > 0));
-  const projects = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return r.projects
-      .filter((p) => !q || p.name.toLowerCase().includes(q))
-      .sort((a, b) => (projectSort === "budget" ? (b.b ?? 0) - (a.b ?? 0) : (share(b) ?? -1) - (share(a) ?? -1)));
-  }, [r, query, projectSort]);
-  const projectMax = Math.max(0, ...r.projects.map((p) => p.b ?? 0));
-  const projectsUnspent = r.projects.filter((p) => (p.b ?? 0) > 0 && !(p.y ?? 0)).length;
+  const all = [...r.programmes, ...r.running];
+  const total = all.reduce((acc, p) => acc + p.b, 0) || 1;
+  const max = Math.max(0, ...all.map((p) => p.b));
+  const period = periodLabel(r.year, r.quarter);
+  const singleObjective = r.officialObjectives.length === 1 ? r.officialObjectives[0] : null;
 
   return (
-    <div className="space-y-14">
+    <div className="space-y-12">
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Report">
         {reports.map((x) => (
           <button
@@ -80,23 +89,23 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
         ))}
       </div>
 
-      {board ? (
+      {r.board ? (
         <section className="grid gap-4 md:grid-cols-[1.4fr_1fr]">
           <div className="rounded-2xl bg-[var(--pub-green-deep)] p-6 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/70">Primary Health Care Management Board · {periodLabel(r.year, r.quarter)}</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/70">Primary Health Care Management Board · {period}</p>
             <p className="font-display mt-3 text-5xl font-semibold">
-              <CountUp key={`b-${slug}`} value={board.y} kind="naira" />
+              <CountUp key={`b-${slug}`} value={r.board.y} kind="naira" />
             </p>
-            <p className="mt-1 text-white/80">spent of a {formatNairaShort(board.b)} budget</p>
-            <p className="mt-6 text-xs text-white/70">
-              <SourceLinkLight source={source(board)} />
+            <p className="mt-1 text-white/80">spent of a {formatNairaShort(r.board.b)} budget</p>
+            <p className="mt-6 text-xs [&_a]:text-white/80 [&_a]:decoration-white/30">
+              <SourceLink source={r.board.source} />
             </p>
           </div>
           <div className="flex items-center gap-5 rounded-2xl border border-[var(--pub-line)] bg-white p-6">
-            <Ring key={`r-${slug}`} fraction={share(board) ?? 0} size={96} stroke={10} />
+            <Ring key={`r-${slug}`} fraction={share(r.board) ?? 0} size={96} stroke={10} />
             <div>
               <p className="font-display text-4xl font-semibold">
-                <CountUp key={`s-${slug}`} value={share(board)} kind="percent" />
+                <CountUp key={`s-${slug}`} value={share(r.board)} kind="percent" />
               </p>
               <p className="text-sm text-[var(--pub-muted)]">of the year&apos;s budget spent</p>
             </div>
@@ -104,120 +113,86 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
         </section>
       ) : null}
 
-      {groups.length ? (
-        <section>
-          <h2 className="font-display text-3xl font-semibold tracking-tight">What the money pays for</h2>
-          <p className="mt-2 max-w-2xl text-[var(--pub-ink-2)]">The Board&apos;s budget line by line, grouped by type. The largest lines come first.</p>
-          <div className="mt-6 grid gap-4 lg:grid-cols-3">
-            {groups.map((g) => {
-              const max = Math.max(0, ...g.lines.map((l) => l.b ?? 0));
-              return (
-                <div key={g.code} className="rounded-2xl border border-[var(--pub-line)] bg-white p-5">
-                  <div className="flex items-center gap-2">
-                    <span className="size-2.5 rounded-full" style={{ background: g.color }} aria-hidden />
-                    <h3 className="font-semibold">{g.label}</h3>
+      <section>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            <h2 className="font-display text-3xl font-semibold tracking-tight">Where the money goes</h2>
+            <p className="mt-2 text-[var(--pub-ink-2)]">Each health programme&apos;s budget for {r.year}, and how much of it was spent by {period.split("–")[1] ?? "the end of the year"}.</p>
+          </div>
+          <AskButton question={`Which primary health care programmes have spent the least of their ${r.year} budget, and how much is left?`} label="Ask about PHC programmes" />
+        </div>
+
+        {/* Composition: every programme's share of the Board's budget */}
+        <div className="mt-6 flex h-5 w-full gap-[2px] overflow-hidden rounded-[5px]" role="img" aria-label={all.map((p) => `${p.name} ${formatShare(p.b / total)}`).join(", ")}>
+          {all.map((p, i) => (
+            <motion.div
+              key={`${slug}-${p.key}`}
+              title={`${p.name}: ${formatNairaShort(p.b)} (${formatShare(p.b / total)})`}
+              className="h-full"
+              style={{ background: colorFor(p.key, i) }}
+              initial={{ flexGrow: 0.0001 }}
+              animate={{ flexGrow: Math.max(p.b / total, 0.003) }}
+              transition={{ duration: 0.8, delay: 0.04 * i, ease: [0.16, 1, 0.3, 1] }}
+            />
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {all.map((p, i) => {
+            const Icon = ICON[p.key] ?? InfoIcon;
+            const s = share(p);
+            const flag = r.quarter >= 2 && s !== null && s < LOW_SPEND_THRESHOLD;
+            const running = p.key === "personnel" || p.key === "overhead";
+            return (
+              <Reveal key={`${slug}-${p.key}`} delay={Math.min(i, 8) * 0.04}>
+                <div className={cn("flex h-full flex-col gap-3 rounded-2xl border p-5", running ? "border-dashed border-[var(--pub-line)] bg-[var(--pub-canvas)]" : "border-[var(--pub-line)] bg-white")}>
+                  <div className="flex items-start gap-3">
+                    <span className={cn("inline-flex size-10 shrink-0 items-center justify-center rounded-xl", running ? "bg-[#eceeed] text-[#4b5551]" : "bg-[var(--pub-mint)] text-[var(--pub-green-deep)]")}>
+                      <Icon className="size-5" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-semibold leading-snug">{p.name}</p>
+                      <p className="text-xs text-[var(--pub-muted)]">{p.blurb}</p>
+                    </div>
                   </div>
-                  <p className="mt-2 text-2xl font-semibold tabular-nums">
-                    {formatNairaShort(g.total!.y)} <span className="text-sm font-normal text-[var(--pub-muted)]">of {formatNairaShort(g.total!.b)} · {formatShare(share(g.total!))}</span>
-                  </p>
-                  <ul className="mt-4 space-y-3">
-                    {g.lines.slice(0, 8).map((l) => (
-                      <li key={l.code} className="space-y-1">
-                        <div className="flex items-baseline justify-between gap-3 text-xs">
-                          <span className="min-w-0 truncate text-[var(--pub-ink-2)]" title={l.name}>{l.name}</span>
-                          <span className="shrink-0 tabular-nums text-[var(--pub-muted)]">{formatShare(share(l))}</span>
-                        </div>
-                        <BudgetBar budget={l.b} spent={l.y} maxBudget={max} color={g.color} height={8} label={barLabel(l.name, l.b, l.y, share(l))} />
-                      </li>
-                    ))}
-                  </ul>
-                  {g.lines.length > 8 ? <p className="mt-3 text-xs text-[var(--pub-muted)]">+ {g.lines.length - 8} smaller lines</p> : null}
-                  <p className="mt-4 text-xs">
-                    <SourceLink source={source(g.total)} />
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-xl font-semibold tabular-nums">
+                      {formatNairaShort(p.y)} <span className="text-sm font-normal text-[var(--pub-muted)]">of {formatNairaShort(p.b)}</span>
+                    </p>
+                    <SharePill share={s} flag={flag} />
+                  </div>
+                  <BudgetBar budget={p.b} spent={p.y} maxBudget={max} color={running ? "#64706a" : "var(--pub-green)"} label={barLabel(p.name, p.b, p.y, s)} />
+                  <p className="mt-auto text-xs text-[var(--pub-muted)]">
+                    {formatShare(p.b / total)} of the Board&apos;s budget{p.count ? ` · ${p.count} ${p.count === 1 ? "project" : "projects"}` : ""}
                   </p>
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      ) : null}
+              </Reveal>
+            );
+          })}
+        </div>
 
-      {programmes.length ? (
-        <section>
-          <h2 className="font-display text-3xl font-semibold tracking-tight">By health programme</h2>
-          <ul className="mt-6 space-y-3 rounded-2xl border border-[var(--pub-line)] bg-white p-5">
-            {programmes.map((p) => (
-              <li key={p.code} className="grid gap-1.5 sm:grid-cols-[16rem_1fr_11rem] sm:items-center">
-                <span className="text-sm font-semibold">{p.name}</span>
-                <BudgetBar budget={p.b} spent={p.y} maxBudget={programmeMax} label={barLabel(p.name, p.b, p.y, share(p))} />
-                <span className="text-xs tabular-nums text-[var(--pub-muted)] sm:text-right">
-                  {formatNairaShort(p.y)} of {formatNairaShort(p.b)} · {formatShare(share(p))}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {r.projects.length ? (
-        <section>
-          <h2 className="font-display text-3xl font-semibold tracking-tight">Capital projects</h2>
-          <p className="mt-2 max-w-2xl text-[var(--pub-ink-2)]">
-            {r.projects.length} projects in the {r.year} budget. {projectsUnspent} had no spending recorded by {periodLabel(r.year, r.quarter).split("–")[1] ?? "the end of the year"}.
-            Project names appear as printed in the report, which shortens some of them.
+        <div className="mt-6 flex items-start gap-2 rounded-xl border border-[var(--pub-line)] bg-white px-4 py-3 text-sm text-[var(--pub-ink-2)]">
+          <InfoIcon className="mt-0.5 size-4 shrink-0 text-[var(--pub-muted)]" aria-hidden />
+          <p>
+            Programmes are grouped by us from the names of the Board&apos;s capital projects; every amount is the report&apos;s own, and
+            together they add up to the Board&apos;s capital budget. Salaries and running costs are shown separately because the
+            report does not split them by programme.
+            {singleObjective ? ` The report itself codes all of the Board's ${r.year} spending to a single objective, "${singleObjective}".` : ""}{" "}
+            <span className="inline-flex flex-wrap gap-x-4">
+              <SourceLink source={r.projectSource} prefix="Projects" />
+              <SourceLink source={r.econSource} prefix="Totals" />
+            </span>
           </p>
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <label className="relative flex-1 sm:max-w-sm">
-              <span className="sr-only">Search projects</span>
-              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[var(--pub-muted)]" aria-hidden />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search projects, e.g. solar, Sumaila, vehicles"
-                className="h-10 w-full rounded-md border border-[var(--pub-line)] bg-white pl-9 pr-3 text-sm"
-              />
-            </label>
-            <select
-              value={projectSort}
-              onChange={(e) => setProjectSort(e.target.value as "budget" | "share")}
-              className="h-10 rounded-md border border-[var(--pub-line)] bg-white px-3 text-sm"
-              aria-label="Sort projects"
-            >
-              <option value="budget">Largest budget</option>
-              <option value="share">Highest % spent</option>
-            </select>
-          </div>
-          <ul className="mt-4 divide-y divide-[var(--pub-line)] rounded-2xl border border-[var(--pub-line)] bg-white">
-            {projects.map((p, i) => {
-              const s = share(p);
-              return (
-                <li key={`${p.name}-${i}`} className="grid gap-2 px-4 py-3.5 sm:grid-cols-[1fr_14rem_auto] sm:items-center sm:px-5">
-                  <span className="text-sm">{p.name}</span>
-                  <BudgetBar budget={p.b} spent={p.y} maxBudget={projectMax} color={CLASS_COLOR.capital} label={barLabel(p.name, p.b, p.y, s)} />
-                  <span className="flex items-center justify-between gap-3 sm:justify-end">
-                    <span className="text-xs tabular-nums text-[var(--pub-muted)]">
-                      {formatNairaShort(p.y)} of {formatNairaShort(p.b)}
-                    </span>
-                    <SharePill share={s} flag={r.quarter >= 2 && s !== null && s < LOW_SPEND_THRESHOLD} />
-                  </span>
-                </li>
-              );
-            })}
-            {!projects.length ? <li className="px-5 py-6 text-sm text-[var(--pub-muted)]">No project matches &ldquo;{query}&rdquo;.</li> : null}
-          </ul>
-          <p className="mt-2 text-xs">
-            <SourceLink source={source(r.projects[0])} />
-          </p>
-        </section>
-      ) : null}
+        </div>
+      </section>
     </div>
   );
 }
 
-function SourceLinkLight({ source }: { source: Source }) {
-  return (
-    <span className="[&_a]:text-white/80 [&_a]:decoration-white/30 hover:[&_a]:text-white">
-      <SourceLink source={source} />
-    </span>
-  );
+// One hue for programmes (identity comes from the labels, not colour — there are
+// more programmes than a safe categorical palette); salaries and running costs
+// are neutral because they are not programmes.
+function colorFor(key: string, index: number) {
+  if (key === "personnel" || key === "overhead") return index % 2 ? "#8a958f" : "#64706a";
+  return index % 2 ? "#1f8553" : "#167a4a";
 }

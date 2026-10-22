@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRightIcon, BookOpenIcon, MessageCircleQuestionIcon, StethoscopeIcon } from "lucide-react";
+import { AskHeroBox } from "@/components/public/ask-panel";
 import { Explorer } from "@/components/public/explorer";
 import { ClassStrip, HeadlineCards } from "@/components/public/headline";
 import { CLASS_LABEL } from "@/lib/public/labels";
@@ -75,6 +76,9 @@ export default async function PublicHomePage() {
               Official figures from the Kano State {latest.title.replace(/^Kano State /, "")}, covering every health ministry,
               department and agency. Each number links to the page of the report it comes from.
             </p>
+          </Reveal>
+          <Reveal delay={0.1} className="mt-7 max-w-3xl">
+            <AskHeroBox />
           </Reveal>
           <div className="mt-10">
             <HeadlineCards
@@ -198,7 +202,7 @@ export default async function PublicHomePage() {
 
         <div className="mt-20 grid gap-4 md:grid-cols-3">
           <Teaser href="/phc" icon={<StethoscopeIcon className="size-5" />} title="Primary health care" body="PHC Board spending by programme, by type and by named capital project." />
-          <Teaser href="/ask" icon={<MessageCircleQuestionIcon className="size-5" />} title="Ask the data" body="Ask a question in English or Hausa and get an answer, with a chart, from the published figures." />
+          <Teaser href="/ask" icon={<MessageCircleQuestionIcon className="size-5" />} title="Ask the data" body="Ask a question in English or Hausa and get an answer, with a chart and sources, from the published figures." />
           <Teaser href="/reports" icon={<BookOpenIcon className="size-5" />} title="Every report since 2019" body="Browse and download all of the State's quarterly Budget Performance Reports." />
         </div>
       </Shell>
