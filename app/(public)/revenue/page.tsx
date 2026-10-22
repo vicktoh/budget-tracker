@@ -97,7 +97,6 @@ export default async function RevenuePage() {
           source={sector?.source ?? null}
           composition={parts(budgetLines)}
           mdas={mdas}
-          compositionSource={REVENUE_BUDGETS[year]?.source.replace(" (budget lines)", "") ?? null}
           contributors={contributorsBySource(budgetLines, (code) => mdaNames.get(code) ?? code)}
         />
       </div>

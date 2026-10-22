@@ -42,7 +42,6 @@ export function RevenueView({
   source,
   composition,
   mdas,
-  compositionSource,
   contributors,
 }: {
   year: number;
@@ -53,7 +52,6 @@ export function RevenueView({
   source: Source | null;
   composition: RevenuePart[];
   mdas: RevenueMda[];
-  compositionSource: string | null;
   contributors: Partial<Record<RevenueSourceKey, Contributor[]>>;
 }) {
   const total = composition.reduce((a, p) => a + p.amount, 0);
@@ -130,10 +128,9 @@ export function RevenueView({
       <div className="flex items-start gap-2 rounded-xl border border-[var(--pub-line)] bg-white px-4 py-3 text-sm text-[var(--pub-ink-2)]">
         <InfoIcon className="mt-0.5 size-4 shrink-0 text-[var(--pub-muted)]" aria-hidden />
         <p>
-          This page covers money health MDAs receive directly — fees, grants and transfers. Most of their spending is paid from the
-          State&apos;s general budget, which is not shown here. The split by source comes from the{" "}
-          {compositionSource ?? "approved revenue budget"}; amounts collected come from the Budget Performance Report, which gives
-          one total per MDA and does not split collections by source.
+          This page shows money that health MDAs receive directly, such as fees, grants and contributions. Most of their spending is
+          paid from the State&apos;s main budget, which is not shown here. Expected amounts come from the approved budget; amounts
+          collected come from the State&apos;s quarterly budget reports, which give one total for each MDA.
         </p>
       </div>
     </div>
