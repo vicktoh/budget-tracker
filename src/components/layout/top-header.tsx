@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { ChevronsUpDownIcon, LogOutIcon, UserCogIcon } from "lucide-react";
+import { ChevronsUpDownIcon, GlobeIcon, LogOutIcon, UserCogIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -102,6 +102,10 @@ export function TopHeader({ profile }: { profile: AppProfile }) {
           <DropdownMenuItem onClick={() => (window.location.href = "/settings")}>
             <UserCogIcon aria-hidden="true" className="size-4" />
             Account settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => window.open("/?view=public", "_blank", "noopener")}>
+            <GlobeIcon aria-hidden="true" className="size-4" />
+            View public site
           </DropdownMenuItem>
           <DropdownMenuItem destructive onClick={handleSignOut}>
             <LogOutIcon aria-hidden="true" className="size-4" />

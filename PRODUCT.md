@@ -31,3 +31,14 @@ Avoid decorative SaaS dashboards, oversized hero metrics, ceremonial government 
 ## Accessibility & Inclusion
 
 Use semantic controls, visible keyboard focus, accessible names and titles, sufficient text and status contrast, and redundant non-color status cues. Respect reduced-motion preferences, support long institutional labels without clipping, and keep core reporting and data-entry workflows usable with keyboard and assistive technology.
+
+## Public site register
+
+kanohealthbudget.org also has a public face for citizens, journalists, civil
+society and partners (see `docs/public-site.md`). It is a separate register:
+editorial and data-journalism rather than operations. Confident headline numbers,
+explanatory motion and a display serif are allowed there; the anti-references
+above still apply to the staff workspace. The public voice is descriptive and
+credited to the Kano State Government: rule-based flags (below 25% of budget
+spent), never adjectives, blame or praise. Official, published quarters only;
+every figure links to the report page it comes from.

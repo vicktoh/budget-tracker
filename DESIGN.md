@@ -60,3 +60,23 @@ Forms should use sectioned single pages rather than multi-step wizards for v1. R
 Tables and dashboards should keep filters prominent and consistent. Use summary metric cards sparingly for totals, pending review, budget utilization, warnings, and export readiness. Detailed tables remain first-class because traceability matters as much as visualization.
 
 Spacing should be practical and consistent: compact table rows, comfortable form sections, and restrained page margins. Avoid oversized empty states, decorative backgrounds, and marketing-style composition. The app should feel like a durable daily operations tool for official health finance reporting.
+
+## 6. Public site (kanohealthbudget.org)
+
+The public pages (`app/(public)`, `src/components/public`) share the palette but
+use an editorial register. Tokens live under `.public-site` in `app/globals.css`.
+
+- **Type:** Source Serif 4 (`font-display`) for headlines and big numbers; Inter
+  with tabular numerals for everything else.
+- **Core mark:** `BudgetBar` — the track length is the budget (relative to the
+  largest shown), the fill is what has been spent; the figures are always printed
+  beside it. Reuse it rather than inventing new bar styles.
+- **Economic classes** (fixed order, validated for colour-blind separation):
+  personnel `#167a4a`, overhead `#2a78d6`, capital `#c0751a`, other `#9b4f96`.
+  Always labelled; never colour alone.
+- **Years** use a one-hue green ordinal ramp, oldest light → newest dark.
+- **Flags:** amber pill for below 25% spent (from Q2), with text, never red.
+- **Motion:** count-ups on first view, bars growing into place and gliding between
+  filter states, rows re-ordering with layout animation. Everything respects
+  `prefers-reduced-motion` (`PublicMotion`), and server HTML shows final values.
+- Phone first: every section stacks to one column at 375px; controls wrap.

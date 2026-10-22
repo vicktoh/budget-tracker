@@ -4,7 +4,22 @@
     {
       "name": "dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "dev-public-fixture",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "PUBLIC_DATASET_FIXTURE=tmp/bir-dataset.json",
+        "npm",
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
     }

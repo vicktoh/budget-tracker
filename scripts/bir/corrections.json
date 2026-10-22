@@ -1,0 +1,10 @@
+{
+  "2025-Q2": [
+    {"kind": "exp_admin", "class": "overhead",
+     "reason": "The BIR's overhead-by-MDA table (Table 6) skips the health MDAs. Health overhead is worked out from the BIR's own figures: total − personnel − capital − other."}
+  ],
+  "2023-Q4": [
+    {"kind": "exp_function", "class": "capital",
+     "reason": "The BIR's capital-by-function table (Table 13) uses an older programme code list instead of function codes. Capital by health function is worked out from the BIR's own figures: total − personnel − overhead − other."}
+  ]
+}

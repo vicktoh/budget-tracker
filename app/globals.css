@@ -163,3 +163,44 @@
     break-inside: avoid;
   }
 }
+
+/* Public site (kanohealthbudget.org): an editorial, data-journalism register on
+   the same green/earth palette as the staff app. See DESIGN.md § Public site. */
+.public-site {
+  --pub-canvas: #f6f8f4;
+  --pub-surface: #ffffff;
+  --pub-ink: #14201a;
+  --pub-ink-2: #3f4b44;
+  --pub-muted: #66726b;
+  --pub-line: #dce4dd;
+  --pub-track: #e8eee9;
+  --pub-green: #167a4a;
+  --pub-green-deep: #0f5132;
+  --pub-mint: #e7f4ec;
+  --pub-earth: #8a5a2b;
+  --pub-clay: #f3e9dc;
+  --pub-flag: #9a5b00;
+  --pub-flag-bg: #fff4dc;
+  /* Economic classes, fixed order (validated: adjacent CVD ΔE ≥ 8, all ≥ 3:1). */
+  --pub-personnel: #167a4a;
+  --pub-overhead: #2a78d6;
+  --pub-capital: #c0751a;
+  --pub-other: #9b4f96;
+  /* Years, ordinal one-hue ramp, oldest → newest. */
+  --pub-year-1: #86c29f;
+  --pub-year-2: #4ea677;
+  --pub-year-3: #1f8553;
+  --pub-year-4: #0f5132;
+  background: var(--pub-canvas);
+  color: var(--pub-ink);
+  font-feature-settings: "tnum" 1, "cv11" 1;
+}
+
+.public-site .font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+  font-feature-settings: normal;
+}
+
+.public-site ::selection {
+  background: #cfe9d9;
+}

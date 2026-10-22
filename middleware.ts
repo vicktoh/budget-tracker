@@ -36,7 +36,18 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // The root is the public site; signed-in staff go straight to their workspace
+  // unless they ask for the public view (/?view=public).
+  if (user && request.nextUrl.pathname === "/" && request.nextUrl.searchParams.get("view") !== "public") {
+    const redirect = NextResponse.redirect(new URL("/mda", request.url));
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  }
+
   return response;
 }
 

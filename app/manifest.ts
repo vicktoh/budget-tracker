@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "KHFF Dashboard",
     description:
       "Capture funding and expenditure entries, discuss records, and track health-financing flows — works offline and syncs on reconnect.",
-    start_url: "/",
+    start_url: "/mda",
     scope: "/",
     display: "standalone",
     orientation: "portrait-primary",
