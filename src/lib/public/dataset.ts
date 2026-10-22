@@ -93,3 +93,43 @@ export function reportPdfUrl(report: Pick<PublicReport, "storage_path">, page?: 
   const url = `${base}/storage/v1/object/public/bir-reports/${encodeURIComponent(report.storage_path)}`;
   return page ? `${url}#page=${page}` : url;
 }
+
+export type PublicBrief = {
+  id: string;
+  kind: string;
+  fiscal_year: number;
+  quarter: number | null;
+  title: string;
+  publisher: string | null;
+  storage_path: string;
+  file_bytes: number | null;
+  published_at: string;
+};
+
+const cachedBriefs = unstable_cache(
+  async (): Promise<PublicBrief[]> => {
+    const { data, error } = await anonClient()
+      .from("public_briefs")
+      .select("id, kind, fiscal_year, quarter, title, publisher, storage_path, file_bytes, published_at")
+      .order("fiscal_year", { ascending: false })
+      .order("quarter", { ascending: false, nullsFirst: true });
+    if (error) throw error;
+    return (data ?? []) as PublicBrief[];
+  },
+  ["public-briefs-v1"],
+  { tags: [PUBLIC_DATASET_TAG], revalidate: 3600 },
+);
+
+/** Briefs an admin has published to the public site (e.g. the Accountability Brief). */
+export async function loadPublicBriefs(): Promise<PublicBrief[]> {
+  // The Reports page must still render the State's reports if this list cannot load.
+  return cachedBriefs().catch((error) => {
+    console.error("Could not load public briefs:", error);
+    return [];
+  });
+}
+
+export function briefPdfUrl(brief: Pick<PublicBrief, "storage_path">): string | null {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return base ? `${base}/storage/v1/object/public/public-briefs/${encodeURIComponent(brief.storage_path)}` : null;
+}

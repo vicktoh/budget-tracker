@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2Icon, ChevronDownIcon, DownloadIcon, ExternalLinkIcon, FileTextIcon } from "lucide-react";
+import { CheckCircle2Icon, ChevronDownIcon, DownloadIcon, ExternalLinkIcon, FileTextIcon, MegaphoneIcon } from "lucide-react";
 import { PageHero } from "@/components/public/page-hero";
-import { loadPublicDataset } from "@/lib/public/dataset";
+import { loadPublicBriefs, loadPublicDataset, type PublicBrief } from "@/lib/public/dataset";
 import type { PublicReport } from "@/lib/public/types";
 
 export const revalidate = 3600;
@@ -23,7 +23,7 @@ function size(bytes: number | null) {
 }
 
 export default async function ReportsPage() {
-  const ds = await loadPublicDataset();
+  const [ds, briefs] = await Promise.all([loadPublicDataset(), loadPublicBriefs()]);
   const reports = [...ds.reports].sort((a, b) => b.fiscal_year - a.fiscal_year || b.quarter - a.quarter);
   const years = [...new Set(reports.map((r) => r.fiscal_year))];
 
@@ -39,7 +39,22 @@ export default async function ReportsPage() {
       </PageHero>
     <div className="mx-auto max-w-6xl px-4 pb-14 sm:px-6">
 
-      <div className="mt-10 space-y-4">
+      {briefs.length ? (
+        <section id="briefs" className="mt-10 scroll-mt-24" aria-labelledby="briefs-title">
+          <h2 id="briefs-title" className="font-display text-3xl text-[var(--pub-navy)]">Briefs and analysis</h2>
+          <p className="mt-2 max-w-2xl text-[var(--pub-ink-2)]">
+            Plain-language briefs on what the official figures show, with recommendations and what to watch next.
+          </p>
+          <ul className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {briefs.map((b) => (
+              <BriefCard key={b.id} brief={b} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <h2 className="font-display mt-14 text-3xl text-[var(--pub-navy)]">The State&apos;s quarterly reports</h2>
+      <div className="mt-5 space-y-4">
         {years.map((year, index) => {
           const yearReports = reports.filter((r) => r.fiscal_year === year);
           return (
@@ -112,5 +127,40 @@ export default async function ReportsPage() {
       </div>
     </div>
     </>
+  );
+}
+
+const QUARTER_MONTHS = ["", "January–March", "April–June", "July–September", "October–December"];
+
+function BriefCard({ brief }: { brief: PublicBrief }) {
+  const period = brief.quarter ? `Q${brief.quarter} ${brief.fiscal_year} · ${QUARTER_MONTHS[brief.quarter]}` : `Full year ${brief.fiscal_year}`;
+  return (
+    <li className="relative flex flex-col gap-3 overflow-hidden rounded-3xl bg-[var(--pub-navy)] p-5 text-white">
+      <span aria-hidden className="pointer-events-none absolute -right-10 -top-10 size-36 rounded-full bg-white/10" />
+      <div className="relative flex items-start gap-3">
+        <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--pub-accent)] text-[var(--pub-navy)]">
+          <MegaphoneIcon className="size-5" aria-hidden />
+        </span>
+        <div className="min-w-0">
+          <p className="font-display text-2xl leading-tight">{brief.title}</p>
+          <p className="text-sm text-[var(--pub-aqua)]">{period}</p>
+        </div>
+      </div>
+      <p className="relative text-sm text-white/80">
+        Findings, plain-language interpretation, recommendations and a watchlist{brief.publisher ? `, prepared by ${brief.publisher}` : ""}.
+      </p>
+      <div className="relative mt-auto flex flex-wrap items-center gap-3 pt-1">
+        <Link
+          href={`/reports/briefs/${brief.id}/pdf`}
+          prefetch={false}
+          className="inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--pub-navy)] hover:bg-[var(--pub-aqua)]"
+        >
+          <DownloadIcon className="size-4" aria-hidden /> Download PDF
+        </Link>
+        <span className="text-xs text-white/70">
+          Published {new Date(brief.published_at).toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" })}
+        </span>
+      </div>
+    </li>
   );
 }

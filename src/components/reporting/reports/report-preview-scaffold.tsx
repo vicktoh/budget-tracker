@@ -67,7 +67,16 @@ export function ReportPreviewScaffold({
   compactPeriod?: boolean;
   /** Extra toolbar controls rendered before Download (e.g. publisher switch). */
   toolbarExtras?: React.ReactNode;
-  renderToolbarExtras?: (context: { fiscalYear: number | null; quarter: ReportQuarter | null; loading: boolean }) => React.ReactNode;
+  renderToolbarExtras?: (context: {
+    fiscalYear: number | null;
+    quarter: ReportQuarter | null;
+    loading: boolean;
+    periodLabel: string;
+    periodSlug: string;
+    /** The captured document region (what Download PDF exports). */
+    capture: () => HTMLElement | null;
+    hasData: boolean;
+  }) => React.ReactNode;
   /** Suppress the built-in canvas Download button (report supplies its own). */
   hideDownload?: boolean;
   children: (props: ReportBodyProps) => React.ReactNode;
@@ -141,7 +150,15 @@ export function ReportPreviewScaffold({
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
           {toolbarExtras}
-          {renderToolbarExtras?.({ fiscalYear, quarter, loading })}
+          {renderToolbarExtras?.({
+            fiscalYear,
+            quarter,
+            loading,
+            periodLabel: label,
+            periodSlug: slug,
+            capture: () => reportRef.current,
+            hasData: Boolean(dataset),
+          })}
           {hideDownload ? null : (
             <Button
               type="button"

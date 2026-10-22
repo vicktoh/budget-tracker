@@ -14,6 +14,7 @@ import {
   type ReportTableColumn,
 } from "@/components/reporting/reports/report-table";
 import { PublisherSwitch } from "@/components/reporting/reports/cso/publisher-switch";
+import { PublishBriefButton } from "@/components/reporting/reports/cso/publish-brief";
 import { useCsoNarratives } from "@/components/reporting/reports/cso/use-cso-narratives";
 import { ChartCard } from "@/components/reporting/chart-card";
 import { ReportStatStrip } from "@/components/reporting/report-stat-strip";
@@ -104,6 +105,17 @@ export function CsoReportRoute() {
           </Button>
         </>
       }
+      renderToolbarExtras={({ fiscalYear, quarter, loading, periodLabel, periodSlug, capture, hasData }) => (
+        <PublishBriefButton
+          fiscalYear={fiscalYear}
+          quarter={quarter}
+          periodLabel={periodLabel}
+          periodSlug={periodSlug}
+          publisher={publisher.name}
+          capture={capture}
+          disabled={loading || !hasData || editMode}
+        />
+      )}
     >
       {(props) => (
         <CsoReportBody {...props} publisher={publisher} editMode={editMode} />

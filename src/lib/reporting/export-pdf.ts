@@ -16,6 +16,15 @@ export async function exportElementToPdf(
   element: HTMLElement,
   filename: string,
 ): Promise<void> {
+  (await renderElementToPdf(element)).save(filename);
+}
+
+/** The same capture as a PDF Blob, for uploading (e.g. publishing a brief). */
+export async function exportElementToPdfBlob(element: HTMLElement): Promise<Blob> {
+  return (await renderElementToPdf(element)).output("blob");
+}
+
+async function renderElementToPdf(element: HTMLElement): Promise<jsPDF> {
   const background =
     window.getComputedStyle(document.body).backgroundColor || "#ffffff";
 
@@ -77,5 +86,5 @@ export async function exportElementToPdf(
     );
   }
 
-  pdf.save(filename);
+  return pdf;
 }

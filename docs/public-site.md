@@ -115,3 +115,14 @@ npx tsx scripts/public/export-revenue-budgets.ts <year>
 
 then add the new files to `OTHER_MDA_BUDGETS` (app/(public)/phc/page.tsx) and
 `REVENUE_BUDGETS` (app/(public)/revenue/page.tsx).
+
+## Briefs (Accountability Brief)
+
+Admins publish the civil-society Accountability Brief from
+`/admin/reports/cso` → **Publish to public site** (republish / remove there
+too). It captures the brief for the selected period as a PDF into the public
+`public-briefs` bucket and records it in `public_briefs`; the public Reports
+page lists it under "Briefs and analysis". The database trigger
+`enforce_public_brief_period` refuses any period that is not officially
+published (a quarter needs its BIR publication; a full-year brief needs all
+four), so provisional quarters cannot go public this way.
