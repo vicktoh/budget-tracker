@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PhcView, type PhcProgrammeRow, type PhcReport } from "@/components/public/phc-view";
 import { PageHero } from "@/components/public/page-hero";
 import { loadPublicDataset } from "@/lib/public/dataset";
-import { publishedReports, titleCase } from "@/lib/public/model";
+import { publishedReports } from "@/lib/public/model";
 import {
   CROSS_MDA_PROGRAMMES,
   PHC_PROGRAMMES,
@@ -76,7 +76,6 @@ export default async function PhcPage() {
       programmes: all.filter((g) => CROSS_MDA_PROGRAMMES.includes(g.key as PhcProgrammeKey)).sort((a, b) => total(b) - total(a)),
       otherBudgetsSource: other ? other.source : null,
       passThrough,
-      officialObjectives: figs.filter((f) => f.lens === "phc_programme" && f.code?.length === 4).map((o) => titleCase(o.name)),
     });
   }
 

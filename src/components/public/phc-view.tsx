@@ -42,7 +42,6 @@ export type PhcReport = {
   programmes: PhcProgrammeRow[];
   otherBudgetsSource: string | null;
   passThrough: number;
-  officialObjectives: string[];
 };
 
 const ICON: Record<string, LucideIcon> = {
@@ -70,7 +69,6 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
   const r = reports.find((x) => x.slug === slug)!;
   const period = periodLabel(r.year, r.quarter);
   const periodEndMonth = period.split("–")[1] ?? `the end of ${r.year}`;
-  const singleObjective = r.officialObjectives.length === 1 ? r.officialObjectives[0] : null;
 
   return (
     <div className="space-y-14">
@@ -117,20 +115,10 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
 
       <div className="flex items-start gap-2 rounded-xl border border-[var(--pub-line)] bg-white px-4 py-3 text-sm text-[var(--pub-ink-2)]">
         <InfoIcon className="mt-0.5 size-4 shrink-0 text-[var(--pub-muted)]" aria-hidden />
-        <div className="space-y-1.5">
-          <p>
-            Programmes are grouped by us from project names. The PHC Board&apos;s budget and spending come from the State&apos;s Budget
-            Performance Report{r.otherBudgetsSource ? `; other MDAs' budgets from the ${r.otherBudgetsSource.replace(" (budget lines)", "")}` : ""}.
-            Spending by programme is only reported for the PHC Board, so other MDAs show budgets only.
-            {singleObjective ? ` The report itself codes all of the Board's ${r.year} spending to a single objective, "${singleObjective}".` : ""}
-          </p>
-          {r.passThrough > 0 ? (
-            <p>
-              Not counted: {formatNairaShort(r.passThrough)} that the Kano State Health Trust Fund (KHETFUND) passes on to these
-              programmes as remittances — counting it as well would count the same money twice.
-            </p>
-          ) : null}
-        </div>
+        <p>
+          Programmes are grouped by name from the approved budget and the State&apos;s quarterly reports. Spending is shown only for
+          the PHC Board, the one agency that reports spending by programme{r.passThrough > 0 ? "; Health Trust Fund transfers to these programmes are not counted twice" : ""}.
+        </p>
       </div>
     </div>
   );
