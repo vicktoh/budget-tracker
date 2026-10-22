@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": 'attachment; filename="kano-health-budget.csv"',
-      "X-Licence": licence,
+      // Header values must be ASCII; the full credit line is in the JSON body and on /data.
+      "X-Licence": "CC-BY-4.0",
     },
   });
 }
