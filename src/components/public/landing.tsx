@@ -202,24 +202,26 @@ function ClassIcon({ cls }: { cls: EconClass }) {
 }
 
 // ---------------------------------------------------------------------------
-// Who holds the budget: top MDAs with one simple toggle.
+// Who holds the budget: MDAs ranked by the share of their budget spent.
 
 export type MdaBar = { code: string; name: string; short: string; budget: number; spent: number; share: number | null };
 
+// Small budgets swing to 0% or 100%+ on a single payment; keep them out of the rankings.
+const RANKING_MIN_BUDGET = 1e8;
+
 export function TopMdas({ rows, quarter }: { rows: MdaBar[]; quarter: number }) {
-  const [mode, setMode] = useState<"largest" | "lowest">("largest");
-  const list =
-    mode === "largest"
-      ? [...rows].sort((a, b) => b.budget - a.budget).slice(0, 6)
-      : [...rows].filter((r) => r.budget >= 1e8).sort((a, b) => (a.share ?? 0) - (b.share ?? 0)).slice(0, 6);
-  const max = Math.max(0, ...list.map((r) => r.budget));
+  const [mode, setMode] = useState<"highest" | "lowest">("highest");
+  const eligible = rows.filter((r) => r.budget >= RANKING_MIN_BUDGET && r.share !== null);
+  const list = [...eligible]
+    .sort((a, b) => (mode === "highest" ? (b.share ?? 0) - (a.share ?? 0) : (a.share ?? 0) - (b.share ?? 0)))
+    .slice(0, 6);
   return (
     <div className="rounded-3xl border border-[var(--pub-line)] bg-white p-5 sm:p-6">
-      <div className="mb-5 inline-flex rounded-full bg-[var(--pub-sand)] p-1" role="tablist" aria-label="Which MDAs">
+      <div className="mb-5 inline-flex rounded-full bg-[var(--pub-sand)] p-1" role="tablist" aria-label="Rank MDAs by share of budget spent">
         {(
           [
-            ["largest", "Largest budgets"],
-            ["lowest", "Lowest share spent"],
+            ["highest", "Highest % spent"],
+            ["lowest", "Lowest % spent"],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -236,12 +238,13 @@ export function TopMdas({ rows, quarter }: { rows: MdaBar[]; quarter: number }) 
       </div>
       <ul className="space-y-4">
         {list.map((r, i) => (
-          <motion.li key={`${mode}-${r.code}`} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="grid gap-1.5 sm:grid-cols-[13rem_1fr_auto] sm:items-center sm:gap-4">
+          <motion.li key={`${mode}-${r.code}`} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="grid gap-1.5 sm:grid-cols-[13rem_1fr_14.5rem] sm:items-center sm:gap-4">
             <div className="min-w-0">
               <p className="truncate font-semibold">{r.short}</p>
               <p className="truncate text-xs text-[var(--pub-muted)]">{r.name}</p>
             </div>
-            <BudgetBar budget={r.budget} spent={r.spent} maxBudget={max} height={14} color="var(--pub-brand)" label={barLabel(r.name, r.budget, r.spent, r.share)} />
+            {/* Each bar is the MDA's own budget, so bars compare performance, not size. */}
+            <BudgetBar budget={r.budget} spent={r.spent} maxBudget={r.budget} height={14} color="var(--pub-brand)" label={barLabel(r.name, r.budget, r.spent, r.share)} />
             <div className="flex items-center justify-between gap-3 sm:justify-end">
               <span className="text-sm tabular-nums text-[var(--pub-ink-2)]">
                 {formatNairaShort(r.spent)} <span className="text-[var(--pub-muted)]">of {formatNairaShort(r.budget)}</span>
@@ -252,7 +255,9 @@ export function TopMdas({ rows, quarter }: { rows: MdaBar[]; quarter: number }) 
         ))}
       </ul>
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--pub-line)] pt-5">
-        <p className="text-sm text-[var(--pub-muted)]">Bar length is the budget; the filled part is what has been spent.</p>
+        <p className="text-sm text-[var(--pub-muted)]">
+          Each bar is one MDA&apos;s own budget; the filled part is the share it has spent. MDAs with budgets of ₦100m or more.
+        </p>
         <Link href="/explore" className="inline-flex items-center gap-2 rounded-full bg-[var(--pub-brand)] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[var(--pub-brand-deep)]">
           Explore all MDAs, programmes and years <ArrowRightIcon className="size-4" />
         </Link>
