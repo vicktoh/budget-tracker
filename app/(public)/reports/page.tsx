@@ -43,14 +43,12 @@ export default async function ReportsPage() {
       <div className="mt-10 space-y-4">
         {years.map((year, index) => {
           const yearReports = reports.filter((r) => r.fiscal_year === year);
-          const withFigures = yearReports.filter((r) => r.data_status === "published").length;
           return (
           <details key={year} open={index === 0} className="group rounded-3xl border border-[var(--pub-line)] bg-white/60 open:bg-transparent open:border-transparent">
             <summary className="flex cursor-pointer list-none items-center gap-4 rounded-3xl px-5 py-4 transition hover:bg-white [&::-webkit-details-marker]:hidden">
               <h2 className="font-display text-3xl text-[var(--pub-navy)]">{year}</h2>
               <span className="text-sm text-[var(--pub-muted)]">
                 {yearReports.length} {yearReports.length === 1 ? "report" : "reports"}
-                {withFigures ? ` · ${withFigures} with figures on this site` : ""}
               </span>
               <ChevronDownIcon className="ml-auto size-5 text-[var(--pub-muted)] transition group-open:rotate-180" aria-hidden />
             </summary>
