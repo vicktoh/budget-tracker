@@ -7,6 +7,10 @@ import type { PublicReport } from "@/lib/public/types";
 
 export const revalidate = 3600;
 
+// "Briefs and analysis" is hidden until it is decided which reports belong
+// there. Published briefs stay in public_briefs; flip this to list them again.
+const SHOW_BRIEFS = false;
+
 export const metadata: Metadata = {
   title: "Budget Performance Reports",
   description: "Every Kano State quarterly Budget Performance Report since 2019, to browse and download.",
@@ -23,7 +27,7 @@ function size(bytes: number | null) {
 }
 
 export default async function ReportsPage() {
-  const [ds, briefs] = await Promise.all([loadPublicDataset(), loadPublicBriefs()]);
+  const [ds, briefs] = await Promise.all([loadPublicDataset(), SHOW_BRIEFS ? loadPublicBriefs() : Promise.resolve([] as PublicBrief[])]);
   const reports = [...ds.reports].sort((a, b) => b.fiscal_year - a.fiscal_year || b.quarter - a.quarter);
   const years = [...new Set(reports.map((r) => r.fiscal_year))];
 
@@ -53,8 +57,8 @@ export default async function ReportsPage() {
         </section>
       ) : null}
 
-      <h2 className="font-display mt-14 text-3xl text-[var(--pub-navy)]">The State&apos;s quarterly reports</h2>
-      <div className="mt-5 space-y-4">
+      {briefs.length ? <h2 className="font-display mt-14 text-3xl text-[var(--pub-navy)]">The State&apos;s quarterly reports</h2> : null}
+      <div className={briefs.length ? "mt-5 space-y-4" : "mt-10 space-y-4"}>
         {years.map((year, index) => {
           const yearReports = reports.filter((r) => r.fiscal_year === year);
           return (
