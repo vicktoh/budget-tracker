@@ -194,11 +194,15 @@
   --pub-overhead: #ff7a2e;
   --pub-capital: #14b0c8;
   --pub-other: #e14242;
-  /* Years, ordinal one-hue teal ramp, oldest → newest. */
-  --pub-year-1: #5fc2cf;
-  --pub-year-2: #1fa6ba;
-  --pub-year-3: #00839a;
-  --pub-year-4: #0b5566;
+  /* Years, six distinct hues, oldest → newest; the newest two are IBP teal and
+     orange. Validated all-pairs (dots can sit side by side): CVD ΔE ≥ 10.1,
+     normal-vision ΔE ≥ 19. The legend and hover labels name every year. */
+  --pub-year-1: #cc8bf3;
+  --pub-year-2: #65c18b;
+  --pub-year-3: #9c4340;
+  --pub-year-4: #7347af;
+  --pub-year-5: #00879b;
+  --pub-year-6: #ff7a2e;
   background: var(--pub-canvas);
   color: var(--pub-ink);
   font-feature-settings: "tnum" 1, "cv11" 1;
@@ -213,6 +217,34 @@
 
 .public-site ::selection {
   background: #bfe9ee;
+}
+
+/* Ask AI draws tables with renderTable; a markdown table the model still
+   writes gets the same quiet look. */
+.public-site [data-streamdown="table-wrapper"] {
+  border-color: var(--pub-line);
+  background: var(--pub-surface);
+  border-radius: 0.75rem;
+}
+.public-site [data-streamdown="table"] {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.public-site [data-streamdown="table-header"] {
+  background: var(--pub-canvas);
+}
+.public-site [data-streamdown="table-header-cell"] {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--pub-ink-2);
+  padding: 0.5rem 0.75rem;
+}
+.public-site [data-streamdown="table-cell"] {
+  padding: 0.5rem 0.75rem;
+}
+.public-site [data-streamdown="table"],
+.public-site [data-streamdown="table"] > * {
+  border-color: var(--pub-line);
 }
 
 @keyframes pub-pulse {

@@ -20,6 +20,7 @@ import {
   periodLabel,
   quarterOnlyLabel,
   samePointHistory,
+  yearsAvailable,
   sectorValue,
   valueAt,
   type ExplorerData,
@@ -40,7 +41,7 @@ const LENS_LABEL: Record<ExplorerLens, { title: string; noun: string; plural: st
   function: { title: "Functions", noun: "function", plural: "functions", hint: "What the money pays for: hospitals, public health, medicines…" },
 };
 
-const YEAR_COLORS = ["var(--pub-year-1)", "var(--pub-year-2)", "var(--pub-year-3)", "var(--pub-year-4)"];
+const YEAR_COLORS = [1, 2, 3, 4, 5, 6].map((n) => `var(--pub-year-${n})`);
 
 export function Explorer({ data, initialYear, initialQuarter }: { data: ExplorerData; initialYear: number; initialQuarter: number }) {
   const periods = useMemo(() => availablePeriods(data), [data]);
@@ -55,7 +56,9 @@ export function Explorer({ data, initialYear, initialQuarter }: { data: Explorer
   const [open, setOpen] = useState<string | null>(null);
 
   const quarters = periods.find((p) => p.year === year)?.quarters ?? [];
-  const lensOk = lensAvailable(data, year, quarter, lens);
+  // Breakdown needs the chosen year; Compare years needs at least one year with figures at that point.
+  const lensUsable = (l: ExplorerLens) => (mode === "years" ? yearsAvailable(data, quarter, l).length > 0 : lensAvailable(data, year, quarter, l));
+  const lensOk = lensUsable(lens);
 
   function chooseYear(next: number) {
     setYear(next);
@@ -95,14 +98,18 @@ export function Explorer({ data, initialYear, initialQuarter }: { data: Explorer
             options={(Object.keys(LENS_LABEL) as ExplorerLens[]).map((l) => ({
               value: l,
               label: LENS_LABEL[l].title,
-              disabled: !lensAvailable(data, year, quarter, l),
-              title: !lensAvailable(data, year, quarter, l) ? "Programme tables start in the 2025 reports" : LENS_LABEL[l].hint,
+              disabled: !lensUsable(l),
+              title: !lensUsable(l) ? "Programme tables start in the 2025 reports" : LENS_LABEL[l].hint,
             }))}
           />
           <Segmented
             label="Show"
             value={mode}
-            onChange={setMode}
+            onChange={(next) => {
+              setMode(next);
+              // Back to a breakdown: snap to the chosen year's latest published point if needed.
+              if (next === "breakdown" && !quarters.includes(quarter)) setQuarter(quarters[quarters.length - 1] ?? 4);
+            }}
             options={[
               { value: "breakdown", label: "Breakdown" },
               { value: "years", label: "Compare years" },
@@ -192,7 +199,11 @@ export function Explorer({ data, initialYear, initialQuarter }: { data: Explorer
       </div>
 
       {!lensOk ? (
-        <Notice>The {year} reports do not include a {LENS_LABEL[lens].noun} breakdown. Programme tables start in 2025.</Notice>
+        <Notice>
+          {mode === "years"
+            ? `No published year has a ${LENS_LABEL[lens].noun} breakdown at this point. Programme tables start in 2025.`
+            : `The ${year} reports do not include a ${LENS_LABEL[lens].noun} breakdown. Programme tables start in 2025.`}
+        </Notice>
       ) : mode === "breakdown" ? (
         <section aria-live="polite" className="space-y-4">
           <div className="flex flex-col gap-3 rounded-2xl bg-[var(--pub-ink)] p-5 text-white sm:flex-row sm:items-end sm:justify-between">
@@ -211,7 +222,7 @@ export function Explorer({ data, initialYear, initialQuarter }: { data: Explorer
           </div>
           {sector?.derived ? <Notice>{sector.derived}</Notice> : null}
           {quarterOnlyMissing ? (
-            <Notice>Spending within this quarter alone is not printed for every row; those rows show &ldquo;—&rdquo;.</Notice>
+            <Notice>Spending within this quarter alone is not printed for every row; those rows show &ldquo;n/a&rdquo;.</Notice>
           ) : null}
 
           <div className="flex items-center justify-between gap-3 text-sm">
@@ -404,8 +415,11 @@ function RowDetail({
 
 /** One row per entity; one dot per year at the same point in the year. */
 function YearsCompare({ data, lens, cls, quarter, metric }: { data: ExplorerData; lens: ExplorerLens; cls: EconClass; quarter: number; metric: Metric }) {
-  const years = [...new Set(data.reports.map((r) => r.year))].sort((a, b) => a - b);
-  const colorFor = (y: number) => YEAR_COLORS[Math.max(0, YEAR_COLORS.length - (years.length - years.indexOf(y)))];
+  const allYears = [...new Set(data.reports.map((r) => r.year))].sort((a, b) => a - b);
+  // Only years with published figures at this point (2026 has no Full year yet).
+  const years = yearsAvailable(data, quarter, lens);
+  // Each year keeps its colour whichever years are shown.
+  const colorFor = (y: number) => YEAR_COLORS[Math.max(0, YEAR_COLORS.length - (allYears.length - allYears.indexOf(y)))];
   const entities = [
     { code: SECTOR_CODE[lens], name: "Health sector (total)", short: "Health sector", order: -1 },
     ...data.entities[lens].filter((e) => e.code !== SECTOR_CODE[lens] && (lens === "mda" ? e.code.length === 12 : e.code.length === 4)),
@@ -425,10 +439,10 @@ function YearsCompare({ data, lens, cls, quarter, metric }: { data: ExplorerData
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-        <span className="text-[var(--pub-muted)]">{periodLabel(2000, quarter, true).replace(" 2000", "")} of each year:</span>
+        <span className="text-[var(--pub-muted)]">{quarter === 4 ? "Jan–Dec" : periodLabel(2000, quarter, true).replace(" 2000", "")} of each year:</span>
         {years.map((y) => (
           <span key={y} className="inline-flex items-center gap-1.5">
-            <span className="size-3 rounded-full ring-2 ring-white" style={{ background: colorFor(y) }} aria-hidden />
+            <span className="size-3 rounded-full ring-2 ring-white shadow-[0_0_0_3px_rgba(18,38,44,0.16)]" style={{ background: colorFor(y) }} aria-hidden />
             {y}
           </span>
         ))}
@@ -468,7 +482,7 @@ function YearsCompare({ data, lens, cls, quarter, metric }: { data: ExplorerData
                     <motion.button
                       key={p.year}
                       type="button"
-                      className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full ring-2 ring-white focus:outline-none focus-visible:ring-[var(--pub-ink)]"
+                      className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-[0_0_0_3px_rgba(18,38,44,0.16)] ring-2 ring-white focus:outline-none focus-visible:ring-[var(--pub-ink)]"
                       style={{ background: colorFor(p.year) }}
                       initial={{ left: "0%", opacity: 0 }}
                       animate={{ left: `${Math.min(m / own, 1) * 100}%`, opacity: 1 }}

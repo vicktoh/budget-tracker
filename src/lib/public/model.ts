@@ -287,6 +287,11 @@ export function lensAvailable(data: ExplorerData, year: number, quarter: number,
   return Boolean(sectorValue(data, year, quarter, lens, "total"));
 }
 
+/** Years with figures for a lens at the same point (e.g. Full year), oldest first. */
+export function yearsAvailable(data: ExplorerData, quarter: number, lens: ExplorerLens): number[] {
+  return [...new Set(data.reports.map((r) => r.year))].sort((a, b) => a - b).filter((y) => lensAvailable(data, y, quarter, lens));
+}
+
 // ---------------------------------------------------------------------------
 // Headline + facts (server-side, from the full dataset)
 
@@ -306,11 +311,11 @@ export function stateHeadline(ds: PublicDataset, report: ExplorerReport, pdf: st
 export type Fact = { title: string; body: string; source: Source | null };
 
 export function formatShare(value: number | null): string {
-  if (value === null) return "—";
+  if (value === null) return "n/a";
   return `${(value * 100).toFixed(1)}%`;
 }
 
-/** Rule-generated "things to know" — descriptive, no adjectives, never AI. */
+/** Rule-generated "things to know": descriptive, no adjectives, never AI. */
 export function buildFacts(data: ExplorerData, year: number, quarter: number): Fact[] {
   const facts: Fact[] = [];
   const now = sectorValue(data, year, quarter, "mda", "total");
@@ -365,7 +370,7 @@ export function periodEnd(quarter: number): string {
 // Formatting
 
 export function formatNairaShort(value: number | null | undefined, digits = 1): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return "n/a";
   const sign = value < 0 ? "−" : "";
   const v = Math.abs(value);
   if (v >= 1e12) return `${sign}₦${(v / 1e12).toFixed(digits)}tn`;
@@ -378,7 +383,7 @@ export function formatNairaShort(value: number | null | undefined, digits = 1): 
 const fullNaira = new Intl.NumberFormat("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function formatNairaFull(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  if (value === null || value === undefined || Number.isNaN(value)) return "n/a";
   return `₦${fullNaira.format(value)}`;
 }
 

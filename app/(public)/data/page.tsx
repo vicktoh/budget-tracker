@@ -37,8 +37,8 @@ export default async function DataPage() {
         Every figure on this site, with the report, table and page it comes from. Free to reuse under{" "}
         <a className="underline underline-offset-2" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener">
           CC BY 4.0
-        </a>{" "}
-        — please credit &ldquo;Kano State Government, Budget Performance Reports, via kanohealthbudget.org&rdquo;.
+        </a>
+        . Please credit &ldquo;Kano State Government, Budget Performance Reports, via kanohealthbudget.org&rdquo;.
       </PageHero>
     <div className="mx-auto max-w-6xl px-4 pb-14 pt-8 sm:px-6">
         <div className="flex flex-wrap gap-3">
@@ -83,7 +83,7 @@ export default async function DataPage() {
                       const v = valueAt(data, latest.year, latest.quarter, "mda", c, r.entity.code);
                       return (
                         <td key={c} className="px-4 py-2.5 text-right text-[var(--pub-ink-2)]">
-                          {v && (v.budget ?? 0) > 0 ? formatShare(v.share) : "—"}
+                          {v && (v.budget ?? 0) > 0 ? formatShare(v.share) : "n/a"}
                         </td>
                       );
                     })}
@@ -99,7 +99,7 @@ export default async function DataPage() {
         <h2 className="font-display text-2xl font-semibold text-[var(--pub-ink)]">How the figures are checked</h2>
         <p>
           Each report is downloaded from budget.kn.gov.ng, stored unchanged (with its SHA-256 fingerprint) and read table by
-          table. Only health-sector rows are kept — administrative codes beginning 0521, function 707 and programme 04 — plus the
+          table. Only health-sector rows are kept (administrative codes beginning 0521, function 707 and programme 04), plus the
           State&apos;s headline totals.
         </p>
         <ul className="list-disc space-y-2 pl-5">

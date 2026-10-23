@@ -27,7 +27,7 @@ export default async function ExplorePage() {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         {latest ? <Explorer data={data} initialYear={latest.year} initialQuarter={latest.quarter} /> : <p>No published figures yet.</p>}
         <p className="mt-12 text-sm text-[var(--pub-ink-2)]">
-          Looking for money coming in — fees, grants and transfers?{" "}
+          Looking for money coming in, such as fees, grants and transfers?{" "}
           <Link href="/revenue" className="font-semibold text-[var(--pub-brand-deep)] underline underline-offset-2">
             See revenue by MDA
           </Link>

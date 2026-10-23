@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Please ask a shorter question (up to about 1,500 characters)." }, { status: 400 });
   }
   if (userTurns > MAX_USER_TURNS) {
-    return NextResponse.json({ error: "This conversation is long enough — start a new one to keep answers quick and accurate." }, { status: 400 });
+    return NextResponse.json({ error: "This conversation is long enough. Start a new one to keep answers quick and accurate." }, { status: 400 });
   }
   if (!(await verifyTurnstile(request.headers.get("x-turnstile-token"), request))) {
     await logExchange({ visitor, conversationId, question, status: "rejected" });

@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import Script from "next/script";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { CheckCircle2Icon, RotateCcwIcon, SparklesIcon, XCircleIcon } from "lucide-react";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -19,8 +19,13 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { AssistantChartCard } from "@/components/assistant/chart-card";
 import { useAsk } from "@/components/public/ask-context";
+import { AskTableCard } from "@/components/public/ask-table";
 import type { PublicAssistantUIMessage } from "@/lib/public/assistant";
+import type { AssistantTableInput } from "@/lib/public/assistant-table";
 import type { AssistantChartInput } from "@/lib/assistant/tools";
+
+/** IBP categorical order for Ask AI charts (validated: adjacent CVD ΔE ≥ 16, normal ΔE ≥ 26). */
+const ASK_CHART_COLORS = ["#00879B", "#FF7A2E", "#14B0C8", "#E14242", "#7A5CC7"] as const;
 
 const SUGGESTIONS = [
   "How much has Kano spent on health so far this year, and what share of the budget is that?",
@@ -38,6 +43,7 @@ const TOOL_LABEL: Record<string, string> = {
   "tool-findEntity": "names",
   "tool-getValue": "the figures",
   "tool-getPrimaryHealthCare": "primary health care",
+  "tool-getHealthProgrammes": "health programmes",
 };
 
 declare global {
@@ -59,6 +65,49 @@ export function stripExternalLinks(text: string): string {
     .replace(/\[([^\]]+)\]\((?:https?:)?\/\/[^)\s]+\)/g, "$1")
     .replace(/<?https?:\/\/[^\s)>]+>?/g, "")
     .replace(/\(\s*\)/g, "");
+}
+
+/** Drop "[Table: …]" / "(rendered chart)" stand-ins; the card itself is drawn beside the text. */
+export function stripVisualPlaceholders(text: string): string {
+  return text
+    .replace(/^[ \t]*[\[(](?:table|chart)(?:\s*:|\s+(?:below|above))[^\])\n]*[\])][ \t]*$\n?/gim, "")
+    .replace(/[ \t]*\((?:rendered|see) (?:the )?(?:table|chart)( below| above)?\)/gi, "");
+}
+
+/**
+ * House style: no em dashes. The model is told not to write them; any that
+ * slip through become commas, or "n/a" in an empty table cell.
+ */
+export function replaceEmDashes(text: string): string {
+  return text
+    .replace(/(\|)[ \t]*\u2014[ \t]*(?=\|)/g, "$1 n/a ")
+    .replace(/[ \t]*\u2014[ \t]*/g, ", ")
+    .replace(/, ([.,;:!?)])/g, "$1")
+    .replace(/\(, /g, "(")
+    .replace(/^, /gm, "");
+}
+
+type Visual = "table" | "chart";
+export type AnswerSegment = { text: string } | { visual: Visual; index: number };
+
+/**
+ * Split answer text at the [[table]] / [[chart]] markers the model writes
+ * where each card belongs. `counters` runs across a message's text parts so
+ * the n-th [[table]] marker takes the n-th renderTable call.
+ */
+export function splitAnswer(text: string, counters: Record<Visual, number>): AnswerSegment[] {
+  // A marker still streaming in ("[[tab") stays hidden until it is complete.
+  const complete = text.replace(/\[\[[a-z]*\]?$/i, "");
+  const segments: AnswerSegment[] = [];
+  let last = 0;
+  for (const match of complete.matchAll(/\[\[(table|chart)\]\]/gi)) {
+    const visual = match[1].toLowerCase() as Visual;
+    segments.push({ text: complete.slice(last, match.index) });
+    segments.push({ visual, index: counters[visual]++ });
+    last = (match.index ?? 0) + match[0].length;
+  }
+  segments.push({ text: complete.slice(last) });
+  return segments.filter((seg) => !("text" in seg) || seg.text.trim() !== "");
 }
 
 function describeError(error: Error): string {
@@ -143,35 +192,7 @@ export function AskView({ variant = "page" }: { variant?: "page" | "panel" }) {
                   <div className="flex w-full gap-3">
                     <Avatar />
                     <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5 text-[15px] leading-relaxed">
-                      {m.parts.map((part, i) => {
-                        const key = `${m.id}-${i}`;
-                        if (part.type === "text") return <MessageResponse key={key}>{stripExternalLinks(part.text)}</MessageResponse>;
-                        if (part.type === "tool-renderChart") {
-                          if (part.state === "input-available" || part.state === "output-available") {
-                            return <AssistantChartCard key={key} spec={part.input as AssistantChartInput} />;
-                          }
-                          return <Shimmer key={key} className="text-sm">Drawing a chart…</Shimmer>;
-                        }
-                        if (part.type.startsWith("tool-") && "state" in part) {
-                          const label = TOOL_LABEL[part.type] ?? "the data";
-                          if (part.state === "output-available") {
-                            return (
-                              <p key={key} className="flex items-center gap-1.5 text-xs text-[var(--pub-muted)]">
-                                <CheckCircle2Icon className="size-3.5 text-[var(--pub-brand)]" /> Checked {label}
-                              </p>
-                            );
-                          }
-                          if (part.state === "output-error") {
-                            return (
-                              <p key={key} className="flex items-center gap-1.5 text-xs text-[var(--pub-muted)]">
-                                <XCircleIcon className="size-3.5" /> Could not read {label}
-                              </p>
-                            );
-                          }
-                          return <Shimmer key={key} className="text-xs">{`Reading ${label}…`}</Shimmer>;
-                        }
-                        return null;
-                      })}
+                      <AssistantParts message={m} />
                     </div>
                   </div>
                 </Message>
@@ -224,12 +245,87 @@ export function AskView({ variant = "page" }: { variant?: "page" | "panel" }) {
         </PromptInput>
         <div ref={widget} />
         <p className={variant === "panel" ? "text-[11px] leading-snug text-[var(--pub-muted)]" : "text-xs leading-relaxed text-[var(--pub-muted)]"}>
-          Answers are generated by AI from the published figures and can contain mistakes — each answer names the report and page it
+          Answers are generated by AI from the published figures and can contain mistakes. Each answer names the report and page it
           relies on. Questions are logged anonymously (no names, no IP addresses) to improve the service.
         </p>
       </div>
     </div>
   );
+}
+
+/** Titles and captions the model writes for tables and charts follow the same house style. */
+function tidySpec<T extends { title: string; description?: string }>(spec: T): T {
+  return { ...spec, title: replaceEmDashes(spec.title), ...(spec.description ? { description: replaceEmDashes(spec.description) } : {}) };
+}
+
+function AssistantParts({ message }: { message: PublicAssistantUIMessage }) {
+  // Tables and charts in the order the model drew them.
+  const visuals: Record<Visual, ReactNode[]> = { table: [], chart: [] };
+  const natural = new Map<number, { visual: Visual; index: number }>();
+  message.parts.forEach((part, i) => {
+    const key = `${message.id}-${i}`;
+    if (part.type === "tool-renderTable") {
+      const ready = part.state === "input-available" || part.state === "output-available";
+      natural.set(i, { visual: "table", index: visuals.table.length });
+      visuals.table.push(
+        ready ? <AskTableCard key={key} spec={tidySpec(part.input as AssistantTableInput)} /> : <Shimmer key={key} className="text-sm">Building a table…</Shimmer>,
+      );
+    } else if (part.type === "tool-renderChart") {
+      const ready = part.state === "input-available" || part.state === "output-available";
+      natural.set(i, { visual: "chart", index: visuals.chart.length });
+      visuals.chart.push(
+        ready ? (
+          <AssistantChartCard key={key} spec={tidySpec(part.input as AssistantChartInput)} colors={ASK_CHART_COLORS} />
+        ) : (
+          <Shimmer key={key} className="text-sm">Drawing a chart…</Shimmer>
+        ),
+      );
+    }
+  });
+
+  // Where the text places them; the rest stay where they were drawn.
+  const counters: Record<Visual, number> = { table: 0, chart: 0 };
+  const segments = new Map<number, AnswerSegment[]>();
+  message.parts.forEach((part, i) => {
+    if (part.type === "text") segments.set(i, splitAnswer(part.text, counters));
+  });
+
+  const checked = new Set<string>();
+  return message.parts.map((part, i) => {
+    const key = `${message.id}-${i}`;
+    if (part.type === "text") {
+      return (segments.get(i) ?? []).map((seg, j) =>
+        "text" in seg ? (
+          <MessageResponse key={`${key}-${j}`}>{replaceEmDashes(stripVisualPlaceholders(stripExternalLinks(seg.text)))}</MessageResponse>
+        ) : (
+          (visuals[seg.visual][seg.index] ?? null)
+        ),
+      );
+    }
+    const drawn = natural.get(i);
+    if (drawn) return drawn.index < counters[drawn.visual] ? null : visuals[drawn.visual][drawn.index];
+    if (part.type.startsWith("tool-") && "state" in part) {
+      const label = TOOL_LABEL[part.type] ?? "the data";
+      if (part.state === "output-available") {
+        if (checked.has(label)) return null;
+        checked.add(label);
+        return (
+          <p key={key} className="flex items-center gap-1.5 text-xs text-[var(--pub-muted)]">
+            <CheckCircle2Icon className="size-3.5 text-[var(--pub-brand)]" /> Checked {label}
+          </p>
+        );
+      }
+      if (part.state === "output-error") {
+        return (
+          <p key={key} className="flex items-center gap-1.5 text-xs text-[var(--pub-muted)]">
+            <XCircleIcon className="size-3.5" /> Could not read {label}
+          </p>
+        );
+      }
+      return <Shimmer key={key} className="text-xs">{`Reading ${label}…`}</Shimmer>;
+    }
+    return null;
+  });
 }
 
 function Avatar() {

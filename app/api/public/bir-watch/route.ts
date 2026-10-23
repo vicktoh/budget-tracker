@@ -26,7 +26,7 @@ function guessPeriod(text: string): { year: number; quarter: number; fullYear: b
 /**
  * Weekly check of budget.kn.gov.ng for new Budget Performance Reports (pg_cron
  * `bir-archive-watch`, or an admin). New PDFs are recorded unlisted and admins
- * are notified; nothing is downloaded, parsed or published automatically —
+ * are notified; nothing is downloaded, parsed or published automatically;
  * see docs/public-site.md for the review steps.
  */
 export async function POST(request: Request) {

@@ -11,11 +11,11 @@ const display = DM_Serif_Display({ subsets: ["latin"], variable: "--font-display
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Kano Health Budget — official health budget figures for Kano State",
+    absolute: "Kano Health Budget: official health budget figures for Kano State",
     template: "%s · Kano Health Budget",
   },
   description:
-    "How much Kano State budgets for health, how much has been spent, and where — from the State's official Budget Performance Reports, every quarter.",
+    "How much Kano State budgets for health, how much has been spent and where, from the State's official Budget Performance Reports, updated every quarter.",
   openGraph: {
     title: "Kano Health Budget",
     description: "Official Kano State health budget and spending figures, every quarter.",

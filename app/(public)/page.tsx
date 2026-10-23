@@ -107,7 +107,7 @@ export default async function PublicHomePage() {
         <Section
           eyebrow="Who holds the budget"
           title="Health MDAs at a glance"
-          lede={`Budget performance is the share of its yearly budget an MDA has spent, here up to ${periodEnd(quarter)} — the same measure the State's Budget Performance Reports use. "Highest performing" are the MDAs that have spent the largest share so far; "lowest performing", the smallest. It tracks spending progress, not the quality of services.`}
+          lede={`Releases here are measured by actual spending: the share of its yearly budget each MDA has spent up to ${periodEnd(quarter)}, as printed in the State's Budget Performance Reports. "Highest releases" are the MDAs that have spent the largest share so far; "lowest releases", the smallest. It tracks how far each budget has been used, not the quality of services.`}
         >
           <TopMdas
             quarter={quarter}

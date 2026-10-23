@@ -206,11 +206,11 @@ export function TopMdas({ rows, quarter }: { rows: MdaBar[]; quarter: number }) 
     .slice(0, 6);
   return (
     <div className="rounded-3xl border border-[var(--pub-line)] bg-white p-5 sm:p-6">
-      <div className="mb-5 inline-flex rounded-full bg-[var(--pub-sand)] p-1" role="tablist" aria-label="Rank MDAs by budget performance (share of budget spent)">
+      <div className="mb-5 inline-flex rounded-full bg-[var(--pub-sand)] p-1" role="tablist" aria-label="Rank MDAs by releases (share of budget spent)">
         {(
           [
-            ["highest", "Highest performing"],
-            ["lowest", "Lowest performing"],
+            ["highest", "Highest releases"],
+            ["lowest", "Lowest releases"],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -265,8 +265,8 @@ export function YearColumns({ years, current }: { years: YearColumn[]; current: 
   const seen = useInView(ref, { once: true, margin: "-10% 0px" });
   const max = Math.max(1, ...years.map((y) => Math.max(y.budget, y.spent)));
   return (
-    <div ref={ref} className="rounded-3xl border border-[var(--pub-line)] bg-white p-5 sm:p-8">
-      <div className="flex h-64 items-end justify-around gap-2 border-b border-[var(--pub-line)] pt-8 sm:h-72 sm:gap-4">
+    <div ref={ref} className="rounded-3xl border border-[var(--pub-line)] bg-white p-4 sm:p-8">
+      <div className="flex h-64 items-end justify-around gap-1 border-b border-[var(--pub-line)] pt-8 sm:h-72 sm:gap-4">
         {years.map((y, i) => {
           const isNow = y.year === current;
           return (
@@ -296,13 +296,23 @@ export function YearColumns({ years, current }: { years: YearColumn[]; current: 
           );
         })}
       </div>
-      <div className="mt-3 flex justify-around gap-2 sm:gap-4">
+      {/* Six years must fit a phone: smaller labels below sm so the row never scrolls sideways. */}
+      <div className="mt-3 flex justify-around gap-1 sm:gap-4">
         {years.map((y) => (
-          <div key={y.year} className="w-full max-w-[7rem] text-center">
-            <p className="font-display text-2xl text-[var(--pub-navy)]">{y.year}</p>
-            {y.partial ? <p className="text-[11px] font-semibold text-[var(--pub-accent-deep)]">{y.partial}</p> : null}
-            <p className="text-xs tabular-nums text-[var(--pub-muted)]">
-              {formatNairaShort(y.spent)} of {formatNairaShort(y.budget)}
+          <div key={y.year} className="w-full min-w-0 max-w-[7rem] text-center">
+            <p className="font-display text-lg text-[var(--pub-navy)] sm:text-2xl">{y.year}</p>
+            {/* Full years are Jan–Dec; the current year runs to its latest published quarter. */}
+            <p className={cn("text-[10px] font-semibold leading-tight sm:text-[11px]", y.year === current ? "text-[var(--pub-accent-deep)]" : "text-[var(--pub-brand-deep)]")}>
+              {y.partial ?? "Jan–Dec"}
+            </p>
+            <p className="mt-0.5 text-[10px] leading-tight tabular-nums text-[var(--pub-muted)] sm:text-xs">
+              {/* Whole billions on phones so "₦214.8bn" never breaks mid-number; exact figures are in the bar tooltip. */}
+              <span className="sm:hidden">
+                <span className="whitespace-nowrap">{formatNairaShort(y.spent, 0)}</span> of <span className="whitespace-nowrap">{formatNairaShort(y.budget, 0)}</span>
+              </span>
+              <span className="hidden sm:inline">
+                {formatNairaShort(y.spent)} of {formatNairaShort(y.budget)}
+              </span>
             </p>
           </div>
         ))}

@@ -79,3 +79,51 @@ export const CROSS_MDA_PROGRAMMES: PhcProgrammeKey[] = [
 export function isPassThrough(description: string): boolean {
   return /remit|re-?mit|remiitance|disbursement of/i.test(description);
 }
+
+// ---------------------------------------------------------------------------
+// Programme rows as the page and Ask AI show them (built in health-programmes.ts).
+
+export const PHC_BOARD_CODE = "052100500100";
+export const PHC_BOARD_LABEL = "PHC Board";
+
+export type ProgrammeLine = {
+  mdaCode: string;
+  mda: string;
+  description: string;
+  budget: number;
+  /** Year-to-date spending; only the PHC Board reports it. */
+  spent: number | null;
+  page: number | null;
+};
+
+/** b / y = the PHC Board's own budget and spending (from the BIR); others = other MDAs' budgets (approved budget lines). */
+export type PhcProgrammeRow = {
+  key: PhcProgrammeKey;
+  name: string;
+  blurb: string;
+  b: number;
+  y: number;
+  count?: number;
+  others?: { code: string; name: string; amount: number }[];
+  lines?: ProgrammeLine[];
+};
+
+export type PhcReport = {
+  slug: string;
+  year: number;
+  quarter: number;
+  programmes: PhcProgrammeRow[];
+  otherBudgetsSource: string | null;
+  passThrough: number;
+};
+
+export function programmeTotal(p: PhcProgrammeRow): number {
+  return p.b + (p.others ?? []).reduce((a, o) => a + o.amount, 0);
+}
+
+/** Every MDA budgeting for the programme, the PHC Board included, largest first. */
+export function programmeFunders(p: PhcProgrammeRow): { code: string; name: string; amount: number }[] {
+  return [...(p.b > 0 ? [{ code: PHC_BOARD_CODE, name: PHC_BOARD_LABEL, amount: p.b }] : []), ...(p.others ?? [])].sort(
+    (a, b) => b.amount - a.amount,
+  );
+}

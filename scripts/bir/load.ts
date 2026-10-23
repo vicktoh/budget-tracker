@@ -35,16 +35,30 @@ function argValue(flag: string): string | undefined {
 
 // Reports whose figures are public once their checks pass.
 const PUBLISHABLE = new Set([
+  "2021-Q1", "2021-Q2", "2021-Q3", "2021-Q4",
+  "2022-Q1", "2022-Q2", "2022-Q3", "2022-Q4",
   "2023-Q1", "2023-Q2", "2023-Q3", "2023-Q4",
-  "2024-Q1", "2024-Q2",
+  "2024-Q1", "2024-Q2", "2024-Q3", "2024-Q4",
   "2025-Q1", "2025-Q2", "2025-Q3", "2025-Q4",
   "2026-Q2",
 ]);
 
+// Programme tables are published from 2025, when every report prints the full
+// set; earlier reports print only some of them.
+const FIRST_PROGRAMME_YEAR = 2025;
+
+// MDAs re-coded between years: the 2021–2022 reports list three schools under
+// the Nursing and Midwifery Board; from 2023 each has its own code. Figures are
+// filed under the current code so the schools compare across years, and keep
+// the printed code in their note.
+const CODE_ALIASES: Record<string, string> = {
+  "052100400900": "052102000100", // School of Hygiene
+  "052100401000": "052103000100", // School of Health Technology Bebeji
+  "052100401100": "052104000100", // School of Health Technology Kano
+};
+
 // Shown on the archive card when a report's figures are not public.
 const HELD_NOTES: Record<string, string> = {
-  "2024-Q3": "Some tables in this report do not add up to the report's own totals. Its figures are held back while they are checked; the PDF is available to download.",
-  "2024-Q4": "The tables in this report are images rather than text. Its figures are being transcribed; the PDF is available to download.",
   "2026-Q1": "Most tables in this report are images. Q1 2026 figures on this site come from the Q2 2026 report (year to date minus Q2).",
 };
 const NOT_EXTRACTED_NOTE =
@@ -83,6 +97,7 @@ type ParsedRow = {
   mda?: string;
   page: number;
   derived?: string;
+  note?: string;
   original_budget: number | null;
   revised_budget: number | null;
   quarter_actual: number | null;
@@ -111,15 +126,18 @@ function figureRows(parsed: Parsed, reportId: string) {
   for (const table of parsed.tables) {
     const lens = LENS[table.kind];
     if (!lens) continue;
+    if (lens === "programme" && parsed.fiscal_year < FIRST_PROGRAMME_YEAR) continue;
     for (const r of table.rows) {
-      const notes = [r.derived, table.budget_column_note,
-        r.original_budget_from ? `Original budget taken from the ${parsed.fiscal_year} ${r.original_budget_from}.` : null]
+      const alias = (lens === "mda" || lens === "revenue") && r.code ? CODE_ALIASES[r.code] : undefined;
+      const notes = [r.derived, r.note, table.budget_column_note,
+        r.original_budget_from ? `Original budget taken from the ${parsed.fiscal_year} ${r.original_budget_from}.` : null,
+        alias ? `Printed under code ${r.code} in this report.` : null]
         .filter(Boolean);
       rows.push({
         report_id: reportId,
         lens,
         econ_class: table.class ?? "total",
-        code: r.code,
+        code: alias ?? r.code,
         row_key: lens === "state" ? r.key ?? null : r.code ? null : "table_total",
         name: r.name,
         mda_code: lens === "phc_project" ? r.code : null,

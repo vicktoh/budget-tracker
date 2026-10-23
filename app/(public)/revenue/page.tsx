@@ -10,7 +10,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Revenue",
-  description: "Where Kano State's health MDAs expect their revenue to come from — fees, local governments, federal grants and donors — and how much they have collected.",
+  description: "Where Kano State's health MDAs expect their revenue to come from (fees, local governments, federal grants and donors) and how much they have collected.",
 };
 
 /** Approved revenue budget lines by fiscal year (scripts/public/export-revenue-budgets.ts). */

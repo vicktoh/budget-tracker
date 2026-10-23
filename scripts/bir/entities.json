@@ -37,6 +37,12 @@
   {"lens": "function", "code": "70732", "name": "Specialised hospital services", "short_name": "Specialist hospitals", "sort_order": 13},
   {"lens": "function", "code": "70741", "name": "Public health services", "short_name": "Public health", "sort_order": 14},
   {"lens": "function", "code": "70761", "name": "Health not elsewhere classified", "short_name": "Health n.e.c.", "sort_order": 15},
+  {"lens": "function", "code": "70712", "name": "Other medical products", "short_name": "Other medical products", "sort_order": 16},
+  {"lens": "function", "code": "70713", "name": "Therapeutic appliances and equipment", "short_name": "Therapeutic equipment", "sort_order": 17},
+  {"lens": "function", "code": "70722", "name": "Specialised medical services", "short_name": "Specialist medical", "sort_order": 18},
+  {"lens": "function", "code": "70723", "name": "Dental services", "short_name": "Dental", "sort_order": 19},
+  {"lens": "function", "code": "70733", "name": "Medical and maternity services", "short_name": "Medical and maternity", "sort_order": 20},
+  {"lens": "function", "code": "70734", "name": "Nursing and convalescent services", "short_name": "Nursing and convalescent", "sort_order": 21},
 
   {"lens": "programme", "code": "04", "name": "Health (all programme objectives)", "short_name": "Health", "sort_order": 0},
   {"lens": "programme", "code": "0401", "name": "Effective governance of the health system", "short_name": "Health governance", "sort_order": 1},

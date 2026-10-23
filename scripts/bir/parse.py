@@ -66,6 +66,9 @@ TOKEN_RE = re.compile(
 )
 CODE_RE = re.compile(r"^ ?(\d{2,12})(?:\s*-)?\s+(\S.*)$")
 TABLE_RE = re.compile(r"(?:^|\s)Table\s+(\d+)\s*:\s*(.+?)\s*$")
+# Some headings drop the colon ("2.I Table 14 Total Expenditure by Programme"); those
+# count only when the title is a known table, so prose like "see Table 5" never splits a table.
+TABLE_NOCOLON_RE = re.compile(r"(?:^|\s)Table\s+(\d+)\s+([A-Z].+?)\s*$")
 PROJECT_MDA_RE = re.compile(r"^\s*(\d{12})\s*-\s*(\S.+?)\s*$")
 
 TOLERANCE = 1.0  # naira
@@ -97,14 +100,33 @@ def trailing_run(text, toks):
     return run
 
 
-def split_row(text: str, n_money: int):
-    """Return (name_text, values dict, pct, balance) or None when incomplete."""
+def split_row(text: str, n_money: int, dash_revised: bool = False):
+    """Return (name_text, values dict, pct, balance) or None when incomplete.
+
+    dash_revised: the table has original and revised budget columns, and some
+    reports (2021-Q4, 2022-Q4 function tables) print the revised budget, the %
+    and the balance of most rows as "-" (the year's whole final budget sits on
+    one row). Such a row is complete with its four figures; its balance, when
+    printed, is minus the amount spent and is checked against it."""
     toks = tokens(text)
     pct_idx = [i for i, t in enumerate(toks) if t[0] == "pct"]
+    if not pct_idx and dash_revised:
+        run = trailing_run(text, toks)
+        if len(run) >= n_money and run[1][0] == "dash":
+            rest = [t[0] for t in run[n_money:]]
+            balances = {(): None, ("dash",): None, ("dash", "dash"): 0.0}
+            if tuple(rest) in balances:
+                return run[:n_money], None, balances[tuple(rest)]
+            if rest in (["dash", "money"], ["dash", "dash", "money"]):
+                return run[:n_money], None, -abs(to_number(run[-1][1]))
     if not pct_idx:
         # A zero-budget row prints no % (and often no balance): accept a
         # trailing run of exactly n_money numbers, or n_money + a balance.
         run = trailing_run(text, toks)
+        if len(run) == n_money and to_number(run[0][1]) != 0:
+            # Budget and actuals with no % or balance printed at all (2024-Q3 p39,
+            # cut off at the page edge): complete, and left to the table cross-checks.
+            return run, None, None
         if len(run) < n_money or to_number(run[0][1]) != 0:
             return None  # incomplete (wrapped) row, or a real budget missing its %
         rest = run[n_money:]
@@ -169,6 +191,13 @@ def verify(row, pct, balance):
         bal_ok = balance is None or abs((base - row["ytd_actual"]) - balance) <= TOLERANCE
         if pct_ok and bal_ok:
             return True, name
+    # Some total rows print the % against the original budget and the balance
+    # against the final one (2021-Q4, 2022-Q4): accept when each matches a base.
+    if pct is not None and balance is not None and len(bases) == 2:
+        pct_base = next((n for n, b in bases if b and abs(row["ytd_actual"] / b * 100 - pct) <= 0.15), None)
+        bal_base = next((n for n, b in bases if abs((b - row["ytd_actual"]) - balance) <= TOLERANCE), None)
+        if pct_base and bal_base:
+            return True, f"{pct_base} (%), {bal_base} (balance)"
     return False, None
 
 
@@ -188,6 +217,10 @@ def parse_report(txt: str):
     heads = []
     for idx, (page, line) in enumerate(lines):
         m = TABLE_RE.search(line)
+        if not m:
+            m2 = TABLE_NOCOLON_RE.search(line)
+            if m2 and any(rx.match(m2.group(2)) for rx, _, _ in TABLE_KINDS):
+                m = m2
         if m and "...." not in line and "…" not in line:
             title = m.group(2)
             for rx, kind, cls in TABLE_KINDS:
@@ -214,8 +247,55 @@ def parse_report(txt: str):
                 r["pct_base"] = "revised (not printed)"
         tables.append({"number": number, "title": title, "kind": kind, "class": cls,
                        "columns": columns, "pct_against_hidden_budget": hidden,
-                       "page": lines[start][0], "rows": rows})
+                       "page": lines[start][0], "rows": rows, "_seg": seg})
+
+    # Some older reports print class tables with names but no codes: give their
+    # rows the codes the same report's total table prints for the same names.
+    for t in tables:
+        prefix = HEALTH_PREFIX.get(t["kind"])
+        if prefix is None or t["class"] == "total" or any(r["code"] and r["code"].startswith(prefix) for r in t["rows"]):
+            continue
+        ref = next((x for x in tables if x["kind"] == t["kind"] and x["class"] == "total"), None)
+        named = parse_named_rows(t["_seg"], t["columns"], ref["rows"]) if ref else []
+        if named:
+            t["rows"] = [r for r in t["rows"] if r["code"] is None] + named
+            t["codes_from_names"] = True
+    for t in tables:
+        del t["_seg"]
     return tables
+
+
+def name_key(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", name.lower()).strip()
+
+
+def parse_named_rows(seg, columns, ref_rows):
+    """Rows of a code-less table, coded by matching names to ref_rows (same report).
+
+    A name printed twice (e.g. a sector row and its main MDA) takes the codes in
+    the order the total table prints them. Lines whose name is not in ref_rows
+    are skipped; the cross-checks catch anything that goes missing."""
+    codes = {}
+    for r in ref_rows:
+        if r["code"]:
+            codes.setdefault(name_key(r["name"]), []).append(r["code"])
+    used = {}
+    rows = []
+    for page, line in seg:
+        name, figs = split_line(line)
+        key = name_key(name)
+        if not figs.strip() or key not in codes:
+            continue
+        i = used.get(key, 0)
+        if i >= len(codes[key]):
+            continue
+        pending = Pending(codes[key][i], page)
+        pending.names, pending.figures = [name.strip()], [figs.strip()]
+        row = finish(pending, columns)
+        if row:
+            used[key] = i + 1
+            rows.append(row)
+    return rows
 
 
 BUDGET_COL_RE = re.compile(r"(?<!against )(?<!against)\b20\d\d\s+(Original|Revised|Final)\s+Budget", re.I)
@@ -303,7 +383,8 @@ class Pending:
 def finish(pending, columns):
     """Return a row dict once the pending row has all its figures, else None."""
     text = pending.text()
-    parts = split_row(text, len(columns))
+    dash_revised = len(columns) == 4 and columns[1] == "revised_budget"
+    parts = split_row(text, len(columns), dash_revised)
     if parts is None:
         return None
     run, pct, balance = parts
@@ -352,6 +433,52 @@ def parse_segment(seg, kind, columns):
         elif len(pending.names) > 8:
             pending = None  # a header line that never got figures
     return rows
+
+
+TRANSCRIPTIONS = Path(__file__).parent / "transcriptions"
+
+
+def transcribed_tables(slug):
+    """Tables read by hand from a report whose tables are images (transcriptions/<slug>.json).
+
+    Rows are [code, name, *columns, printed %, printed balance]. Each row is checked
+    against its printed % (or, where the % is against a budget the table does not
+    print, against its balance); rows listed under derive_from_classes are worked
+    out as personnel + overhead + capital + other and marked derived."""
+    path = TRANSCRIPTIONS / f"{slug}.json"
+    if not path.exists():
+        return None
+    doc = json.loads(path.read_text())
+    tables = []
+    for t in doc["tables"]:
+        cols = t["columns"]
+        hidden = t.get("pct_base") == "hidden"
+        rows = []
+        for raw in t["rows"]:
+            code, name, *vals = raw
+            pct = vals[len(cols)] if len(vals) > len(cols) else None
+            balance = vals[len(cols) + 1] if len(vals) > len(cols) + 1 else None
+            row = {"code": code, "name": name, "page": t["page"], "original_budget": None, "revised_budget": None,
+                   "quarter_actual": None, "ytd_actual": None, **dict(zip(cols, vals[:len(cols)]))}
+            if hidden:
+                base = (row["ytd_actual"] or 0) + (balance or 0)
+                ok = balance is None or pct is None or (abs((row["ytd_actual"] / base * 100 if base else 0) - pct) <= 0.15)
+                pct_base = "revised (not printed)"
+            else:
+                ok, pct_base = verify(row, pct, balance)
+            row.update({"valid": ok, "printed_pct": pct, "printed_balance": balance, "pct_base": pct_base, "note": doc["note"]})
+            rows.append(row)
+        tables.append({"number": t["number"], "title": t["title"], "kind": t["kind"], "class": t["class"], "columns": cols,
+                       "pct_against_hidden_budget": hidden, "page": t["page"], "rows": rows, "transcribed": True})
+    for t, src in zip(tables, doc["tables"]):
+        for code in src.get("derive_from_classes", []):
+            parts = [r for x in tables if x["kind"] == t["kind"] and x["class"] in CLASSES[1:] for r in x["rows"] if r["code"] == code]
+            if not parts:
+                raise SystemExit(f"{slug}: no class rows to derive {code}")
+            vals = {f: round(sum(r[f] or 0 for r in parts), 2) for f in ("original_budget", "revised_budget", "quarter_actual", "ytd_actual")}
+            t["rows"].append({"code": code, "name": parts[0]["name"], "page": t["page"], "valid": True, "derived": src["derive_reason"],
+                              "printed_pct": None, "printed_balance": None, "pct_base": None, **vals})
+    return tables
 
 
 def keep_row(kind, row):
@@ -471,7 +598,13 @@ def reference_originals(out, fiscal_year, current_slug, tables):
         ref_path = out / f"{fiscal_year}-Q1.json"
         if not ref_path.exists():
             return {}
-        ref_tables = json.loads(ref_path.read_text())["tables"]
+        ref = json.loads(ref_path.read_text())
+        # A Q1 report read from images is published as printed but does not relabel
+        # later quarters: in 2022 the State amended some original budgets after Q2
+        # and printed the amended figures (and a separate final budget) from Q3 on.
+        if ref.get("transcribed"):
+            return {}
+        ref_tables = ref["tables"]
     ref = {}
     for t in ref_tables:
         for r in t["rows"]:
@@ -518,7 +651,8 @@ def run(manifest_path, pdf_dir, out_dir, only):
             continue
         pdf = Path(pdf_dir) / rep["file"]
         txt = subprocess.run(["pdftotext", "-layout", str(pdf), "-"], capture_output=True, text=True).stdout
-        tables = parse_report(txt)
+        transcribed = transcribed_tables(rep["slug"])
+        tables = transcribed or parse_report(txt)
         for t in tables:
             t["rows"] = [r for r in t["rows"] if keep_row(t["kind"], r)]
             if t["kind"] == "state_summary":
@@ -534,11 +668,19 @@ def run(manifest_path, pdf_dir, out_dir, only):
         budget_notes = reconcile_budgets(tables, ref, rep["slug"])
         for corr in corrections.get(rep["slug"], []):
             apply_correction(tables, corr)
+        # A state-wide total row whose printed % and balance match none of its own
+        # budgets is the report's arithmetic, not a health figure; leave it out.
+        for t in tables:
+            if t["kind"] == "state_summary":
+                continue
+            for r in [r for r in t["rows"] if r["code"] is None and not r["valid"]]:
+                t["rows"].remove(r)
+                budget_notes.append(f"T{t['number']} {r['name']} row left out: its printed % / balance match none of its budgets")
         invalid = [f"T{t['number']} p{r['page']} {r['code'] or ''} {r['name'][:50]}: printed % / balance do not reconcile"
                    for t in tables for r in t["rows"] if not r["valid"]]
         fails = invalid + cross_checks(tables)
         kinds = sorted({(t["kind"], t["class"] or "") for t in tables})
-        result = {**rep, "tables": tables, "checks": fails, "budget_notes": budget_notes,
+        result = {**rep, "tables": tables, "checks": fails, "budget_notes": budget_notes, "transcribed": bool(transcribed),
                   "row_count": sum(len(t["rows"]) for t in tables)}
         (out / f"{rep['slug']}.json").write_text(json.dumps(result, indent=1))
         print(f"{rep['slug']}: {len(tables)} tables, {result['row_count']} rows, {len(fails)} failing checks")

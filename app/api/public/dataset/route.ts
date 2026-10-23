@@ -31,7 +31,7 @@ function csvCell(value: unknown): string {
 
 /**
  * The full published dataset, CC BY 4.0. ?format=csv (default) or json.
- * Only figures of published reports are included — the same rows any visitor can read.
+ * Only figures of published reports are included: the same rows any visitor can read.
  */
 export async function GET(request: NextRequest) {
   const format = request.nextUrl.searchParams.get("format") === "json" ? "json" : "csv";
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const licence = "CC BY 4.0 — Kano State Government, Budget Performance Reports, via kanohealthbudget.org";
+  const licence = "CC BY 4.0: Kano State Government, Budget Performance Reports, via kanohealthbudget.org";
   if (format === "json") {
     return NextResponse.json(
       { licence, generated_at: new Date().toISOString(), columns: COLUMNS, rows },

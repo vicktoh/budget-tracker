@@ -18,7 +18,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CHART_COLORS, pickChartColor } from "@/components/reporting/charts/palette";
+import { CHART_COLORS, pickChartColor as pickAppChartColor } from "@/components/reporting/charts/palette";
 import { formatCompactNaira, formatNaira } from "@/lib/format";
 import type { AssistantChartInput } from "@/lib/assistant/tools";
 
@@ -62,10 +62,14 @@ const axisTickStyle = {
   fontSize: 11,
 } as const;
 
-/** Renders the assistant's renderChart tool call with the app chart theme. */
-export function AssistantChartCard({ spec }: { spec: AssistantChartInput }) {
+/**
+ * Renders the assistant's renderChart tool call with the app chart theme.
+ * `colors` swaps in another categorical palette (the public site's IBP set).
+ */
+export function AssistantChartCard({ spec, colors }: { spec: AssistantChartInput; colors?: readonly string[] }) {
   const { type, title, description, xKey, valueFormat } = spec;
-  const series = spec.series.slice(0, CHART_COLORS.length);
+  const pickChartColor = (index: number) => (colors ? colors[index % colors.length] : pickAppChartColor(index));
+  const series = spec.series.slice(0, colors?.length ?? CHART_COLORS.length);
   const data = spec.data;
 
   const isPieLike = type === "pie" || type === "donut";

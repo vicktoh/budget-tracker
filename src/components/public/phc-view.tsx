@@ -21,28 +21,11 @@ import {
 import { AskButton } from "@/components/public/ask-panel";
 import { BudgetBar, SharePill } from "@/components/public/budget-bar";
 import { Reveal } from "@/components/public/motion";
+import { PHC_BOARD_LABEL, programmeFunders, programmeTotal, type PhcProgrammeRow, type PhcReport } from "@/lib/public/phc-programmes";
 import { LOW_SPEND_THRESHOLD, barLabel, formatNairaShort, periodLabel } from "@/lib/public/model";
 import { cn } from "@/lib/utils";
 
-/** b / y = the PHC Board's own budget and spending (from the BIR); others = other MDAs' budgets (approved budget lines). */
-export type PhcProgrammeRow = {
-  key: string;
-  name: string;
-  blurb: string;
-  b: number;
-  y: number;
-  count?: number;
-  others?: { code: string; name: string; amount: number }[];
-};
-
-export type PhcReport = {
-  slug: string;
-  year: number;
-  quarter: number;
-  programmes: PhcProgrammeRow[];
-  otherBudgetsSource: string | null;
-  passThrough: number;
-};
+export type { PhcProgrammeRow, PhcReport } from "@/lib/public/phc-programmes";
 
 const ICON: Record<string, LucideIcon> = {
   immunisation: SyringeIcon,
@@ -62,7 +45,6 @@ const ICON: Record<string, LucideIcon> = {
 };
 
 const share = (b: number, y: number) => (b ? y / b : null);
-const othersTotal = (p: PhcProgrammeRow) => (p.others ?? []).reduce((a, o) => a + o.amount, 0);
 
 export function PhcView({ reports }: { reports: PhcReport[] }) {
   const [slug, setSlug] = useState(reports[reports.length - 1].slug);
@@ -126,10 +108,9 @@ export function PhcView({ reports }: { reports: PhcReport[] }) {
 
 function ProgrammeCard({ p, quarter }: { p: PhcProgrammeRow; quarter: number }) {
   const Icon = ICON[p.key] ?? InfoIcon;
-  const others = p.others ?? [];
-  const total = p.b + othersTotal(p);
+  const total = programmeTotal(p);
   const s = share(p.b, p.y);
-  const funders = [...(p.b > 0 ? [{ code: "phc", name: "PHC Board", amount: p.b }] : []), ...others].sort((a, b) => b.amount - a.amount);
+  const funders = programmeFunders(p);
   return (
     <div className="flex h-full flex-col gap-4 rounded-3xl border border-[var(--pub-line)] bg-white p-5 shadow-[0_10px_30px_-22px_rgba(6,61,79,0.45)]">
       <div className="flex items-start gap-3">
@@ -173,12 +154,12 @@ function ProgrammeCard({ p, quarter }: { p: PhcProgrammeRow; quarter: number }) 
         <div className="mt-auto rounded-2xl bg-[var(--pub-canvas)] p-3">
             <div className="flex items-baseline justify-between gap-2 text-sm">
               <span className="text-[var(--pub-ink-2)]">
-                PHC Board spent <strong className="text-[var(--pub-ink)]">{formatNairaShort(p.y)}</strong> of {formatNairaShort(p.b)}
+                {PHC_BOARD_LABEL} spent <strong className="text-[var(--pub-ink)]">{formatNairaShort(p.y)}</strong> of {formatNairaShort(p.b)}
               </span>
               <SharePill share={s} flag={quarter >= 2 && s !== null && s < LOW_SPEND_THRESHOLD} />
             </div>
             <div className="mt-2">
-              <BudgetBar budget={p.b} spent={p.y} maxBudget={p.b} height={8} label={barLabel(`PHC Board ${p.name}`, p.b, p.y, s)} />
+              <BudgetBar budget={p.b} spent={p.y} maxBudget={p.b} height={8} label={barLabel(`${PHC_BOARD_LABEL} ${p.name}`, p.b, p.y, s)} />
             </div>
         </div>
       ) : null}

@@ -11,7 +11,7 @@ naira, descriptive tone, anonymous AI assistant with a $100/month cap.
 |---|---|
 | `/` | Deep-teal hero with an animated Kano LGA map and the Ask AI box, four colour tiles, spending-type donut, three rule-generated facts, top MDAs (largest budgets / lowest share spent), same point each year, Ask AI band |
 | `/explore` | The full lens explorer (MDA / programme / function × type × period, breakdown or compare years) |
-| `/phc` | Health programmes (immunisation, malaria, nutrition, maternal & child health, family planning, disease control): 2026 budget totalled across every MDA from the approved capital budget lines (`src/lib/public/programme-budgets-<year>.json`, from `scripts/public/export-programme-budgets.ts`), with a who-funds-it split; spending shown for the PHC Board only (the one body whose project spending the BIR reports). Grouping by project name in `src/lib/public/phc-programmes.ts`; KHETFUND remittances excluded to avoid double counting |
+| `/phc` | Health programmes (immunisation, malaria, nutrition, maternal & child health, family planning, disease control): 2026 budget totalled across every MDA from the approved capital budget lines (`src/lib/public/programme-budgets-<year>.json`, from `scripts/public/export-programme-budgets.ts`), with a who-funds-it split; spending shown for the PHC Board only (the one body whose project spending the BIR reports). Grouping by project name in `src/lib/public/phc-programmes.ts`, totals in `src/lib/public/health-programmes.ts` (shared with Ask AI); KHETFUND remittances excluded to avoid double counting |
 | `/revenue` | Where health MDAs' own revenue comes from: expected revenue by source (federal incl. BHCPF, local governments, donors, fees, other) from the approved revenue budget lines (`revenue-budgets-<year>.json`, `scripts/public/export-revenue-budgets.ts`, grouped in `revenue-sources.ts`), and collected so far per MDA from the BIR (totals only — the BIR does not split collections by source) |
 | `/reports` | All 24 reports since 2019: mirrored PDF download (counted), link to the original, SHA-256 |
 | `/data` | Full dataset CSV/JSON (CC BY 4.0), a plain table view, how figures are checked |
@@ -44,14 +44,27 @@ public pages + /api/public/*   read only published rows, as the anon role
 - A quarter without its own published report is derived from the next
   quarter's report (YTD − that quarter) and says so (e.g. 2026 Q1 from 2026 Q2).
 
-### Reports held back (Oct 2026)
+- Older reports vary: some class tables print MDA names without codes (coded
+  from the same report's total table), some print "-" for most rows' final
+  budget, and some total rows mix bases (% against original, balance against
+  final). The parser handles each and still checks every row.
+- Reports whose tables are images are transcribed by hand into
+  `scripts/bir/transcriptions/<slug>.json` (rows exactly as printed; the
+  parser runs the same checks on them and each figure carries a note). Where a
+  total table is cut off, the missing MDA totals are worked out from the class
+  tables and marked derived. A transcribed Q1 does not relabel later quarters'
+  budget columns (2022 amended some original budgets after Q2).
+- Programme tables are published from 2025 (earlier reports print only some).
+- Three schools changed codes in 2023; `CODE_ALIASES` in load.ts files their
+  2021–22 figures under the current codes (each keeps a note of the printed code).
 
-| Report | Why | To publish |
-|---|---|---|
-| 2024 Q3 | Its class tables do not add up to its own totals | Investigate / add corrections |
-| 2024 Q4 | Tables are images | Transcribe health rows, then run the same checks |
-| 2026 Q1 | Admin/revenue tables are images | Not needed: Q1 is derived from Q2 |
-| 2019–2022 | Not extracted yet (garbled text layer) | Phase 2 |
+### Coverage (Oct 2026)
+
+| Report | Status |
+|---|---|
+| 2021 Q1 – 2026 Q2 | Published, all checks passing (2022 Q1 and 2024 Q4 transcribed from images) |
+| 2026 Q1 | Admin/revenue tables are images; Q1 is derived from Q2 |
+| 2019, 2020 | Older format, not extracted |
 
 ## Adding a new quarter
 
@@ -113,8 +126,10 @@ npx tsx scripts/public/export-programme-budgets.ts <year>
 npx tsx scripts/public/export-revenue-budgets.ts <year>
 ```
 
-then add the new files to `OTHER_MDA_BUDGETS` (app/(public)/phc/page.tsx) and
-`REVENUE_BUDGETS` (app/(public)/revenue/page.tsx).
+then add the new files to `OTHER_MDA_BUDGETS` (src/lib/public/health-programmes.ts)
+and `REVENUE_BUDGETS` (app/(public)/revenue/page.tsx). The /phc cards and Ask
+AI's `getHealthProgrammes` tool both read `buildHealthProgrammes`, so they
+always show the same programme figures.
 
 ## Briefs (Accountability Brief)
 

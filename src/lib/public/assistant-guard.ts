@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/server/auth";
 /**
  * Guardrails for the anonymous public assistant:
  * - per-visitor rate limit (messages per hour) and conversation length cap;
- * - a hard monthly spend cap — when reached, the assistant says it is busy and
+ * - a hard monthly spend cap: when reached, the assistant says it is busy and
  *   the rest of the site keeps working;
  * - optional Cloudflare Turnstile check (when TURNSTILE_SECRET_KEY is set);
  * - an anonymous log: a salted hash of the visitor, never the IP itself.
@@ -64,7 +64,7 @@ export async function checkGuards(visitor: string): Promise<GuardResult> {
     if (!data || data.length < 1000) break;
   }
   if (spent >= MONTHLY_CAP_USD) {
-    return { ok: false, status: 503, reason: "budget_exhausted", message: "The assistant is busy right now. Please try again later — the charts and figures on the rest of the site are all available." };
+    return { ok: false, status: 503, reason: "budget_exhausted", message: "The assistant is busy right now. Please try again later. The charts and figures on the rest of the site are all available." };
   }
   return { ok: true };
 }

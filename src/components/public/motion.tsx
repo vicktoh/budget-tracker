@@ -63,7 +63,7 @@ export function CountUp({
     return () => controls.stop();
   }, [inView, value, reduce]);
 
-  if (value === null) return <span className={className}>—</span>;
+  if (value === null) return <span className={className}>n/a</span>;
   return (
     <span ref={ref} className={className} aria-label={format(value, kind, digits)}>
       <span aria-hidden>{format(display, kind, digits)}</span>
